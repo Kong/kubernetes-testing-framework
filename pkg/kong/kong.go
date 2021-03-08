@@ -1,8 +1,10 @@
 package kong
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -75,7 +77,7 @@ func SimpleProxySetup(kc *kubernetes.Clientset, namespace string) error {
 // DeployControllers deploys the Kong Kubernetes Ingress Controller (KIC) and other relevant
 // Ingress controllers to the provided cluster given a *kubernetes.Clientset for it.
 // FIXME: this is a total hack for now
-func DeployControllers(kc *kubernetes.Clientset, containerImage, namespace string) (context.CancelFunc, error) {
+func DeployControllers(kc *kubernetes.Clientset, containerImage, namespace, pathToMain string) (context.CancelFunc, error) {
 	// ensure the controller namespace is created
 	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
 	if _, err := kc.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{}); err != nil {
@@ -90,10 +92,11 @@ func DeployControllers(kc *kubernetes.Clientset, containerImage, namespace strin
 		return nil, err
 	}
 
+	stderr := new(bytes.Buffer)
 	ctx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(ctx, "go", "run", "../../main.go")
+	cmd := exec.CommandContext(ctx, "go", "run", pathToMain)
 	cmd.Stdout = tmpfile
-	cmd.Stderr = tmpfile
+	cmd.Stderr = io.MultiWriter(stderr, tmpfile)
 	fmt.Fprintf(os.Stdout, "INFO: tempfile for controller logs: %s\n", tmpfile.Name())
 
 	go func() {
