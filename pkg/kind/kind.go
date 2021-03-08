@@ -20,16 +20,21 @@ const (
 
 	// KindContainerSuffix provides the string suffix that Kind names all cluster containers with.
 	KindContainerSuffix = "-control-plane"
+
+	// ProxyOnlyImage is the kind container image that should be used to deploy a Kind cluster that
+	// is only running the Kong proxy, but no the ingress controller.
+	// Note that images like this are built, maintained and documented here: https://github.com/kong/kind-images
+	ProxyOnlyImage = "docker.pkg.github.com/kong/kind-images/proxy-only"
 )
 
 // -----------------------------------------------------------------------------
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// CreateKindCluster creates a new cluster using Kubernetes in Docker (KIND).
-func CreateKindCluster(name string) error {
+// CreateKindClusterWithProxy creates a new cluster using Kubernetes in Docker (KIND).
+func CreateKindClusterWithProxy(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
-	cmd := exec.Command("kind", "create", "cluster", "--name", name)
+	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--image", ProxyOnlyImage)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
