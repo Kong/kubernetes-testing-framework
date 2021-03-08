@@ -12,7 +12,7 @@ import (
 
 // NewServiceForDeployment provides a basic and opinionated service to expose the
 // provided *appsv1.Deployment for testing purposes.
-func NewServiceForDeployment(d *appsv1.Deployment) *corev1.Service {
+func NewServiceForDeployment(d *appsv1.Deployment, serviceType corev1.ServiceType) *corev1.Service {
 	svcPorts := []corev1.ServicePort{}
 	for _, p := range d.Spec.Template.Spec.Containers[0].Ports {
 		svcPorts = append(svcPorts, corev1.ServicePort{
@@ -26,6 +26,7 @@ func NewServiceForDeployment(d *appsv1.Deployment) *corev1.Service {
 			Name: d.Name,
 		},
 		Spec: corev1.ServiceSpec{
+			Type:     serviceType,
 			Selector: d.Spec.Selector.MatchLabels,
 			Ports:    svcPorts,
 		},

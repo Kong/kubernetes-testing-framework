@@ -21,7 +21,7 @@ func DeployIngressForContainer(kc *kubernetes.Clientset, ingressClass, ingressPa
 		return err
 	}
 
-	service := k8s.NewServiceForDeployment(deployment)
+	service := k8s.NewServiceForDeployment(deployment, corev1.ServiceTypeClusterIP)
 	_, err = kc.CoreV1().Services("default").Create(ctx, service, opts)
 	if err != nil {
 		return err
