@@ -19,6 +19,7 @@ func NewIngressForService(ingressClass, path string, s *corev1.Service) *netv1.I
 			Name: s.Name,
 			Annotations: map[string]string{
 				"kubernetes.io/ingress.class": ingressClass,
+				"konghq.com/strip-path":       "true",
 			},
 		},
 		Spec: netv1.IngressSpec{
