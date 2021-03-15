@@ -31,9 +31,10 @@ const (
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// CreateKindClusterWithProxy creates a new cluster using Kubernetes in Docker (KIND).
-func CreateKindClusterWithProxy(name string) error {
+// CreateKindClusterWithKongProxy creates a new cluster using Kubernetes in Docker (KIND).
+func CreateKindClusterWithKongProxy(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
+	// later we should switch to using the libs.
 	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--image", ProxyOnlyImage)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
