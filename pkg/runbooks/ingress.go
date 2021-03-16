@@ -9,8 +9,8 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-// DeployIngressForContainer is a runbook which simplifies creating a Deployment, Service, and Ingress resource
-// given a container specification for which they should serve.
+// DeployIngressForContainer is a runbook which simplifies creating a Deployment, Service, and Ingress resource given a container specification for which they should serve.
+// TODO: This is opionated and ultimately expects that the Ingress controller is going to be kong, and that `strip-path` should be used.
 func DeployIngressForContainer(kc *kubernetes.Clientset, ingressClass, ingressPath string, container corev1.Container) error {
 	ctx := context.Background()
 	opts := metav1.CreateOptions{}
@@ -27,7 +27,10 @@ func DeployIngressForContainer(kc *kubernetes.Clientset, ingressClass, ingressPa
 		return err
 	}
 
-	ingress := k8s.NewIngressForService(ingressClass, ingressPath, service)
+	ingress := k8s.NewIngressForService(ingressPath, map[string]string{
+		"kubernetes.io/ingress.class": ingressClass,
+		"konghq.com/strip-path":       "true",
+	}, service)
 	_, err = kc.NetworkingV1().Ingresses("default").Create(ctx, ingress, opts)
 
 	return err
