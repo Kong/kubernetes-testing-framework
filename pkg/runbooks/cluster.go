@@ -22,13 +22,13 @@ import (
 
 var (
 	// ProxyReadyTimeout is the maximum amount of time the tests will wait for the Kong proxy
-	// to become available in the cluster before considering the cluster a failure and panicing. FIXME
+	// to become available in the cluster before considering the cluster a failure and panicing.
 	ProxyReadyTimeout = time.Minute * 10
 )
 
 // CreateKindClusterWithKongProxy runbook deploys a new kind cluster with the Kong proxy pre-deployed.
 // MetalLB will be used to provision the LoadBalancer service for the proxy using the local Docker network for the Kind cluster.
-func CreateKindClusterWithKongProxy(ctx context.Context, proxyInformer chan *url.URL, clusterName string) (kc *kubernetes.Clientset, cleanup func(), err error) {
+func CreateKindClusterWithKongProxy(ctx context.Context, clusterName string, proxyInformer chan *url.URL, errorInformer chan error) (kc *kubernetes.Clientset, cleanup func(), err error) {
 	// configure the cluster cleanup function
 	cleanup = func() {
 		if v := os.Getenv("KIND_KEEP_CLUSTER"); v == "" { // you can optionally flag the tests to retain the test cluster for inspection.
@@ -54,7 +54,6 @@ func CreateKindClusterWithKongProxy(ctx context.Context, proxyInformer chan *url
 	}
 
 	// get the kong proxy deployment from the cluster
-	// FIXME - race condition here with image ingress deployment
 	proxyDeployment := new(appsv1.Deployment)
 	proxyDeployment, err = kc.AppsV1().Deployments("kong-system").Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
 	if err != nil {
@@ -63,7 +62,7 @@ func CreateKindClusterWithKongProxy(ctx context.Context, proxyInformer chan *url
 
 	// start the proxy informer which will send the proxy URL back via channel when it's provisioned in the cluster and expose the service via MetalLB
 	proxyLoadBalancerService := k8sgen.NewServiceForDeployment(proxyDeployment, corev1.ServiceTypeLoadBalancer)
-	startProxyInformer(ctx, kc, proxyLoadBalancerService, proxyInformer)
+	startProxyInformer(ctx, kc, proxyLoadBalancerService, proxyInformer, errorInformer)
 	proxyLoadBalancerService, err = kc.CoreV1().Services("kong-system").Create(ctx, proxyLoadBalancerService, metav1.CreateOptions{})
 	if err != nil {
 		fmt.Fprintf(os.Stderr, err.Error())
@@ -75,25 +74,27 @@ func CreateKindClusterWithKongProxy(ctx context.Context, proxyInformer chan *url
 
 // startProxyInformer creates a goroutine running in the background that will watch for the Kong proxy service to be fully provisioned and will
 // subsequently indicate the success by publishing the URL of the Proxy to the provided channel.
-func startProxyInformer(ctx context.Context, kc *kubernetes.Clientset, watchService *corev1.Service, readyCh chan *url.URL) {
+func startProxyInformer(ctx context.Context, kc *kubernetes.Clientset, watchService *corev1.Service, readyCh chan *url.URL, errorCh chan error) {
 	factory := kubeinformers.NewSharedInformerFactory(kc, ProxyReadyTimeout)
 	informer := factory.Core().V1().Services().Informer()
+	errors := make([]error, 0)
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		UpdateFunc: func(oldObject, newObject interface{}) {
 			svc, ok := newObject.(*corev1.Service)
 			if !ok {
-				panic(fmt.Errorf("type of %s found", reflect.TypeOf(newObject))) // FIXME
+				errors = append(errors, fmt.Errorf("type of %s found", reflect.TypeOf(newObject)))
+				return
 			}
 
 			if svc.Name == watchService.Name {
 				ing := svc.Status.LoadBalancer.Ingress
 				if len(ing) > 0 && ing[0].IP != "" {
-					// FIXME - need error handling and logging output so this isn't hard to debug later if something breaks it
 					for _, port := range svc.Spec.Ports {
 						if port.Name == "proxy" {
 							u, err := url.Parse(fmt.Sprintf("http://%s:%d", ing[0].IP, port.Port))
 							if err != nil {
-								panic(err) // FIXME
+								errors = append(errors, err)
+								return
 							}
 							readyCh <- u
 							close(readyCh)
@@ -103,5 +104,16 @@ func startProxyInformer(ctx context.Context, kc *kubernetes.Clientset, watchServ
 			}
 		},
 	})
-	go informer.Run(ctx.Done())
+
+	go func() {
+		informer.Run(ctx.Done())
+		if len(errors) > 0 {
+			err := errors[0]
+			for _, erri := range errors[1:] {
+				err = fmt.Errorf("%v: %w", err, erri)
+			}
+			errorCh <- err
+		}
+		close(errorCh)
+	}()
 }
