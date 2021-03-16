@@ -54,8 +54,7 @@ func CreateKindClusterWithKongProxy(ctx context.Context, clusterName string, pro
 	}
 
 	// get the kong proxy deployment from the cluster
-	proxyDeployment := new(appsv1.Deployment)
-	proxyDeployment, err = kc.AppsV1().Deployments("kong-system").Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
+	proxyDeployment, err := getProxyDeployment(ctx, kc)
 	if err != nil {
 		return
 	}
@@ -65,10 +64,24 @@ func CreateKindClusterWithKongProxy(ctx context.Context, clusterName string, pro
 	startProxyInformer(ctx, kc, proxyLoadBalancerService, proxyInformer, errorInformer)
 	proxyLoadBalancerService, err = kc.CoreV1().Services("kong-system").Create(ctx, proxyLoadBalancerService, metav1.CreateOptions{})
 	if err != nil {
-		fmt.Fprintf(os.Stderr, err.Error())
-		os.Exit(16)
+		return
 	}
 
+	return
+}
+
+func getProxyDeployment(ctx context.Context, kc *kubernetes.Clientset) (proxyDeployment *appsv1.Deployment, err error) {
+	timeout := time.Now().Add(time.Second * 30)
+	for timeout.After(time.Now()) {
+		proxyDeployment, err = kc.AppsV1().Deployments("kong-system").Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
+		if err != nil {
+			continue
+		}
+
+		// if we reach here, success!
+		err = nil
+		break
+	}
 	return
 }
 
