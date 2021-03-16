@@ -22,7 +22,7 @@ import (
 
 var (
 	// ProxyReadyTimeout is the maximum amount of time the tests will wait for the Kong proxy
-	// to become available in the cluster before considering the cluster a failure and panicing.
+	// to become available in the cluster before considering the cluster a failure.
 	ProxyReadyTimeout = time.Minute * 10
 )
 

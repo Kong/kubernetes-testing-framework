@@ -10,7 +10,7 @@ import (
 // Public Functions - corev1.Service Helpers
 // -----------------------------------------------------------------------------
 
-// NewServiceForDeployment provides a basic and opinionated service to expose the provided *appsv1.Deployment for testing purposes.
+// NewServiceForDeployment provides a minimal and opinionated service to expose the provided *appsv1.Deployment for testing purposes.
 func NewServiceForDeployment(d *appsv1.Deployment, serviceType corev1.ServiceType) *corev1.Service {
 	svcPorts := []corev1.ServicePort{}
 	for _, p := range d.Spec.Template.Spec.Containers[0].Ports {

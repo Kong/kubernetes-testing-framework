@@ -8,7 +8,7 @@ import (
 // Public Functions - corev1.Container Helpers
 // -----------------------------------------------------------------------------
 
-// NewContainer creates a basic and opinionated corev1.Container object for testing
+// NewContainer creates a minimal and opinionated corev1.Container object for testing
 func NewContainer(name, image string, port int32) corev1.Container {
 	return corev1.Container{
 		Name:  name,
