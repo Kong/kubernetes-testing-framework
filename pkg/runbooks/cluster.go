@@ -73,6 +73,8 @@ func CreateKindClusterWithKongProxy(ctx context.Context, proxyInformer chan *url
 	return
 }
 
+// startProxyInformer creates a goroutine running in the background that will watch for the Kong proxy service to be fully provisioned and will
+// subsequently indicate the success by publishing the URL of the Proxy to the provided channel.
 func startProxyInformer(ctx context.Context, kc *kubernetes.Clientset, watchService *corev1.Service, readyCh chan *url.URL) {
 	factory := kubeinformers.NewSharedInformerFactory(kc, ProxyReadyTimeout)
 	informer := factory.Core().V1().Services().Informer()
