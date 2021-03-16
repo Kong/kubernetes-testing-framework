@@ -10,8 +10,7 @@ import (
 // Public Functions - appsv1.Deployment Helpers
 // -----------------------------------------------------------------------------
 
-// NewDeploymentForContainer creates a basic and opinionated *appsv1.Deployment object
-// for testing based on a provided corev1.Container.
+// NewDeploymentForContainer creates a basic and opinionated *appsv1.Deployment object for testing based on a provided corev1.Container.
 func NewDeploymentForContainer(c corev1.Container) *appsv1.Deployment {
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
