@@ -10,8 +10,7 @@ import (
 // Public Functions - netv1.Ingress Helpers
 // -----------------------------------------------------------------------------
 
-// NewIngressForService provides a basic and opinionated *netv1.Ingress object for the
-// provided *corev1.Service to expose it via an ingress controller for testing purposes.
+// NewIngressForService provides a basic and opinionated *netv1.Ingress object for the provided *corev1.Service to expose it via an ingress controller for testing purposes.
 func NewIngressForService(ingressClass, path string, s *corev1.Service) *netv1.Ingress {
 	pathPrefix := netv1.PathTypePrefix
 	return &netv1.Ingress{
