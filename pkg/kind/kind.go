@@ -18,9 +18,6 @@ const (
 	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
 	DefaultKindDockerNetwork = "kind"
 
-	// KindContainerSuffix provides the string suffix that Kind names all cluster containers with.
-	KindContainerSuffix = "-control-plane"
-
 	// ProxyOnlyImage is the kind container image that should be used to deploy a Kind cluster that
 	// is only running the Kong proxy, but no the ingress controller.
 	// Note that images like this are built, maintained and documented here: https://github.com/kong/kind-images
@@ -52,11 +49,6 @@ func DeleteKindCluster(name string) error {
 // -----------------------------------------------------------------------------
 // Public Functions - Helper
 // -----------------------------------------------------------------------------
-
-// GetKindContainerID produces the docker container ID for the given kind cluster by name.
-func GetKindDockerContainerID(clusterName string) string {
-	return fmt.Sprintf("%s%s", clusterName, KindContainerSuffix)
-}
 
 // ClientForKindCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
 func ClientForKindCluster(name string) (*kubernetes.Clientset, error) {
