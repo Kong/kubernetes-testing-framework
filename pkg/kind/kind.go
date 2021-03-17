@@ -2,7 +2,6 @@ package kind
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -28,8 +27,8 @@ const (
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// CreateKindClusterWithKongProxy creates a new cluster using Kubernetes in Docker (KIND).
-func CreateKindClusterWithKongProxy(name string) error {
+// CreateClusterWithKongProxy creates a new cluster using Kubernetes in Docker (KIND).
+func CreateClusterWithKongProxy(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
 	// later we should switch to using the libs.
 	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--image", ProxyOnlyImage)
@@ -50,8 +49,8 @@ func DeleteKindCluster(name string) error {
 // Public Functions - Helper
 // -----------------------------------------------------------------------------
 
-// ClientForKindCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
-func ClientForKindCluster(name string) (*kubernetes.Clientset, error) {
+// ClientForCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
+func ClientForCluster(name string) (*kubernetes.Clientset, error) {
 	kubeconfig := new(bytes.Buffer)
 	cmd := exec.Command("kind", "get", "kubeconfig", "--name", name)
 	cmd.Stdout = kubeconfig
