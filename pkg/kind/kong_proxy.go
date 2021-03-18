@@ -17,6 +17,24 @@ import (
 )
 
 // -----------------------------------------------------------------------------
+// Kong Proxy Cluster - Consts & Vars
+// -----------------------------------------------------------------------------
+
+const (
+	// proxyInformerResyncPeriod is the default time.Duration between resyncs of client-go informers
+	proxyInformerResyncPeriod = time.Minute * 3
+
+	// proxyDeploymentNamespace is the default namespace where the Kong proxy is expected to be deployed
+	proxyDeploymentNamespace = "kong-proxy"
+
+	// proxyDeploymentName is the default name of the Kong proxy deployment
+	proxyDeploymentName = "ingress-controller-kong"
+
+	// proxyRequestTimeout indicates the default max time we'll wait for a deployed Kong proxy to start responding to HTTP requests.
+	proxyRequestTimeout = time.Minute * 3
+)
+
+// -----------------------------------------------------------------------------
 // Kong Proxy Cluster - Events
 // -----------------------------------------------------------------------------
 
@@ -68,7 +86,7 @@ func (c *kongProxyCluster) startProxyInformer(ctx context.Context) (ready chan P
 // that deployment to a channel when it is found.
 func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deployment chan *appsv1.Deployment) {
 	deployment = make(chan *appsv1.Deployment)
-	factory := kubeinformers.NewSharedInformerFactory(c.client, time.Minute*3) // TODO: resync vars
+	factory := kubeinformers.NewSharedInformerFactory(c.client, proxyInformerResyncPeriod)
 	informer := factory.Apps().V1().Deployments().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		AddFunc: func(obj interface{}) {
@@ -76,7 +94,7 @@ func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deploym
 			if !ok {
 				return
 			}
-			if d.Namespace == "kong-system" && d.Name == "ingress-controller-kong" { // TODO: vars here
+			if d.Namespace == proxyDeploymentNamespace && d.Name == proxyDeploymentName {
 				deployment <- d
 			}
 			return
@@ -92,7 +110,7 @@ func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deploym
 }
 
 func (c *kongProxyCluster) startServiceInformer(ctx context.Context, nsn types.NamespacedName, ready chan ProxyReadinessEvent) {
-	factory := kubeinformers.NewSharedInformerFactory(c.client, time.Minute*3) // TODO: resync vars
+	factory := kubeinformers.NewSharedInformerFactory(c.client, proxyInformerResyncPeriod)
 	informer := factory.Core().V1().Services().Informer()
 	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
 		// this UpdateFunc is responsible for closing the ready channel once the proxy URL is ready (or if an error occurs)
@@ -138,10 +156,11 @@ func (c *kongProxyCluster) startServiceInformer(ctx context.Context, nsn types.N
 }
 
 func waitForKongProxy(u *url.URL) (proxyReady bool, err error) {
-	timeout := time.Now().Add(time.Minute * 3) // TODO: timeout vars
+	timeout := time.Now().Add(proxyRequestTimeout)
 	for timeout.After(time.Now()) {
 		var resp *http.Response
-		resp, err = http.Get(u.String())
+		httpc := http.Client{Timeout: proxyRequestTimeout}
+		resp, err = httpc.Get(u.String())
 		if err != nil {
 			continue
 		}
