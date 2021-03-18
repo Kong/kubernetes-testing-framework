@@ -56,10 +56,10 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 	cluster := &kongProxyCluster{
 		name:   name,
 		client: kc,
+		enabledMetal: c.EnableMetalLB,
 	}
 
-	if c.EnableMetalLB {
-		cluster.enabledMetal = true
+	if cluster.enabledMetal {
 		if err := metallb.DeployMetallbForKindCluster(kc, name, c.DockerNetwork); err != nil {
 			return nil, nil, err
 		}
@@ -77,7 +77,7 @@ func (c *kongProxyCluster) Name() string {
 }
 
 func (c *kongProxyCluster) Cleanup() error {
-	if v := os.Getenv(EnvKeepCluster); v == "" {
+	if os.Getenv(EnvKeepCluster) == "" {
 		return DeleteKindCluster(c.name)
 	}
 	return nil

@@ -16,6 +16,6 @@ type Cluster interface {
 	// Client is the configured *kubernetes.Clientset which can be used to access the Cluster's API
 	Client() *kubernetes.Clientset
 
-	// Cleanup performs any necessary teardown for the cluster
+	// Cleanup obliterates the cluster and all of its resources, leaving no garbage behind, unless `KIND_KEEP_CLUSTER` is set.
 	Cleanup() error
 }
