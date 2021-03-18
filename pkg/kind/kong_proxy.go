@@ -25,7 +25,7 @@ const (
 	proxyInformerResyncPeriod = time.Minute * 3
 
 	// proxyDeploymentNamespace is the default namespace where the Kong proxy is expected to be deployed
-	proxyDeploymentNamespace = "kong-proxy"
+	proxyDeploymentNamespace = "kong-system"
 
 	// proxyDeploymentName is the default name of the Kong proxy deployment
 	proxyDeploymentName = "ingress-controller-kong"
