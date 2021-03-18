@@ -51,9 +51,11 @@ func (c *kongProxyCluster) startProxyInformer(ctx context.Context) (ready chan P
 				close(ready)
 				return
 			}
-		case <-time.After(time.Minute * 3): // TODO: vars
-			// fail on timeout
-			err := fmt.Errorf("deployment \"kong-system/ingress-controller-kong\" not ready after %s", time.Minute*3) // TODO: vars here
+		case <-ctx.Done():
+			err := ctx.Err()
+			if err == nil {
+				err = fmt.Errorf("context was done before deployment received")
+			}
 			ready <- ProxyReadinessEvent{Err: err}
 			close(ready)
 		}

@@ -54,8 +54,8 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 	}
 
 	cluster := &kongProxyCluster{
-		name:   name,
-		client: kc,
+		name:         name,
+		client:       kc,
 		enabledMetal: c.EnableMetalLB,
 	}
 
