@@ -45,7 +45,7 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 
 	err := CreateClusterWithKongProxy(name)
 	if err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("CreateClusterWithKongProxy failed: %w", err)
 	}
 
 	kc, err := ClientForCluster(name)
