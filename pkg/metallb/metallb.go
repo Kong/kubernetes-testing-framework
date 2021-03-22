@@ -12,9 +12,9 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 
 	ktfdocker "github.com/kong/kubernetes-testing-framework/pkg/docker"
-	ktfkind "github.com/kong/kubernetes-testing-framework/pkg/kind"
 	ktfnet "github.com/kong/kubernetes-testing-framework/pkg/networking"
 )
 
@@ -23,13 +23,7 @@ import (
 // -----------------------------------------------------------------------------
 
 // DeployMetallbForKindCluster deploys Metallb to the given Kind cluster using the Docker network provided for LoadBalancer IPs.
-func DeployMetallbForKindCluster(kindClusterName, dockerNetwork string) error {
-	// grab a kubernetes client for the cluster
-	kc, err := ktfkind.ClientForKindCluster(kindClusterName)
-	if err != nil {
-		return err
-	}
-
+func DeployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dockerNetwork string) error {
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: "metallb-system"}}
 	if _, err := kc.CoreV1().Namespaces().Create(context.Background(), &ns, metav1.CreateOptions{}); err != nil {
@@ -39,7 +33,7 @@ func DeployMetallbForKindCluster(kindClusterName, dockerNetwork string) error {
 	}
 
 	// get an IP range for the docker container network to use for MetalLB
-	network, err := ktfdocker.GetDockerContainerIPNetwork(ktfkind.GetKindDockerContainerID(kindClusterName), dockerNetwork)
+	network, err := ktfdocker.GetDockerContainerIPNetwork(ktfdocker.GetKindContainerID(kindClusterName), dockerNetwork)
 	if err != nil {
 		return err
 	}

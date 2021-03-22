@@ -2,7 +2,6 @@ package kind
 
 import (
 	"bytes"
-	"fmt"
 	"os"
 	"os/exec"
 
@@ -17,18 +16,16 @@ import (
 const (
 	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
 	DefaultKindDockerNetwork = "kind"
-
-	// KindContainerSuffix provides the string suffix that Kind names all cluster containers with.
-	KindContainerSuffix = "-control-plane"
 )
 
 // -----------------------------------------------------------------------------
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// CreateKindCluster creates a new cluster using Kubernetes in Docker (KIND).
-func CreateKindCluster(name string) error {
+// CreateCluster creates a new cluster using Kubernetes in Docker (KIND).
+func CreateCluster(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
+	// later we should switch to using the libs.
 	cmd := exec.Command("kind", "create", "cluster", "--name", name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
@@ -47,13 +44,8 @@ func DeleteKindCluster(name string) error {
 // Public Functions - Helper
 // -----------------------------------------------------------------------------
 
-// GetKindContainerID produces the docker container ID for the given kind cluster by name.
-func GetKindDockerContainerID(clusterName string) string {
-	return fmt.Sprintf("%s%s", clusterName, KindContainerSuffix)
-}
-
-// ClientForKindCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
-func ClientForKindCluster(name string) (*kubernetes.Clientset, error) {
+// ClientForCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
+func ClientForCluster(name string) (*kubernetes.Clientset, error) {
 	kubeconfig := new(bytes.Buffer)
 	cmd := exec.Command("kind", "get", "kubeconfig", "--name", name)
 	cmd.Stdout = kubeconfig

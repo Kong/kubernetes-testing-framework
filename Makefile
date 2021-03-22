@@ -1,0 +1,3 @@
+.PHONY: test.integration
+test.integration:
+	@GOFLAGS="-tags=integration_tests" go test -v ./test/integration/...

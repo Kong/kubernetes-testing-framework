@@ -3,9 +3,6 @@ package kong
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"os/exec"
 	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -70,39 +67,6 @@ func SimpleProxySetup(kc *kubernetes.Clientset, namespace string) error {
 	}
 
 	return nil
-}
-
-// DeployControllers deploys the Kong Kubernetes Ingress Controller (KIC) and other relevant
-// Ingress controllers to the provided cluster given a *kubernetes.Clientset for it.
-// FIXME: this is a total hack for now
-func DeployControllers(kc *kubernetes.Clientset, containerImage, namespace string) (context.CancelFunc, error) {
-	// ensure the controller namespace is created
-	ns := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
-	if _, err := kc.CoreV1().Namespaces().Create(context.Background(), ns, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return nil, err
-		}
-	}
-
-	// FIXME: temp logging file
-	tmpfile, err := ioutil.TempFile(os.TempDir(), "kong-integration-tests-")
-	if err != nil {
-		return nil, err
-	}
-
-	ctx, cancel := context.WithCancel(context.Background())
-	cmd := exec.CommandContext(ctx, "go", "run", "../../main.go")
-	cmd.Stdout = tmpfile
-	cmd.Stderr = tmpfile
-	fmt.Fprintf(os.Stdout, "INFO: tempfile for controller logs: %s\n", tmpfile.Name())
-
-	go func() {
-		if err := cmd.Run(); err != nil {
-			fmt.Fprintf(os.Stderr, err.Error())
-		}
-	}()
-
-	return cancel, nil
 }
 
 // -----------------------------------------------------------------------------
