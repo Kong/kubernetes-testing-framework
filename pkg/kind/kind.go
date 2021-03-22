@@ -16,22 +16,17 @@ import (
 const (
 	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
 	DefaultKindDockerNetwork = "kind"
-
-	// ProxyOnlyImage is the kind container image that should be used to deploy a Kind cluster that
-	// is only running the Kong proxy, but no the ingress controller.
-	// Note that images like this are built, maintained and documented here: https://github.com/kong/kind-images
-	ProxyOnlyImage = "docker.pkg.github.com/kong/kind-images/proxy-only"
 )
 
 // -----------------------------------------------------------------------------
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// CreateClusterWithKongProxy creates a new cluster using Kubernetes in Docker (KIND).
-func CreateClusterWithKongProxy(name string) error {
+// CreateCluster creates a new cluster using Kubernetes in Docker (KIND).
+func CreateCluster(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
 	// later we should switch to using the libs.
-	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--image", ProxyOnlyImage)
+	cmd := exec.Command("kind", "create", "cluster", "--name", name)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"k8s.io/client-go/kubernetes"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/helm"
 	"github.com/kong/kubernetes-testing-framework/pkg/metallb"
 )
 
@@ -44,9 +45,9 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 		c.DockerNetwork = DefaultKindDockerNetwork
 	}
 
-	err := CreateClusterWithKongProxy(name)
+	err := CreateCluster(name)
 	if err != nil {
-		return nil, nil, fmt.Errorf("CreateClusterWithKongProxy failed: %w", err)
+		return nil, nil, fmt.Errorf("CreateCluster() failed: %w", err)
 	}
 
 	kc, err := ClientForCluster(name)
@@ -64,6 +65,10 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 		if err := metallb.DeployMetallbForKindCluster(kc, name, c.DockerNetwork); err != nil {
 			return nil, nil, err
 		}
+	}
+
+	if err := helm.DeployKongProxyOnly(name); err != nil {
+		return nil, nil, err
 	}
 
 	return cluster, cluster.startProxyInformer(ctx), nil

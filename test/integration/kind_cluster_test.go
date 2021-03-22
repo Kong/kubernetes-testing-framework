@@ -20,8 +20,8 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 	}
 
 	cluster, ready, err := config.Deploy(context.Background())
-	defer cluster.Cleanup()
 	assert.NoError(t, err)
+	defer cluster.Cleanup()
 
 	event := <-ready
 	assert.NoError(t, event.Err)
