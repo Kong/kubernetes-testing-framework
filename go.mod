@@ -1,8 +1,6 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.15
-
-replace k8s.io/client-go => k8s.io/client-go v0.20.2
+go 1.16
 
 require (
 	github.com/Microsoft/go-winio v0.4.16 // indirect
@@ -19,8 +17,9 @@ require (
 	github.com/opencontainers/image-spec v1.0.1 // indirect
 	github.com/sirupsen/logrus v1.7.0 // indirect
 	github.com/stretchr/testify v1.7.0
+	golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba // indirect
 	gotest.tools/v3 v3.0.3 // indirect
-	k8s.io/api v0.20.2
-	k8s.io/apimachinery v0.20.2
-	k8s.io/client-go v0.0.0-00010101000000-000000000000
+	k8s.io/api v0.20.5
+	k8s.io/apimachinery v0.20.5
+	k8s.io/client-go v0.20.5
 )
