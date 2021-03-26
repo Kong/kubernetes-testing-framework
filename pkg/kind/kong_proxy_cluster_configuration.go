@@ -7,6 +7,7 @@ import (
 
 	"github.com/google/uuid"
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/helm"
 	"github.com/kong/kubernetes-testing-framework/pkg/metallb"
@@ -50,7 +51,7 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 		return nil, nil, fmt.Errorf("CreateCluster() failed: %w", err)
 	}
 
-	kc, err := ClientForCluster(name)
+	cfg, kc, err := ClientForCluster(name)
 	if err != nil {
 		return nil, nil, err
 	}
@@ -58,6 +59,7 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 	cluster := &kongProxyCluster{
 		name:         name,
 		client:       kc,
+		cfg:          cfg,
 		enabledMetal: c.EnableMetalLB,
 	}
 
@@ -93,6 +95,10 @@ func (c *kongProxyCluster) Client() *kubernetes.Clientset {
 	return c.client
 }
 
+func (c *kongProxyCluster) Config() *rest.Config {
+	return c.cfg
+}
+
 // -----------------------------------------------------------------------------
 // Kong Proxy Cluster - Private Types
 // -----------------------------------------------------------------------------
@@ -100,5 +106,6 @@ func (c *kongProxyCluster) Client() *kubernetes.Clientset {
 type kongProxyCluster struct {
 	name         string
 	client       *kubernetes.Clientset
+	cfg          *rest.Config
 	enabledMetal bool
 }

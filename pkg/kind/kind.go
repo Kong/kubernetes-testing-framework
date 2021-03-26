@@ -6,6 +6,7 @@ import (
 	"os/exec"
 
 	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
 
@@ -45,24 +46,25 @@ func DeleteKindCluster(name string) error {
 // -----------------------------------------------------------------------------
 
 // ClientForCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
-func ClientForCluster(name string) (*kubernetes.Clientset, error) {
+func ClientForCluster(name string) (*rest.Config, *kubernetes.Clientset, error) {
 	kubeconfig := new(bytes.Buffer)
 	cmd := exec.Command("kind", "get", "kubeconfig", "--name", name)
 	cmd.Stdout = kubeconfig
 	cmd.Stderr = os.Stderr
 	if err := cmd.Run(); err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	clientCfg, err := clientcmd.NewClientConfigFromBytes(kubeconfig.Bytes())
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	restCfg, err := clientCfg.ClientConfig()
+	cfg, err := clientCfg.ClientConfig()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return kubernetes.NewForConfig(restCfg)
+	clientset, err := kubernetes.NewForConfig(cfg)
+	return cfg, clientset, err
 }
