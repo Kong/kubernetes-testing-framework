@@ -20,14 +20,14 @@ import (
 // -----------------------------------------------------------------------------
 
 const (
+	// ProxyDeploymentNamespace is the default namespace where the Kong proxy is expected to be deployed
+	ProxyDeploymentNamespace = "kong-system"
+
+	// ProxyDeploymentName is the default name of the Kong proxy deployment
+	ProxyDeploymentName = "ingress-controller-kong"
+
 	// proxyInformerResyncPeriod is the default time.Duration between resyncs of client-go informers
 	proxyInformerResyncPeriod = time.Minute * 3
-
-	// proxyDeploymentNamespace is the default namespace where the Kong proxy is expected to be deployed
-	proxyDeploymentNamespace = "kong-system"
-
-	// proxyDeploymentName is the default name of the Kong proxy deployment
-	proxyDeploymentName = "ingress-controller-kong"
 
 	// proxyRequestTimeout indicates the default max time we'll wait for a deployed Kong proxy to start responding to HTTP requests.
 	proxyRequestTimeout = time.Minute * 3
@@ -85,7 +85,7 @@ func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deploym
 			if !ok {
 				return
 			}
-			if d.Namespace == proxyDeploymentNamespace && d.Name == proxyDeploymentName {
+			if d.Namespace == ProxyDeploymentNamespace && d.Name == ProxyDeploymentName {
 				deployment <- d
 			}
 			return
