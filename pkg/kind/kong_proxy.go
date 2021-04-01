@@ -11,7 +11,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/types"
 	kubeinformers "k8s.io/client-go/informers"
 	"k8s.io/client-go/tools/cache"
 )
@@ -32,6 +31,9 @@ const (
 
 	// proxyRequestTimeout indicates the default max time we'll wait for a deployed Kong proxy to start responding to HTTP requests.
 	proxyRequestTimeout = time.Minute * 3
+
+	// time to wait between GET requests
+	serviceInformerTickTime = time.Millisecond * 200
 )
 
 // -----------------------------------------------------------------------------
@@ -50,7 +52,7 @@ type ProxyReadinessEvent struct {
 
 // startProxyInformer provides a channel indicates when the proxy server is fully functional and accessible
 // by providing the *url.URL by which to access it. The channel will produce a nil value on failure.
-func (c *kongProxyCluster) startProxyInformer(ctx context.Context) (ready chan ProxyReadinessEvent) {
+func (c *kongProxyCluster) startProxyInformer(ctx context.Context, timeout time.Time) (ready chan ProxyReadinessEvent) {
 	ready = make(chan ProxyReadinessEvent)
 
 	// we need to wait for the Kong proxy deployment
@@ -59,23 +61,12 @@ func (c *kongProxyCluster) startProxyInformer(ctx context.Context) (ready chan P
 	go func() {
 		select {
 		case d := <-deployment:
-			// start the service informer to watch updates to the service we're about to create
-			go c.startServiceInformer(ctx, types.NamespacedName{Namespace: d.Namespace, Name: d.Name}, ready)
-
-			// expose the deployment
-			_, err := c.exposeProxyDeployment(ctx, d)
-			if err != nil {
-				ready <- ProxyReadinessEvent{Err: err}
-				close(ready)
-				return
-			}
+			go c.startServiceInformer(ctx, d, ready, timeout)
 		case <-ctx.Done():
 			err := ctx.Err()
 			if err == nil {
 				err = fmt.Errorf("context was done before deployment received")
 			}
-			ready <- ProxyReadinessEvent{Err: err}
-			close(ready)
 		}
 	}()
 
@@ -109,50 +100,68 @@ func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deploym
 	return
 }
 
-func (c *kongProxyCluster) startServiceInformer(ctx context.Context, nsn types.NamespacedName, ready chan ProxyReadinessEvent) {
-	factory := kubeinformers.NewSharedInformerFactory(c.client, proxyInformerResyncPeriod)
-	informer := factory.Core().V1().Services().Informer()
-	informer.AddEventHandler(cache.ResourceEventHandlerFuncs{
-		// this UpdateFunc is responsible for closing the ready channel once the proxy URL is ready (or if an error occurs)
-		UpdateFunc: func(old1, new1 interface{}) {
-			newService, ok := new1.(*corev1.Service)
-			if !ok {
-				err := fmt.Errorf("somehow got unexpected type instead of corev1.Service: %T", new1)
+// startServiceInformer exposes the provided deployment as LoadBalancer type and reports when the service has been provisioned a load balancer IP/Host
+// TODO: this is a bit of a hack right now, we need to make this more idiomatic and sturdy: https://github.com/Kong/kubernetes-testing-framework/issues/14
+func (c *kongProxyCluster) startServiceInformer(ctx context.Context, d *appsv1.Deployment, ready chan ProxyReadinessEvent, timeout time.Time) {
+	defer close(ready)
+
+	// expose the deployment first, if this fails then all fails
+	if _, err := c.exposeProxyDeployment(ctx, d); err != nil {
+		ready <- ProxyReadinessEvent{Err: err}
+		return
+	}
+
+	// wait for the IP to be provisioned for the LB Service
+	var u *url.URL
+	var errs error
+	serviceLoadBalancerReady := false
+	for timeout.After(time.Now()) {
+		service, err := c.Client().CoreV1().Services(d.Namespace).Get(ctx, d.Name, metav1.GetOptions{})
+		if err != nil {
+			errs = fmt.Errorf("failures while waiting for loadbalancer service to provisioner: %w", err)
+			time.Sleep(serviceInformerTickTime)
+			continue
+		}
+
+		// verify if the IP for the LB has been provisioned yet
+		ing := service.Status.LoadBalancer.Ingress
+		if len(ing) > 0 && ing[0].IP != "" {
+			// get the URL for the LB
+			u, err = urlForLoadBalancerIngress(service, &ing[0])
+			if err != nil {
 				ready <- ProxyReadinessEvent{Err: err}
-				close(ready)
 				return
 			}
 
-			// if this is the correct service, operate on it
-			if newService.Namespace == nsn.Namespace && newService.Name == nsn.Name {
-				// verify if the IP for the LB has been provisioned yet
-				ing := newService.Status.LoadBalancer.Ingress
-				if len(ing) > 0 && ing[0].IP != "" {
-					// get the URL for the LB
-					u, err := urlForLoadBalancerIngress(newService, &ing[0])
-					if err != nil {
-						ready <- ProxyReadinessEvent{Err: err}
-						close(ready)
-						return
-					}
-
-					// if docker network/metallb test HTTP access using the URL
-					if c.enabledMetal {
-						proxyReady, err := waitForKongProxy(u)
-						if !proxyReady {
-							ready <- ProxyReadinessEvent{Err: err}
-							close(ready)
-							return
-						}
-					}
-
-					ready <- ProxyReadinessEvent{URL: u}
-					close(ready)
+			// if docker network/metallb test HTTP access using the URL
+			if c.enabledMetal {
+				proxyReady, err := waitForKongProxy(u)
+				if !proxyReady {
+					ready <- ProxyReadinessEvent{Err: err}
+					return
 				}
 			}
-		},
-	})
-	go informer.Run(ctx.Done())
+
+			if u == nil {
+				errs = fmt.Errorf("url returned was nil without error: %w", errs)
+			}
+
+			serviceLoadBalancerReady = true
+			break
+		}
+	}
+
+	if errs != nil {
+		ready <- ProxyReadinessEvent{Err: errs}
+		return
+	}
+
+	if serviceLoadBalancerReady {
+		ready <- ProxyReadinessEvent{URL: u}
+		return
+	}
+
+	ready <- ProxyReadinessEvent{Err: fmt.Errorf("load balancer service for deployment %s/%s not ready after %s", d.Namespace, d.Name, timeout)}
 }
 
 func waitForKongProxy(u *url.URL) (proxyReady bool, err error) {
