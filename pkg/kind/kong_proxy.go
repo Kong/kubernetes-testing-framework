@@ -101,6 +101,7 @@ func (c *kongProxyCluster) startDeploymentInformer(ctx context.Context) (deploym
 }
 
 // startServiceInformer exposes the provided deployment as LoadBalancer type and reports when the service has been provisioned a load balancer IP/Host
+// TODO: this is a bit of a hack right now, we need to make this more idiomatic and sturdy: https://github.com/Kong/kubernetes-testing-framework/issues/14
 func (c *kongProxyCluster) startServiceInformer(ctx context.Context, d *appsv1.Deployment, ready chan ProxyReadinessEvent, timeout time.Time) {
 	defer close(ready)
 
@@ -110,7 +111,7 @@ func (c *kongProxyCluster) startServiceInformer(ctx context.Context, d *appsv1.D
 		return
 	}
 
-	// check
+	// wait for the IP to be provisioned for the LB Service
 	var u *url.URL
 	var errs error
 	serviceLoadBalancerReady := false
