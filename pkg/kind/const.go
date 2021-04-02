@@ -2,7 +2,6 @@ package kind
 
 import (
 	"fmt"
-	"time"
 )
 
 // -----------------------------------------------------------------------------
@@ -27,9 +26,4 @@ var (
 
 	// ProxyServiceName indicates the name of the Service that's serving the Proxy
 	ProxyServiceName = fmt.Sprintf("%s-proxy", ProxyDeploymentName)
-)
-
-const (
-	// time to wait between GET requests
-	serviceInformerTickTime = time.Millisecond * 200
 )

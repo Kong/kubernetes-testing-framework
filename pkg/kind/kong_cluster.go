@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"os"
-	"time"
 
 	"github.com/google/uuid"
 	"k8s.io/client-go/kubernetes"
@@ -40,7 +39,7 @@ type ClusterConfigurationWithKongProxy struct {
 // -----------------------------------------------------------------------------
 
 // Deploy is a factory method to generate kind.Cluster objects given the configuration, with new names being selected on each deploy.
-func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context, timeout time.Time) (Cluster, chan ProxyReadinessEvent, error) {
+func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster, chan ProxyReadinessEvent, error) {
 	name := uuid.New().String()
 
 	if c.DockerNetwork == "" {

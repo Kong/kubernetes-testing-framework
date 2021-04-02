@@ -19,7 +19,10 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 		EnableMetalLB: true,
 	}
 
-	cluster, ready, err := config.Deploy(context.Background(), time.Now().Add(time.Minute*5))
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
+
+	cluster, ready, err := config.Deploy(ctx)
 	assert.NoError(t, err)
 	defer cluster.Cleanup()
 
@@ -28,9 +31,9 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 	assert.NotEmpty(t, event)
 
 	assert.Eventually(t, func() bool {
-		resp, err := http.Get(event.URL.String())
+		resp, err := http.Get(event.ProxyURL.String())
 		if err != nil {
-			t.Logf("received error while trying to reach the proxy at %s: %v", event.URL, err)
+			t.Logf("received error while trying to reach the proxy at %s: %v", event.ProxyURL, err)
 			return false
 		}
 		defer resp.Body.Close()
