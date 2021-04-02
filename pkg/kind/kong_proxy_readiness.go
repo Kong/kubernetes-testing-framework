@@ -33,6 +33,11 @@ type ProxyReadinessEvent struct {
 	// ProxyURL indicates the URL at which the Kong proxy can be reached.
 	ProxyURL *url.URL
 
+	// ProxyUDPUrl indicates the URL at which UDP traffic the Kong proxy goes.
+	// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
+	//       See: https://github.com/Kong/charts/issues/329
+	ProxyUDPUrl *url.URL
+
 	// Err provides any errors that have occurred that have made it impossible for the Proxy
 	// to become ready, receivers should consider any errors received this way as a critical
 	// failure that can not be automatically recovered from (e.g. the tests have failed).
@@ -217,6 +222,37 @@ func (c *kongProxyCluster) ProxyReadinessInformer(ctx context.Context, ready cha
 			}
 
 			// -------------------------------------------------------------
+			// Proxy UDP Service Check
+			//
+			// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
+			//       See: https://github.com/Kong/charts/issues/329
+			// -------------------------------------------------------------
+
+			// retrieve the udp service
+			udpService, err := c.Client().CoreV1().Services(ProxyNamespace).Get(ctx, ProxyUDPServiceName, metav1.GetOptions{})
+			if err != nil {
+				ready <- ProxyReadinessEvent{Err: fmt.Errorf("udp service %s/%s could not be retrieved: %w", ProxyNamespace, ProxyUDPServiceName, err)}
+				return
+			}
+
+			// validate whether the service has been provisioned an IP yet
+			if len(udpService.Status.LoadBalancer.Ingress) < 1 {
+				continue
+			}
+			udpIP := udpService.Status.LoadBalancer.Ingress[0].IP
+			if udpIP == "" {
+				ready <- ProxyReadinessEvent{Err: fmt.Errorf("udp service %s/%s unexpectedly had no IP provisioned", ProxyNamespace, ProxyUDPServiceName)}
+				return
+			}
+
+			// generate the URL to reach the proxy by
+			udpURL, err := url.Parse(fmt.Sprintf("udp://%s:9999", udpIP))
+			if err != nil {
+				ready <- ProxyReadinessEvent{Err: fmt.Errorf("url for proxy service %s/%s was invalid: %w", ProxyNamespace, ProxyUDPServiceName, err)}
+				return
+			}
+
+			// -------------------------------------------------------------
 			// Report
 			// -------------------------------------------------------------
 
@@ -224,6 +260,7 @@ func (c *kongProxyCluster) ProxyReadinessInformer(ctx context.Context, ready cha
 			ready <- ProxyReadinessEvent{
 				ProxyAdminURL: proxyAdminURL,
 				ProxyURL:      proxyURL,
+				ProxyUDPUrl:   udpURL,
 			}
 
 			return

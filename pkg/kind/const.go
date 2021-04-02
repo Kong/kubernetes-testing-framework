@@ -26,4 +26,9 @@ var (
 
 	// ProxyServiceName indicates the name of the Service that's serving the Proxy
 	ProxyServiceName = fmt.Sprintf("%s-proxy", ProxyDeploymentName)
+
+	// ProxyUDPServiceName provides the name of the LoadBalancer service the proxy uses for UDP traffic.
+	// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
+	//       See: https://github.com/Kong/charts/issues/329
+	ProxyUDPServiceName = fmt.Sprintf("%s-udp", ProxyDeploymentName)
 )
