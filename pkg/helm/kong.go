@@ -49,6 +49,7 @@ func DeployKongProxyOnly(clusterName string) error {
 		"--create-namespace", "--namespace", "kong-system",
 		// this function assumes you're bringing your own controller
 		"--set", "ingressController.enabled=false",
+		"--skip-crds",
 		// exposing the admin API and enabling raw HTTP for using it is convenient,
 		// but again keep in mind this is meant ONLY for testing scenarios and isn't secure.
 		"--set", "proxy.http.nodePort=30080",

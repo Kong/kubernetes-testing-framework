@@ -9,6 +9,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	apix "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/kind"
 )
@@ -43,4 +45,11 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 		}
 		return resp.StatusCode == http.StatusNotFound
 	}, time.Minute*3, time.Millisecond*200)
+
+	// the proxy-only configuration should have no pre-installed CRDs present
+	c, err := apix.NewForConfig(cluster.Config())
+	assert.NoError(t, err)
+	crds, err := c.CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
+	assert.NoError(t, err)
+	assert.Len(t, crds.Items, 0)
 }
