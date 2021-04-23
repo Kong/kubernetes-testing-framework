@@ -42,7 +42,11 @@ type ClusterConfigurationWithKongProxy struct {
 
 // Deploy is a factory method to generate kind.Cluster objects given the configuration, with new names being selected on each deploy.
 func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster, chan ProxyReadinessEvent, error) {
-	name := uuid.New().String()
+	return c.DeployWithName(ctx, uuid.New().String())
+}
+
+// DeployWithName is a factory method to generate kind.Cluster objects given the configuration with a custom name provided.
+func (c *ClusterConfigurationWithKongProxy) DeployWithName(ctx context.Context, name string) (Cluster, chan ProxyReadinessEvent, error) {
 
 	if c.DockerNetwork == "" {
 		c.DockerNetwork = DefaultKindDockerNetwork

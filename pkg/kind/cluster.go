@@ -23,3 +23,20 @@ type Cluster interface {
 	// Cleanup obliterates the cluster and all of its resources, leaving no garbage behind, unless `KIND_KEEP_CLUSTER` is set.
 	Cleanup() error
 }
+
+// -----------------------------------------------------------------------------
+// Public Types - Existing Cluster
+// -----------------------------------------------------------------------------
+
+// GetExistingCluster provides a Cluster object for a given kind cluster by name.
+func GetExistingCluster(name string) (Cluster, error) {
+	cfg, kc, err := ClientForCluster(name)
+	if err != nil {
+		return nil, err
+	}
+	return &kongProxyCluster{
+		name:   name,
+		client: kc,
+		cfg:    cfg,
+	}, nil
+}
