@@ -16,7 +16,7 @@ const kongChartsRepo = "https://charts.konghq.com"
 //  - 9999 (UDP)
 // If more ports are needed they can be added to the KONG_STREAM_LISTEN env var of the pod
 // dynamically, however it would likely be beneficial to just increase the default pool here.
-func DeployKongProxyOnly(clusterName string) error {
+func DeployKongProxyOnly(clusterName, dbmode string) error {
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 
 	repoAdd := exec.Command("helm", "repo", "add", "kong", kongChartsRepo)
@@ -44,11 +44,51 @@ func DeployKongProxyOnly(clusterName string) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	install := exec.Command("helm", "install", "ingress-controller", "kong/kong",
-		"--kubeconfig", tmpFile.Name(),
+	if dbmode == "" || dbmode == "off" {
+		return DeployKongProxyDBLESS(stdout, stderr, tmpFile.Name())
+	} else if dbmode == "postgres" {
+		return DeployKongProxyPostgres(stdout, stderr, tmpFile.Name())
+	}
+
+	return fmt.Errorf("%s is not a supported database mode (supported modes are \"off\" and \"postgres\")", dbmode)
+}
+
+func DeployKongProxyDBLESS(stdout, stderr *bytes.Buffer, kubeconfig string) error {
+	install := defaultProxyInstall()
+	install.Args = append(install.Args, "--kubeconfig", kubeconfig)
+	install.Stdout = stdout
+	install.Stderr = stderr
+	if err := install.Run(); err != nil {
+		return fmt.Errorf("%s: %s: %w", stdout.String(), stderr.String(), err)
+	}
+	return nil
+}
+
+func DeployKongProxyPostgres(stdout, stderr *bytes.Buffer, kubeconfig string) error {
+	install := defaultProxyInstall()
+	install.Args = append(install.Args,
+		"--kubeconfig", kubeconfig,
+		"--set", "env.database=postgres",
+		"--set", "postgresql.enabled=true",
+		"--set", "postgresql.postgresqlUsername=kong",
+		"--set", "postgresql.postgresqlDatabase=kong",
+		"--set", "postgresql.service.port=5432",
+	)
+	install.Stdout = stdout
+	install.Stderr = stderr
+	if err := install.Run(); err != nil {
+		return fmt.Errorf("%s: %s: %w", stdout.String(), stderr.String(), err)
+	}
+	return nil
+}
+
+// defaultProxyInstall provides an opinionated preconfigured proxy deployment used for testing and debugging purposes.
+func defaultProxyInstall() *exec.Cmd {
+	return exec.Command("helm", "install", "ingress-controller", "kong/kong",
 		"--create-namespace", "--namespace", "kong-system",
 		// this function assumes you're bringing your own controller
 		"--set", "ingressController.enabled=false",
+		"--set", "ingressController.installCRDs=false",
 		"--skip-crds",
 		// exposing the admin API and enabling raw HTTP for using it is convenient,
 		// but again keep in mind this is meant ONLY for testing scenarios and isn't secure.
@@ -70,11 +110,4 @@ func DeployKongProxyOnly(clusterName string) error {
 		"--set", "proxy.stream[1].parameters[0]=udp",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
 	)
-	install.Stdout = stdout
-	install.Stderr = stderr
-	if err := install.Run(); err != nil {
-		return fmt.Errorf("%s: %s: %w", stdout.String(), stderr.String(), err)
-	}
-
-	return nil
 }

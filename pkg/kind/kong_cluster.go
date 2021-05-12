@@ -34,6 +34,10 @@ type ClusterConfigurationWithKongProxy struct {
 
 	// EnableMetalLB instructions the deployment of MetalLB to support provisioning LoadBalancer Services in the cluster.
 	EnableMetalLB bool
+
+	// DBMode indicates which database backend to use for the proxy ("off" and "postgres" are the only supported options currently)
+	// Note: leaving this blank is equivalent to "off" and will deploy in DBLESS mode.
+	DBMode string
 }
 
 // -----------------------------------------------------------------------------
@@ -47,7 +51,6 @@ func (c *ClusterConfigurationWithKongProxy) Deploy(ctx context.Context) (Cluster
 
 // DeployWithName is a factory method to generate kind.Cluster objects given the configuration with a custom name provided.
 func (c *ClusterConfigurationWithKongProxy) DeployWithName(ctx context.Context, name string) (Cluster, chan ProxyReadinessEvent, error) {
-
 	if c.DockerNetwork == "" {
 		c.DockerNetwork = DefaultKindDockerNetwork
 	}
@@ -75,7 +78,7 @@ func (c *ClusterConfigurationWithKongProxy) DeployWithName(ctx context.Context, 
 		}
 	}
 
-	if err := helm.DeployKongProxyOnly(name); err != nil {
+	if err := helm.DeployKongProxyOnly(name, c.DBMode); err != nil {
 		return nil, nil, err
 	}
 
