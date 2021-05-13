@@ -13,9 +13,9 @@ import (
 // Public Functions
 // -----------------------------------------------------------------------------
 
-// InspectDockerContainer provides the full container spec for a container by name.
+// InspectDockerContainer is a helper function that uses the local docker environment
+// provides the full container spec for a container present in that environment by name.
 func InspectDockerContainer(containerID string) (*types.ContainerJSON, error) {
-	// TODO: just grabbing the local ENV for now, later we should be selective & dynamic
 	cli, err := client.NewEnvClient()
 	if err != nil {
 		return nil, err

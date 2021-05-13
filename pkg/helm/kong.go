@@ -8,7 +8,17 @@ import (
 	"os/exec"
 )
 
-const kongChartsRepo = "https://charts.konghq.com"
+// -----------------------------------------------------------------------------
+// Helm - Constants & Vars
+// -----------------------------------------------------------------------------
+
+// KongChartsRepo provides the default URL to Kong's chart repository which is
+// configured at https://github.com/kong/charts.
+const KongChartsRepo = "https://charts.konghq.com"
+
+// -----------------------------------------------------------------------------
+// Helm - Public Functions
+// -----------------------------------------------------------------------------
 
 // DeployKongProxyOnly deploys the Kong Proxy (without KIC) to the Kind cluster provided by name.
 // Additional ports will be open on the proxy to support testing TCP and UDP ingress:
@@ -19,7 +29,7 @@ const kongChartsRepo = "https://charts.konghq.com"
 func DeployKongProxyOnly(clusterName, dbmode string) error {
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 
-	repoAdd := exec.Command("helm", "repo", "add", "kong", kongChartsRepo)
+	repoAdd := exec.Command("helm", "repo", "add", "kong", KongChartsRepo)
 	repoAdd.Stderr = stderr
 	if err := repoAdd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
@@ -53,6 +63,8 @@ func DeployKongProxyOnly(clusterName, dbmode string) error {
 	return fmt.Errorf("%s is not a supported database mode (supported modes are \"off\" and \"postgres\")", dbmode)
 }
 
+// DeployKongProxyDBLESS provides a default and opinionated Helm deployment of the Kong Proxy to the cluster
+// provided by way of kubeconfig file, and configures it to use DBLESS mode.
 func DeployKongProxyDBLESS(stdout, stderr *bytes.Buffer, kubeconfig string) error {
 	install := defaultProxyInstall()
 	install.Args = append(install.Args, "--kubeconfig", kubeconfig)
@@ -64,6 +76,8 @@ func DeployKongProxyDBLESS(stdout, stderr *bytes.Buffer, kubeconfig string) erro
 	return nil
 }
 
+// DeployKongProxyPostgres provides a default and opinionated Helm deployment of the Kong Proxy to the cluster
+// provided by way of kubeconfig file, and configures it to use Postgres as the backend DB.
 func DeployKongProxyPostgres(stdout, stderr *bytes.Buffer, kubeconfig string) error {
 	install := defaultProxyInstall()
 	install.Args = append(install.Args,
@@ -81,6 +95,10 @@ func DeployKongProxyPostgres(stdout, stderr *bytes.Buffer, kubeconfig string) er
 	}
 	return nil
 }
+
+// -----------------------------------------------------------------------------
+// Helm - Private Functions
+// -----------------------------------------------------------------------------
 
 // defaultProxyInstall provides an opinionated preconfigured proxy deployment used for testing and debugging purposes.
 func defaultProxyInstall() *exec.Cmd {
