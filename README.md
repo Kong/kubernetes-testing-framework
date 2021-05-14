@@ -1,10 +1,6 @@
-**WARNING**: this is currently an _experimental_ tool from [@kong/team-k8s](https://github.com/orgs/Kong/teams/team-k8s) don't use this yet unless you're aware of the context. Check in with us in [#kong on Kubernetes Slack][slack]!
+# Kubernetes Testing Framework for Kong
 
-[slack]:https://kubernetes.slack.com/messages/kong
-
-# Golang Kubernetes Testing Framework Prototype
-
-Integration testing framework for the [Kong Kubernetes Ingress Controller (KIC)][kic].
+Integration testing framework the [Kong Kubernetes Team][team] uses for the [Kong Kubernetes Ingress Controller (KIC)][kic].
 
 [team]:https://github.com/orgs/Kong/teams/team-k8s
 [kic]:https://github.com/kong/kubernetes-ingress-controller
@@ -12,7 +8,15 @@ Integration testing framework for the [Kong Kubernetes Ingress Controller (KIC)]
 # Requirements
 
 * [Go][go] `v1.16.x+`
-* [Kong Kind Images][kind-images]
 
 [go]:https://go.dev
-[kind-images]:https://github.com/kong/kind-images
+
+# Contributing
+
+Contributions are welcome but the project is currently in a pre-release phase: keep in mind that most functionality is subject to changes that may include backwards incompatibilities until an initial release version is published.
+
+# Community
+
+If you have any questions about this tool and want to get in touch with the maintainers, check in on [#kong in Kubernetes Slack][slack].
+
+[slack]:https://kubernetes.slack.com/messages/kong

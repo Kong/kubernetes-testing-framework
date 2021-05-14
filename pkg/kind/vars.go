@@ -2,13 +2,26 @@ package kind
 
 import (
 	"fmt"
+	"time"
 )
 
 // -----------------------------------------------------------------------------
-// Kong Proxy Cluster - Consts & Vars
+// Public Consts & Vars
 // -----------------------------------------------------------------------------
 
+const (
+	// EnvKeepCluster is the environment variable that can be set to "true" in order
+	// to circumvent teardown during cleanup of clusters in order to allow a user to inspect them instead.
+	EnvKeepCluster = "KIND_KEEP_CLUSTER"
+
+	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
+	DefaultKindDockerNetwork = "kind"
+)
+
 var (
+	// ProxyReadinessWaitTick is the amount of time to wait between status checks for a Kind cluster.
+	ProxyReadinessWaitTick = time.Millisecond * 200
+
 	// ProxyAdminPort is the port on the service at which the Kong Admin API can be reached by default.
 	ProxyAdminPort = 8001
 

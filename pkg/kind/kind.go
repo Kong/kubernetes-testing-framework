@@ -11,15 +11,6 @@ import (
 )
 
 // -----------------------------------------------------------------------------
-// Public Consts & Vars
-// -----------------------------------------------------------------------------
-
-const (
-	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
-	DefaultKindDockerNetwork = "kind"
-)
-
-// -----------------------------------------------------------------------------
 // Public Functions - Cluster Management
 // -----------------------------------------------------------------------------
 

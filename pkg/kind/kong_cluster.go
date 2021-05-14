@@ -19,12 +19,6 @@ import (
 // ClusterConfiguration - Public Types
 // -----------------------------------------------------------------------------
 
-const (
-	// EnvKeepCluster is the environment variable that can be set to "true" in order
-	// to circumvent teardown during cleanup of clusters in order to allow a user to inspect them instead.
-	EnvKeepCluster = "KIND_KEEP_CLUSTER"
-)
-
 // ClusterConfigurationWithKongProxy is an object representing a Kind cluster's configuration and can effectively
 // be used as a factory for kind cluster deployments. Clusters created from these configurations are
 // opinionated, and will always automatically pre-deploy a Kong proxy service.
