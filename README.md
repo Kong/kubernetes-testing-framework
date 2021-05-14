@@ -1,11 +1,7 @@
 # Kubernetes Testing Framework for Kong
 
-Integration testing framework for deploying and testing [Kong][kong] on [Kubernetes][k8s].
+Integration testing framework the [Kong Kubernetes Team][team] uses for the [Kong Kubernetes Ingress Controller (KIC)][kic].
 
-The original intention was to provide testing facilities for integration testing the [Kong Kubernetes Ingress Controller (KIC)][kic].
-
-[kong]:https://github.com/kong/kong
-[k8s]:https://github.com/kubernetes/kubernetes
 [team]:https://github.com/orgs/Kong/teams/team-k8s
 [kic]:https://github.com/kong/kubernetes-ingress-controller
 
