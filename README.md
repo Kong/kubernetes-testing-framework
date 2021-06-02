@@ -1,3 +1,5 @@
+![ktf-banner](https://user-images.githubusercontent.com/5332524/120493758-39a54380-c389-11eb-8adb-ae4a30884851.png)
+
 [![Unit Tests](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_unit.yaml/badge.svg)](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_unit.yaml)
 [![Integration Tests](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_integration.yaml/badge.svg)](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_integration.yaml)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/kong/kubernetes-testing-framework/blob/main/LICENSE)
