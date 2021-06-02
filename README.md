@@ -13,7 +13,7 @@ Integration testing framework the [Kong Kubernetes Team][team] uses for the [Kon
 
 # Contributing
 
-Contributions are welcome but the project is currently in a pre-release phase: keep in mind that most functionality is subject to changes that may include backwards incompatibilities until an initial release version is published.
+See [CONTRIBUTING.md](/CONTRIBUTING.md).
 
 # Community
 
