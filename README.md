@@ -6,6 +6,8 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/kong/kubernetes-testing-framework)](https://goreportcard.com/report/github.com/kong/kubernetes-testing-framework)
 [![GoDoc](https://godoc.org/github.com/kong/kubernetes-testing-framework?status.svg)](https://godoc.org/github.com/kong/kubernetes-testing-framework)
 
+TEST
+
 # Kong Kubernetes Testing Framework (KTF)
 
 Testing framework used by the [Kong Kubernetes Team][team] for the [Kong Kubernetes Ingress Controller (KIC)][kic].
