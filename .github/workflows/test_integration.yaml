@@ -4,6 +4,7 @@ on: [pull_request]
 
 jobs:
   kind-cluster-test:
+    environment: ci
     runs-on: ubuntu-latest
     steps:
     - name: setup golang
