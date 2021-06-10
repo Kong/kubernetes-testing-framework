@@ -18,7 +18,7 @@ import (
 func CreateCluster(name string) error {
 	// TODO: for now using CLI and outputting to stdout/stderr
 	// later we should switch to using the libs.
-	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--config", "kind.config")
+	cmd := exec.Command("kind", "create", "cluster", "--name", name, "--config", "./kind.config")
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 	return cmd.Run()
