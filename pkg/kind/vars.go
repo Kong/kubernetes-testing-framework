@@ -28,6 +28,9 @@ var (
 	// ProxyPort is the port on the service at which the Kong proxy can be reached by default.
 	ProxyPort = 80
 
+	// ProxyHTTPSPort is the port on the service at which the Kong proxy can be reached by default.
+	ProxyHTTPSPort = 443
+
 	// ProxyNamespace is the default namespace where the Kong proxy is expected to be deployed
 	ProxyNamespace = "kong-system"
 

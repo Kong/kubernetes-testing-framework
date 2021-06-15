@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"time"
@@ -21,13 +22,19 @@ type ProxyReadinessEvent struct {
 	// ProxyAdminURL indicates the URL at which the Kong Proxy Admin API can be reached.
 	ProxyAdminURL *url.URL
 
-	// ProxyURL indicates the URL at which the Kong proxy can be reached.
+	// ProxyURL indicates the URL at which the Kong proxy can be reached over HTTP.
 	ProxyURL *url.URL
+
+	// ProxyHTTPSURL indicates the URL at which the Kong proxy can be reached over HTTPS.
+	ProxyHTTPSURL *url.URL
 
 	// ProxyUDPUrl indicates the URL at which UDP traffic the Kong proxy goes.
 	// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
 	//       See: https://github.com/Kong/charts/issues/329
 	ProxyUDPUrl *url.URL
+
+	// ProxyIP is the proxy's IP
+	ProxyIP *net.IP
 
 	// Err provides any errors that have occurred that have made it impossible for the Proxy
 	// to become ready, receivers should consider any errors received this way as a critical
@@ -163,9 +170,15 @@ func (c *kongProxyCluster) ProxyReadinessInformer(ctx context.Context, ready cha
 				ready <- ProxyReadinessEvent{Err: fmt.Errorf("proxy service %s/%s unexpectedly had no IP provisioned", ProxyNamespace, ProxyServiceName)}
 				return
 			}
+			parsedIP := net.ParseIP(proxyIP)
+			if parsedIP == nil {
+				ready <- ProxyReadinessEvent{Err: fmt.Errorf("proxy service %s/%s IP %s is not valid IPv4 address", ProxyNamespace, ProxyServiceName, proxyIP)}
+				return
+			}
 
 			// generate the URL to reach the proxy by
 			proxyURL, err := url.Parse(fmt.Sprintf("http://%s:%d", proxyIP, ProxyPort))
+			proxyHTTPSURL, err := url.Parse(fmt.Sprintf("https://%s:%d", proxyIP, ProxyHTTPSPort))
 			if err != nil {
 				ready <- ProxyReadinessEvent{Err: fmt.Errorf("url for proxy service %s/%s was invalid: %w", ProxyNamespace, ProxyServiceName, err)}
 				return
@@ -251,6 +264,8 @@ func (c *kongProxyCluster) ProxyReadinessInformer(ctx context.Context, ready cha
 			ready <- ProxyReadinessEvent{
 				ProxyAdminURL: proxyAdminURL,
 				ProxyURL:      proxyURL,
+				ProxyHTTPSURL: proxyHTTPSURL,
+				ProxyIP:       &parsedIP,
 				ProxyUDPUrl:   udpURL,
 			}
 
