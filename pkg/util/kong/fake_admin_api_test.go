@@ -9,7 +9,7 @@ import (
 	"github.com/stretchr/testify/assert"
 
 	"github.com/kong/go-kong/kong"
-	kongt "github.com/kong/kubernetes-testing-framework/pkg/kong"
+	kongt "github.com/kong/kubernetes-testing-framework/pkg/util/kong"
 )
 
 func TestFakeAdminAPI(t *testing.T) {

@@ -3,6 +3,8 @@ package kind
 import (
 	"fmt"
 	"time"
+
+	"github.com/kong/kubernetes-testing-framework/pkg/cluster"
 )
 
 // -----------------------------------------------------------------------------
@@ -16,6 +18,9 @@ const (
 
 	// DefaultKindDockerNetwork is the Docker network that a kind cluster uses by default.
 	DefaultKindDockerNetwork = "kind"
+
+	// KindClusterType indicates that the Kubernetes cluster was provisioned by Kind.
+	KindClusterType cluster.Type = "kind"
 )
 
 var (
