@@ -12,30 +12,33 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	apix "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/typed/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kong/kubernetes-testing-framework/pkg/kind"
+	"github.com/kong/kubernetes-testing-framework/pkg/cluster/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/cluster/kind"
 )
 
 func TestKongProxyClusterWithMetalLB(t *testing.T) {
 	config := kind.ClusterConfigurationWithKongProxy{
 		DockerNetwork: kind.DefaultKindDockerNetwork,
-		EnableMetalLB: true,
 	}
 
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 
 	cluster, ready, err := config.Deploy(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer cluster.Cleanup()
 
-	event := <-ready
-	assert.NoError(t, event.Err)
-	assert.NotEmpty(t, event)
+	require.NoError(t, cluster.DeployAddon(metallb.New()))
 
-	assert.Eventually(t, func() bool {
+	event := <-ready
+	require.NoError(t, event.Err)
+	require.NotEmpty(t, event)
+
+	require.Eventually(t, func() bool {
 		resp, err := http.Get(event.ProxyURL.String())
 		if err != nil {
 			t.Logf("received error while trying to reach the proxy at %s: %v", event.ProxyURL, err)
@@ -51,14 +54,14 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 
 	// the proxy-only configuration should have no pre-installed CRDs present
 	c, err := apix.NewForConfig(cluster.Config())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	crds, err := c.CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, crds.Items, 0)
 
 	// the configuration should show that it's configured for dbless
 	httpc := http.Client{Timeout: time.Second * 3}
-	assert.Eventually(t, func() bool {
+	require.Eventually(t, func() bool {
 		resp, err := httpc.Get(fmt.Sprintf("%s/", event.ProxyAdminURL))
 		if err != nil {
 			t.Logf("WARNING: error while waiting for %s: %v", event.ProxyAdminURL.String(), err)
@@ -96,7 +99,6 @@ func TestKongProxyClusterWithMetalLB(t *testing.T) {
 func TestKongProxyClusterWithPostgresBackend(t *testing.T) {
 	config := kind.ClusterConfigurationWithKongProxy{
 		DockerNetwork: kind.DefaultKindDockerNetwork,
-		EnableMetalLB: true,
 		DBMode:        "postgres",
 	}
 
@@ -104,14 +106,14 @@ func TestKongProxyClusterWithPostgresBackend(t *testing.T) {
 	defer cancel()
 
 	cluster, ready, err := config.Deploy(ctx)
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	defer cluster.Cleanup()
 
 	event := <-ready
-	assert.NoError(t, event.Err)
-	assert.NotEmpty(t, event)
+	require.NoError(t, event.Err)
+	require.NotEmpty(t, event)
 
-	assert.Eventually(t, func() bool {
+	require.Eventually(t, func() bool {
 		resp, err := http.Get(event.ProxyURL.String())
 		if err != nil {
 			t.Logf("received error while trying to reach the proxy at %s: %v", event.ProxyURL, err)
@@ -127,14 +129,14 @@ func TestKongProxyClusterWithPostgresBackend(t *testing.T) {
 
 	// the proxy-only configuration should have no pre-installed CRDs present
 	c, err := apix.NewForConfig(cluster.Config())
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	crds, err := c.CustomResourceDefinitions().List(ctx, metav1.ListOptions{})
-	assert.NoError(t, err)
+	require.NoError(t, err)
 	assert.Len(t, crds.Items, 0)
 
 	// the configuration should show that it's configured for postgres
 	httpc := http.Client{Timeout: time.Second * 3}
-	assert.Eventually(t, func() bool {
+	require.Eventually(t, func() bool {
 		resp, err := httpc.Get(fmt.Sprintf("%s/", event.ProxyAdminURL))
 		if err != nil {
 			t.Logf("WARNING: error while waiting for %s: %v", event.ProxyAdminURL.String(), err)
