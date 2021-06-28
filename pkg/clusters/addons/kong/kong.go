@@ -12,6 +12,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
@@ -51,16 +52,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	service, err := cluster.Client().CoreV1().Services(a.namespace).Get(ctx, DefaultProxyServiceName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(service.Status.LoadBalancer.Ingress) == 0 {
-		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, DefaultProxyTCPServicePort))
-	}
-
-	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName})
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
@@ -74,16 +66,7 @@ func (a *Addon) ProxyAdminURL(ctx context.Context, cluster clusters.Cluster) (*u
 		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
 	}
 
-	service, err := cluster.Client().CoreV1().Services(a.namespace).Get(ctx, DefaultAdminServiceName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(service.Status.LoadBalancer.Ingress) == 1 {
-		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, DefaultAdminServicePort))
-	}
-
-	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultAdminServiceName})
 }
 
 // ProxyUDPURL provides a routable *url.URL for accessing the default UDP service for the Kong Proxy.
@@ -97,16 +80,7 @@ func (a *Addon) ProxyUDPURL(ctx context.Context, cluster clusters.Cluster) (*url
 		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
 	}
 
-	service, err := cluster.Client().CoreV1().Services(a.namespace).Get(ctx, DefaultUDPServiceName, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	if len(service.Status.LoadBalancer.Ingress) == 1 {
-		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, DefaultUDPServicePort))
-	}
-
-	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultUDPServiceName})
 }
 
 // -----------------------------------------------------------------------------
@@ -263,4 +237,17 @@ func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace,
 	}
 	_, err := cluster.Client().CoreV1().Services(namespace).Create(ctx, udpService, metav1.CreateOptions{})
 	return err
+}
+
+func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName) (*url.URL, error) {
+	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
+	if err != nil {
+		return nil, err
+	}
+
+	if len(service.Status.LoadBalancer.Ingress) == 1 {
+		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, DefaultAdminServicePort))
+	}
+
+	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
 }
