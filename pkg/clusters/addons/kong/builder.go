@@ -29,9 +29,9 @@ func (b *Builder) WithDBLess() *Builder {
 	return b
 }
 
-// WithPostGreSQL configures the resulting Addon to deploy a PostGreSQL proxy backend.
-func (b *Builder) WithPostGreSQL() *Builder {
-	b.dbmode = PostGreSQL
+// WithPostgreSQL configures the resulting Addon to deploy a PostgreSQL proxy backend.
+func (b *Builder) WithPostgreSQL() *Builder {
+	b.dbmode = PostgreSQL
 	return b
 }
 
