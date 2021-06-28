@@ -48,7 +48,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 	}
 
 	if !ready {
-		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
+		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
 	service, err := cluster.Client().CoreV1().Services(a.namespace).Get(ctx, DefaultProxyServiceName, metav1.GetOptions{})
