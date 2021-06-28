@@ -6,7 +6,6 @@ import (
 	"os"
 	"sync"
 
-	"github.com/google/uuid"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -31,33 +30,17 @@ const (
 
 // kindCluster is a clusters.Cluster implementation backed by Kubernetes In Docker (KIND)
 type kindCluster struct {
-	name   string
-	client *kubernetes.Clientset
-	cfg    *rest.Config
-	addons clusters.Addons
-	l      *sync.RWMutex
+	name       string
+	client     *kubernetes.Clientset
+	cfg        *rest.Config
+	addons     clusters.Addons
+	deployArgs []string
+	l          *sync.RWMutex
 }
 
 // New provides a new clusters.Cluster backed by a Kind based Kubernetes Cluster.
 func New(ctx context.Context) (clusters.Cluster, error) {
-	name := uuid.NewString()
-	err := createCluster(name)
-	if err != nil {
-		return nil, fmt.Errorf("failed to create cluster %s: %w", name, err)
-	}
-
-	cfg, kc, err := clientForCluster(name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &kindCluster{
-		name:   name,
-		client: kc,
-		cfg:    cfg,
-		l:      &sync.RWMutex{},
-		addons: make(clusters.Addons),
-	}, nil
+	return NewBuilder().Build(ctx)
 }
 
 // -----------------------------------------------------------------------------

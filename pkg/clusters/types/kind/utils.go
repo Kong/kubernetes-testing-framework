@@ -40,9 +40,12 @@ func NewFromExisting(name string) (clusters.Cluster, error) {
 // -----------------------------------------------------------------------------
 
 // createCluster creates a new cluster using Kubernetes in Docker (KIND).
-func createCluster(name string) error {
+func createCluster(ctx context.Context, name string, extraArgs ...string) error {
+	args := []string{"create", "cluster", "--name", name}
+	args = append(args, extraArgs...)
+
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kind", "create", "cluster", "--name", name)
+	cmd := exec.CommandContext(ctx, "kind", args...) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
