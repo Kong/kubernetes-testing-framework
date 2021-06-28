@@ -18,7 +18,7 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
-	ktfdocker "github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
@@ -121,7 +121,7 @@ func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dock
 	}
 
 	// get an IP range for the docker container network to use for MetalLB
-	network, err := ktfdocker.GetDockerContainerIPNetwork(ktfdocker.GetKindContainerID(kindClusterName), dockerNetwork)
+	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(kindClusterName), dockerNetwork)
 	if err != nil {
 		return err
 	}
