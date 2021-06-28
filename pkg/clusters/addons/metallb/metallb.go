@@ -19,7 +19,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	ktfdocker "github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
-	ktfnet "github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
 // -----------------------------------------------------------------------------
@@ -172,8 +172,8 @@ func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dock
 // TODO: Just choosing specific default IPs for now, need to check range validity and dynamically assign IPs.
 //       See: https://github.com/Kong/kubernetes-testing-framework/issues/24
 func getIPRangeForMetallb(network net.IPNet) (startIP, endIP net.IP) {
-	startIP = ktfnet.ConvertUint32ToIPv4(ktfnet.ConvertIPv4ToUint32(network.IP) | ktfnet.ConvertIPv4ToUint32(defaultStartIP))
-	endIP = ktfnet.ConvertUint32ToIPv4(ktfnet.ConvertIPv4ToUint32(network.IP) | ktfnet.ConvertIPv4ToUint32(defaultEndIP))
+	startIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultStartIP))
+	endIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultEndIP))
 	return
 }
 
@@ -184,7 +184,7 @@ address-pools:
   protocol: layer2
   addresses:
   - %s
-`, ktfnet.GetIPRangeStr(ipStart, ipEnd))
+`, networking.GetIPRangeStr(ipStart, ipEnd))
 }
 
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.

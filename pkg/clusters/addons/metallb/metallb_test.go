@@ -6,7 +6,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	ktfnet "github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
 func TestHelperFunctions(t *testing.T) {
@@ -17,5 +17,5 @@ func TestHelperFunctions(t *testing.T) {
 	ip1, ip2 := getIPRangeForMetallb(network)
 	assert.Equal(t, ip1.String(), net.IPv4(192, 168, 1, 240).String())
 	assert.Equal(t, ip2.String(), net.IPv4(192, 168, 1, 250).String())
-	assert.Equal(t, ktfnet.GetIPRangeStr(ip1, ip2), "192.168.1.240-192.168.1.250")
+	assert.Equal(t, networking.GetIPRangeStr(ip1, ip2), "192.168.1.240-192.168.1.250")
 }
