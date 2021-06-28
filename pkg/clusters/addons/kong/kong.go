@@ -136,13 +136,13 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	if a.dbmode == PostGreSQL {
+	if a.dbmode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "env.database=postgres",
-			"--set", "postgresql.enabled=true",
-			"--set", "postgresql.postgresqlUsername=kong",
-			"--set", "postgresql.postgresqlDatabase=kong",
-			"--set", "postgresql.service.port=5432",
+			"--set", "PostgreSQL.enabled=true",
+			"--set", "PostgreSQL.PostgreSQLUsername=kong",
+			"--set", "PostgreSQL.PostgreSQLDatabase=kong",
+			"--set", "PostgreSQL.service.port=5432",
 		)
 	}
 
