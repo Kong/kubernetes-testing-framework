@@ -52,6 +52,8 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		if err != nil {
 			return nil, err
 		}
+	} else {
+		cluster = b.existingCluster
 	}
 
 	for _, addon := range b.addons {
