@@ -7,6 +7,7 @@ import (
 	"io"
 	"net/url"
 	"os/exec"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -128,7 +129,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
+		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
+			return fmt.Errorf("%s: %w", stderr.String(), err)
+		}
 	}
 
 	return runUDPServiceHack(ctx, cluster, DefaultNamespace, DefaultDeploymentName)
@@ -236,6 +239,9 @@ func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace,
 		},
 	}
 	_, err := cluster.Client().CoreV1().Services(namespace).Create(ctx, udpService, metav1.CreateOptions{})
+	if err != nil && strings.Contains(err.Error(), "already exists") { // don't fail if the svc already exists
+		err = nil
+	}
 	return err
 }
 
