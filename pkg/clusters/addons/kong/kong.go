@@ -52,7 +52,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName})
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, 80)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
@@ -66,7 +66,7 @@ func (a *Addon) ProxyAdminURL(ctx context.Context, cluster clusters.Cluster) (*u
 		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultAdminServiceName})
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultAdminServiceName}, DefaultAdminServicePort)
 }
 
 // ProxyUDPURL provides a routable *url.URL for accessing the default UDP service for the Kong Proxy.
@@ -80,7 +80,7 @@ func (a *Addon) ProxyUDPURL(ctx context.Context, cluster clusters.Cluster) (*url
 		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultUDPServiceName})
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultUDPServiceName}, DefaultUDPServicePort)
 }
 
 // -----------------------------------------------------------------------------
@@ -239,14 +239,14 @@ func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace,
 	return err
 }
 
-func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName) (*url.URL, error) {
+func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (*url.URL, error) {
 	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
 	}
 
 	if len(service.Status.LoadBalancer.Ingress) == 1 {
-		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, DefaultAdminServicePort))
+		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
 	}
 
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
