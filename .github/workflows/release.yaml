@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "*"
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+
+    # --------------------------------------------------------------------------
+    # Github Release
+    # --------------------------------------------------------------------------
+
+    - name: release
+      id: create_release
+      uses: actions/create-release@v1
+      with:
+        draft: true
+        prerelease: true
+        release_name: ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+
+    # --------------------------------------------------------------------------
+    # Build & Upload Artifacts
+    # --------------------------------------------------------------------------
+
+    - name: build linux amd64 artifacts
+      run: make build GOOS=linux GOARCH=amd64
+    - name: upload linux amd64 artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ktf.linux.amd64
+        asset_name: ktf.linux.amd64
+        asset_content_type: application/octet-stream
+
+    - name: build mac amd64 artifacts
+      run: make build GOOS=darwin GOARCH=amd64
+    - name: upload mac amd64 artifacts
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./ktf.darwin.amd64
+        asset_name: ktf.darwin.amd64
+        asset_content_type: application/octet-stream
+
+    # --------------------------------------------------------------------------
+    # Generate Checksums
+    # --------------------------------------------------------------------------
+
+    - name: generate checksums for linux amd64 artifacts
+      run: sha256sum ktf.linux.amd64 >> CHECKSUMS
+
+    - name: generate checksums for mac amd64 artifacts
+      run: sha256sum ktf.darwin.amd64 >> CHECKSUMS
+
+    - name: upload checksums
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: CHECKSUMS
+        asset_name: CHECKSUMS
+        asset_content_type: text/plain
+
