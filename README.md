@@ -35,8 +35,16 @@ This project provides a command line tool `ktf` which can be used for reason suc
 
 ### Install
 
+If you have [Golang](https://go.dev) installed locally you can install with `go`:
+
 ```shell
-$ curl --proto '=https' --tls1.2 -sSf https://kong.github.io/kubernetes-testing-framework/install.sh | sh
+$ go install github.com/kong/kubernetes-testing-framework/cmd/ktf@latest
+```
+
+Otherwise you can use the shell script to install the latest release for your operating system:
+
+```shell
+$ curl --proto '=https' -sSf https://kong.github.io/kubernetes-testing-framework/install.sh | sh
 ```
 
 ### Testing Environments
