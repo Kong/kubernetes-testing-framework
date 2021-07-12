@@ -20,4 +20,5 @@ test.unit:
 
 .PHONY: test.integration
 test.integration:
-	@GOFLAGS="-tags=integration_tests" go test -race -v ./test/integration/...
+	@GOFLAGS="-tags=integration_tests" go test -race -v \
+		-covermode=atomic -coverprofile=coverage.out ./...

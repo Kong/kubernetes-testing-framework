@@ -2,9 +2,10 @@
 
 [![Unit Tests](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_unit.yaml/badge.svg)](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_unit.yaml)
 [![Integration Tests](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_integration.yaml/badge.svg)](https://github.com/Kong/kubernetes-testing-framework/actions/workflows/test_integration.yaml)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/kong/kubernetes-testing-framework/blob/main/LICENSE)
+[![codecov](https://codecov.io/gh/Kong/kubernetes-testing-framework/branch/main/graph/badge.svg?token=ZJN2GM1CFS)](https://codecov.io/gh/Kong/kubernetes-testing-framework)
 [![Go Report Card](https://goreportcard.com/badge/github.com/kong/kubernetes-testing-framework)](https://goreportcard.com/report/github.com/kong/kubernetes-testing-framework)
 [![GoDoc](https://godoc.org/github.com/kong/kubernetes-testing-framework?status.svg)](https://godoc.org/github.com/kong/kubernetes-testing-framework)
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://github.com/kong/kubernetes-testing-framework/blob/main/LICENSE)
 
 # Kong Kubernetes Testing Framework (KTF)
 
