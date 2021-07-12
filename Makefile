@@ -1,3 +1,16 @@
+GOOS ?= "linux"
+GOARCH ?= "amd64"
+
+all: build
+
+.PHONY: clean
+clean:
+	rm -f ktf*
+
+.PHONY: build
+build:
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ktf.$(GOOS).$(GOARCH) main.go
+
 .PHONY: test
 test: test.unit
 
