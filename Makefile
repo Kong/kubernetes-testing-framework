@@ -1,3 +1,13 @@
+all: build
+
+.PHONY: clean
+clean:
+	rm -f ktf
+
+.PHONY: build
+build:
+	go build -o ktf main.go
+
 .PHONY: test
 test: test.unit
 
