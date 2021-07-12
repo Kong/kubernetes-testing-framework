@@ -14,7 +14,8 @@ import (
 // Builder generates clusters.Cluster objects backed by Kind given
 // provided configuration options.
 type Builder struct {
-	name           string
+	Name string
+
 	addons         clusters.Addons
 	clusterVersion *semver.Version
 }
@@ -22,9 +23,15 @@ type Builder struct {
 // NewBuilder provides a new *Builder object.
 func NewBuilder() *Builder {
 	return &Builder{
-		name:   uuid.NewString(),
+		Name:   uuid.NewString(),
 		addons: make(clusters.Addons),
 	}
+}
+
+// WithName indicates a custom name to use for the cluster.
+func (b *Builder) WithName(name string) *Builder {
+	b.Name = name
+	return b
 }
 
 // WithClusterVersion configures the Kubernetes cluster version for the Builder
@@ -41,17 +48,17 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
 	}
 
-	if err := createCluster(ctx, b.name, deployArgs...); err != nil {
-		return nil, fmt.Errorf("failed to create cluster %s: %w", b.name, err)
+	if err := createCluster(ctx, b.Name, deployArgs...); err != nil {
+		return nil, fmt.Errorf("failed to create cluster %s: %w", b.Name, err)
 	}
 
-	cfg, kc, err := clientForCluster(b.name)
+	cfg, kc, err := clientForCluster(b.Name)
 	if err != nil {
 		return nil, err
 	}
 
 	return &kindCluster{
-		name:       b.name,
+		name:       b.Name,
 		client:     kc,
 		cfg:        cfg,
 		addons:     make(clusters.Addons),
