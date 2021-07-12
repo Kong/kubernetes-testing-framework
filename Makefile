@@ -9,7 +9,7 @@ clean:
 
 .PHONY: build
 build:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ktf.$(GOOS).$(GOARCH) main.go
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ktf.$(GOOS).$(GOARCH) cmd/ktf/main.go
 
 .PHONY: test
 test: test.unit

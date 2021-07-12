@@ -42,7 +42,7 @@ fi
 # Determine Latest Release
 # ------------------------------------------------------------------------------
 
-LATEST_RELEASE=$(curl -s https://api.github.com/repos/${BASE}/releases/latest | perl -ne 'print $1 if m{"name": "(.*)"}')
+LATEST_RELEASE=$(curl -s https://api.github.com/repos/${BASE}/releases/latest | perl -ne 'print $1 if m{"name": "(v[0-9]+\.[0-9]+\.[0-9]+.*)"}')
 
 if [ "$LATEST_RELEASE" = "" ]; then
     echo "Error: could not find latest release for ${BASE}!${LATEST_RELEASE}"
@@ -60,18 +60,18 @@ DOWNLOAD_CHECKSUMS_URL="https://github.com/${BASE}/releases/download/${LATEST_RE
 TEMPDIR=$(mktemp -d)
 
 echo "INFO: downloading ktf cli for ${OSTYPE}/${ARCH}"
-curl --proto '=https' --tlsv1.2 -sSf ${DOWNLOAD_URL} > ${TEMPDIR}/ktf.${OSTYPE}.${ARCH}
+curl -L --proto '=https' --tlsv1.2 -sSf ${DOWNLOAD_URL} > ${TEMPDIR}/ktf.${OSTYPE}.${ARCH}
 
 echo "INFO: downloading checksums for release ${LATEST_RELEASE}"
-curl --proto '=https' --tlsv1.2 -sSf ${DOWNLOAD_CHECKSUMS_URL} > ${TEMPDIR}/CHECKSUMS
+curl -L --proto '=https' --tlsv1.2 -sSf ${DOWNLOAD_CHECKSUMS_URL} > ${TEMPDIR}/CHECKSUMS
 
 # ------------------------------------------------------------------------------
 # Checksum Verification
 # ------------------------------------------------------------------------------
 
-pushd ${TEMPDIR}
-sha256sum -c CHECKSUM --ignore-missing
-popd
+pushd ${TEMPDIR} 1>/dev/null
+sha256sum -c CHECKSUMS --ignore-missing 1>/dev/null
+popd 1>/dev/null
 
 # ------------------------------------------------------------------------------
 # Installation
@@ -90,3 +90,5 @@ chmod +x ${INSTALL_LOCATION}
 rm -f ${TEMPDIR}/ktf.${OSTYPE}.${ARCH}
 rm -f ${TEMPDIR}/CHECKSUMS
 rmdir ${TEMPDIR}
+
+echo "SUCCESS! Checksums verified, ktf (version: ${LATEST_RELEASE}) was installed at: ${INSTALL_LOCATION}"
