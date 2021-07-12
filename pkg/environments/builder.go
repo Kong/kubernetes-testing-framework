@@ -15,13 +15,24 @@ import (
 
 // Builder is a toolkit for building a new test Environment.
 type Builder struct {
+	Name string
+
 	addons          clusters.Addons
 	existingCluster clusters.Cluster
 }
 
 // NewBuilder generates a new empty Builder for creating Environments.
 func NewBuilder() *Builder {
-	return &Builder{addons: make(clusters.Addons)}
+	return &Builder{
+		Name:   uuid.NewString(),
+		addons: make(clusters.Addons),
+	}
+}
+
+// WithName indicates a custom name to provide the testing environment
+func (b *Builder) WithName(name string) *Builder {
+	b.Name = name
+	return b
 }
 
 // WithAddons includes any provided Addon components in the cluster
@@ -48,7 +59,7 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 
 	if b.existingCluster == nil {
 		var err error
-		cluster, err = kind.New(ctx)
+		cluster, err = kind.NewBuilder().WithName(b.Name).Build(ctx)
 		if err != nil {
 			return nil, err
 		}
@@ -63,7 +74,7 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 	}
 
 	return &environment{
-		name:    uuid.NewString(),
+		name:    b.Name,
 		cluster: cluster,
 	}, nil
 }
