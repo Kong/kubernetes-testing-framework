@@ -25,8 +25,55 @@ The following are some of the available features of the KTF:
 
 - integration testing libraries for Kong on Kubernetes (Golang)
 - unit testing libraries for the Kong Proxy (Golang)
+- command line tool for testing environments and other testing features
 
 For the integration testing libraries you have the option to deploy the Kong Proxy _only_ to the Kubernetes cluster or to deploy the entire stack depending on your testing needs.
+
+## Command Line Tool
+
+This project provides a command line tool `ktf` which can be used for reason such as building and maintaining a testing environment for Kong on Kubernetes.
+
+### Install
+
+```shell
+$ curl --proto '=https' --tls1.2 -sSf https://kong.github.io/kubernetes-testing-framework/install.sh | sh
+```
+
+### Testing Environments
+
+You can deploy a testing environment with the following command:
+
+```shell
+$ ktf environments create --generate-name
+```
+
+And it can be torn down with this command:
+
+```shell
+$ ktf environments delete --name <NAME>
+```
+
+#### Examples
+
+The most common use cases will require some addon applications to be deployed to the cluster, particular actually deploying the [Kong Proxy](https://github.com/kong/kong) itself.
+
+You can deploy a cluster with the Kong proxy already deployed and accessible via `LoadBalancer` services by running the following:
+
+```shell
+$ ktf environments create --name kong-proxy-testing --addon metallb --addon kong
+```
+
+Once the cluster is up configure your `kubectl` to use it:
+
+```shell
+$ kubectl cluster-info --context kind-kong-proxy-testing
+```
+
+You can see the IP addresses where you can reach the proxy and the Admin API with:
+
+```shell
+$ kubectl -n kong-system get services
+```
 
 # Contributing
 
