@@ -114,10 +114,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if a.dbmode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "env.database=postgres",
-			"--set", "PostgreSQL.enabled=true",
-			"--set", "PostgreSQL.PostgreSQLUsername=kong",
-			"--set", "PostgreSQL.PostgreSQLDatabase=kong",
-			"--set", "PostgreSQL.service.port=5432",
+			"--set", "postgresql.enabled=true",
+			"--set", "postgresql.postgresqlUsername=kong",
+			"--set", "postgresql.postgresqlDatabase=kong",
+			"--set", "postgresql.service.port=5432",
 		)
 	}
 
@@ -171,7 +171,7 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 	}
 
 	for _, service := range services.Items {
-		if len(service.Status.LoadBalancer.Ingress) < 1 {
+		if service.Spec.Type == corev1.ServiceTypeLoadBalancer && len(service.Status.LoadBalancer.Ingress) < 1 {
 			waitForObjects = append(waitForObjects, &service)
 		}
 	}

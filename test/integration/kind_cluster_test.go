@@ -16,7 +16,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
-func TestEnvironmentWithKindCluster(t *testing.T) {
+func TestEnvWithKindCluster(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 
