@@ -27,8 +27,8 @@ jobs:
           ${{ runner.os }}-go
     - name: checkout repository
       uses: actions/checkout@v2
-    - name: run unit and integration tests
-      run: make test.integration
+    - name: run all tests
+      run: make test.all
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v1
       with:
