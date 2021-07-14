@@ -14,6 +14,9 @@ build:
 .PHONY: test
 test: test.unit
 
+.PHONY: test.all
+test.all: test.integration
+
 .PHONY: test.unit
 test.unit:
 	go test -race -v ./pkg/...
