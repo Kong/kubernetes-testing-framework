@@ -1,4 +1,4 @@
-name: Unit Tests
+name: tests
 
 on:
   pull_request:
@@ -11,7 +11,7 @@ on:
       - '*'
 
 jobs:
-  unit-test:
+  tests-and-coverage:
     runs-on: ubuntu-latest
     steps:
     - name: setup golang
@@ -27,5 +27,9 @@ jobs:
           ${{ runner.os }}-go
     - name: checkout repository
       uses: actions/checkout@v2
-    - name: run unit tests
-      run: make test.unit
+    - name: run unit and integration tests
+      run: make test.integration
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1
+      with:
+        fail_ci_if_error: true
