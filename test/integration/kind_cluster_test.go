@@ -121,3 +121,39 @@ func TestEnvWithKindCluster(t *testing.T) {
 		return false
 	}, time.Minute*1, time.Second*1)
 }
+
+func TestEnvWithKindClusterKongProxyOnlyMode(t *testing.T) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	defer cancel()
+
+	t.Log("configuring the testing environment")
+	builder := environment.NewBuilder()
+
+	t.Log("building the testing environment and Kubernetes cluster with the KIC controller disabled")
+	env, err := builder.WithAddons(metallb.New(), kong.NewBuilder().WithControllerDisabled().Build()).Build(ctx)
+	require.NoError(t, err)
+
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("verifying that both addons have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 2)
+
+	t.Log("waiting for the test environment to be ready for use")
+	require.NoError(t, <-env.WaitForReady(ctx))
+
+	t.Logf("pulling the kong addon from the environment's cluster")
+	kongAddon, err := env.Cluster().GetAddon("kong")
+	require.NoError(t, err)
+	kongAddonRaw, ok := kongAddon.(*kong.Addon)
+	require.True(t, ok)
+
+	t.Log("verifying that the kong addon disabled the controller")
+	kongDeployment, err := env.Cluster().Client().AppsV1().Deployments(kongAddonRaw.Namespace()).Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Len(t, kongDeployment.Spec.Template.Spec.Containers, 1)
+	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Name, "proxy")
+}
