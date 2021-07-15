@@ -21,8 +21,9 @@ func init() {
 }
 
 var environmentsCmd = &cobra.Command{
-	Use:   "environments",
-	Short: "create and manage testing environments",
+	Use:     "environments",
+	Aliases: []string{"environs", "envs", "env"},
+	Short:   "create and manage testing environments",
 }
 
 // -----------------------------------------------------------------------------
