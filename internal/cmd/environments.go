@@ -31,9 +31,14 @@ var environmentsCmd = &cobra.Command{
 
 func init() {
 	environmentsCmd.AddCommand(environmentsCreateCmd)
+
+	// environment naming
 	environmentsCreateCmd.PersistentFlags().String("name", DefaultEnvironmentName, "name to give the new testing environment")
-	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "a list of addons to deploy to the environment's cluster")
 	environmentsCreateCmd.PersistentFlags().Bool("generate-name", false, "indicate whether or not to use a generated name for the environment")
+
+	// addon configurations
+	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
+	environmentsCreateCmd.PersistentFlags().Bool("kong-disable-controller", false, "indicate whether the kong addon should have the controller disabled (proxy only)")
 }
 
 var environmentsCreateCmd = &cobra.Command{
@@ -62,7 +67,7 @@ var environmentsCreateCmd = &cobra.Command{
 		}
 
 		// configure any addons that need to be deployed with the environment's cluster
-		configureAddons(builder, deployAddons)
+		configureAddons(cmd, builder, deployAddons)
 
 		fmt.Printf("building new environment %s\n", builder.Name)
 		env, err := builder.Build(ctx)
@@ -80,7 +85,7 @@ var environmentsCreateCmd = &cobra.Command{
 	},
 }
 
-func configureAddons(builder *environments.Builder, addons []string) {
+func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons []string) {
 	invalid, dedup := make([]string, 0), make(map[string]bool)
 	for _, addon := range addons {
 		// load any valid addons, and check for invalid addons
@@ -88,7 +93,7 @@ func configureAddons(builder *environments.Builder, addons []string) {
 		case "metallb":
 			builder = builder.WithAddons(metallb.New())
 		case "kong":
-			builder = builder.WithAddons(kong.New())
+			builder = configureKongAddon(cmd, builder)
 		default:
 			invalid = append(invalid, addon)
 		}
@@ -103,6 +108,19 @@ func configureAddons(builder *environments.Builder, addons []string) {
 	if len(invalid) > 0 {
 		cobra.CheckErr(fmt.Errorf("%d addons were invalid: %s", len(invalid), invalid))
 	}
+}
+
+func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *environments.Builder {
+	builder := kong.NewBuilder()
+
+	disableController, err := cmd.PersistentFlags().GetBool("kong-disable-controller")
+	cobra.CheckErr(err)
+
+	if disableController {
+		builder.WithControllerDisabled()
+	}
+
+	return envBuilder.WithAddons(builder.Build())
 }
 
 // -----------------------------------------------------------------------------
