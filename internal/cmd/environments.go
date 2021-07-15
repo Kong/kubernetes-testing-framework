@@ -39,6 +39,7 @@ func init() {
 	// addon configurations
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
 	environmentsCreateCmd.PersistentFlags().Bool("kong-disable-controller", false, "indicate whether the kong addon should have the controller disabled (proxy only)")
+	environmentsCreateCmd.PersistentFlags().String("kong-dbmode", "off", "indicate the backend dbmode to use for kong (default: \"off\" (DBLESS mode))")
 }
 
 var environmentsCreateCmd = &cobra.Command{
@@ -115,6 +116,18 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 
 	disableController, err := cmd.PersistentFlags().GetBool("kong-disable-controller")
 	cobra.CheckErr(err)
+
+	dbmode, err := cmd.PersistentFlags().GetString("kong-dbmode")
+	cobra.CheckErr(err)
+
+	switch dbmode {
+	case "off":
+		builder.WithDBLess()
+	case "postgres":
+		builder.WithPostgreSQL()
+	default:
+		cobra.CheckErr(fmt.Errorf("%s is not a valid dbmode for kong, supported modes are \"off\" (DBLESS) or \"postgres\"", dbmode))
+	}
 
 	if disableController {
 		builder.WithControllerDisabled()
