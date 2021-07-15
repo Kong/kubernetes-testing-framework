@@ -33,6 +33,7 @@ type Addon struct {
 	name       string
 	deployArgs []string
 	dbmode     DBMode
+	proxyOnly  bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -40,6 +41,12 @@ type Addon struct {
 // If you need to customize your Kong deployment, use the kong.Builder instead.
 func New() *Addon {
 	return NewBuilder().Build()
+}
+
+// Namespace indicates the operational namespace of Kong addon components,
+// e.g. where the controller and proxy pods live.
+func (a *Addon) Namespace() string {
+	return a.namespace
 }
 
 // ProxyURL provides a routable *url.URL for accessing the Kong proxy.
@@ -121,6 +128,14 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
+	if a.proxyOnly {
+		a.deployArgs = append(a.deployArgs,
+			"--set", "ingressController.enabled=false",
+			"--set", "ingressController.installCRDs=false",
+			"--skip-crds",
+		)
+	}
+
 	args := []string{"install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--create-namespace", "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
@@ -190,10 +205,6 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 // caller will be providing their own ingress controller separately.
 func defaults() []string {
 	return []string{
-		// this function assumes you're bringing your own controller
-		"--set", "ingressController.enabled=false",
-		"--set", "ingressController.installCRDs=false",
-		"--skip-crds",
 		// exposing the admin API and enabling raw HTTP for using it is convenient,
 		// but again keep in mind this is meant ONLY for testing scenarios and isn't secure.
 		"--set", "proxy.http.nodePort=30080",
