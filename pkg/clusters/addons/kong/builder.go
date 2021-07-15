@@ -10,6 +10,7 @@ type Builder struct {
 	name       string
 	deployArgs []string
 	dbmode     DBMode
+	proxyOnly  bool
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -35,6 +36,12 @@ func (b *Builder) WithPostgreSQL() *Builder {
 	return b
 }
 
+// WithControllerDisabled configures the Addon in proxy only mode (bring your own control plane).
+func (b *Builder) WithControllerDisabled() *Builder {
+	b.proxyOnly = true
+	return b
+}
+
 // Build generates a new kong cluster.Addon which can be loaded and deployed
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
@@ -42,5 +49,6 @@ func (b *Builder) Build() *Addon {
 		dbmode:     b.dbmode,
 		namespace:  b.namespace,
 		deployArgs: b.deployArgs,
+		proxyOnly:  b.proxyOnly,
 	}
 }
