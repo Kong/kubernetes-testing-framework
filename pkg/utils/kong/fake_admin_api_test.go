@@ -52,7 +52,7 @@ func TestFakeAdminAPI(t *testing.T) {
 		defer resp.Body.Close()
 		assert.Equal(t, mock.Status, resp.StatusCode)
 
-		// check the consistenty of the response body
+		// check the consistently of the response body
 		buf := new(bytes.Buffer)
 		c, err := buf.ReadFrom(resp.Body)
 		assert.NoError(t, err)
