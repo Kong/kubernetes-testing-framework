@@ -2,7 +2,9 @@ package environments
 
 import (
 	"context"
+	"fmt"
 
+	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
@@ -17,8 +19,9 @@ import (
 type Builder struct {
 	Name string
 
-	addons          clusters.Addons
-	existingCluster clusters.Cluster
+	addons            clusters.Addons
+	existingCluster   clusters.Cluster
+	kubernetesVersion *semver.Version
 }
 
 // NewBuilder generates a new empty Builder for creating Environments.
@@ -51,6 +54,13 @@ func (b *Builder) WithExistingCluster(cluster clusters.Cluster) *Builder {
 	return b
 }
 
+// WithKubernetesVersion indicates which Kubernetes version to deploy clusters
+// with, if the caller wants something other than the default.
+func (b *Builder) WithKubernetesVersion(version semver.Version) *Builder {
+	b.kubernetesVersion = &version
+	return b
+}
+
 // Build is a blocking call to construct the configured Environment and it's
 // underlying Kubernetes cluster. The amount of time that it blocks depends
 // entirely on the underlying clusters.Cluster implementation that was requested.
@@ -59,11 +69,18 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 
 	if b.existingCluster == nil {
 		var err error
-		cluster, err = kind.NewBuilder().WithName(b.Name).Build(ctx)
+		builder := kind.NewBuilder().WithName(b.Name)
+		if b.kubernetesVersion != nil {
+			builder.WithClusterVersion(*b.kubernetesVersion)
+		}
+		cluster, err = builder.Build(ctx)
 		if err != nil {
 			return nil, err
 		}
 	} else {
+		if b.kubernetesVersion != nil {
+			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
+		}
 		cluster = b.existingCluster
 	}
 
