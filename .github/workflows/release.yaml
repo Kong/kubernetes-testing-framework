@@ -35,7 +35,6 @@ jobs:
     - name: checkout repository
       uses: actions/checkout@v2
 
-
     # --------------------------------------------------------------------------
     # Github Release
     # --------------------------------------------------------------------------
@@ -48,6 +47,8 @@ jobs:
         prerelease: true
         release_name: ${{ github.ref }}
         tag_name: ${{ github.ref }}
+        body: |
+          See the [CHANGELOG.md](https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/main/CHANGELOG.md)
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
