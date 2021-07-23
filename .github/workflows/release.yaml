@@ -4,13 +4,6 @@ on:
   push:
     tags:
       - "v*"
-  workflow_run:
-    workflows:
-      - "tests"
-    branches:
-      - "main"
-    types:
-      - "completed"
 
 jobs:
   release:
