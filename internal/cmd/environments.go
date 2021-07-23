@@ -3,7 +3,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"strings"
 
+	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -37,6 +39,9 @@ func init() {
 	environmentsCreateCmd.PersistentFlags().String("name", DefaultEnvironmentName, "name to give the new testing environment")
 	environmentsCreateCmd.PersistentFlags().Bool("generate-name", false, "indicate whether or not to use a generated name for the environment")
 
+	// cluster configurations
+	environmentsCreateCmd.PersistentFlags().String("kubernetes-version", "", "which kubernetes version to use (default: latest for driver)")
+
 	// addon configurations
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
 	environmentsCreateCmd.PersistentFlags().Bool("kong-disable-controller", false, "indicate whether the kong addon should have the controller disabled (proxy only)")
@@ -62,10 +67,19 @@ var environmentsCreateCmd = &cobra.Command{
 		useGeneratedName, err := cmd.PersistentFlags().GetBool("generate-name")
 		cobra.CheckErr(err)
 
+		// check if a specific Kubernetes version was requested
+		kubernetesVersion, err := cmd.PersistentFlags().GetString("kubernetes-version")
+		cobra.CheckErr(err)
+
 		// setup the new environment
 		builder := environments.NewBuilder()
 		if !useGeneratedName {
 			builder = builder.WithName(name)
+		}
+		if kubernetesVersion != "" {
+			version, err := semver.Parse(strings.TrimPrefix(kubernetesVersion, "v"))
+			cobra.CheckErr(err)
+			builder = builder.WithKubernetesVersion(version)
 		}
 
 		// configure any addons that need to be deployed with the environment's cluster
