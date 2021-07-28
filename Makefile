@@ -5,11 +5,12 @@ all: build
 
 .PHONY: clean
 clean:
-	rm -f ktf*
+	rm -rf build/
 
 .PHONY: build
 build:
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o ktf.$(GOOS).$(GOARCH) cmd/ktf/main.go
+	mkdir -p build/
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o build/ktf.$(GOOS).$(GOARCH) internal/cmd/main.go
 
 .PHONY: test
 test: test.unit
