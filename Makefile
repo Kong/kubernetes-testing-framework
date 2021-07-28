@@ -21,6 +21,10 @@ test.all: test.integration
 test.unit:
 	go test -race -v ./pkg/...
 
+.PHONY: test.e2e
+test.e2e:
+	@GOFLAGS="-tags=e2e_tests" go test -race -v -timeout 15m ./test/e2e/...
+
 .PHONY: test.integration
 test.integration:
 	@GOFLAGS="-tags=integration_tests" go test -race -v \
