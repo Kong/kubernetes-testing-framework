@@ -12,6 +12,10 @@ build:
 	mkdir -p build/
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o build/ktf.$(GOOS).$(GOARCH) internal/cmd/main.go
 
+.PHONY: lint
+lint:
+	@golangci-lint run ./...
+
 .PHONY: test
 test: test.unit
 

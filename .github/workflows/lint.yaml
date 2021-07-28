@@ -1,0 +1,43 @@
+name: lint
+
+on:
+  pull_request:
+    branches:
+      - '*'
+  push:
+    branches:
+      - 'main'
+    tags:
+      - '*'
+
+jobs:
+  golangci-lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: setup golang
+      uses: actions/setup-go@v2
+      with:
+        go-version: '^1.16'
+
+    # TODO: had to temporarily disable the caching, it appears its not
+    #       concurrency safe and multiple CI runs corrupted the cache.
+    #       Github is not yet willing to add a feature to clear it:
+    #         - https://github.com/actions/cache/issues/2
+    #
+    #- name: cache go modules
+    #  uses: actions/cache@v2.1.6
+    #  with:
+    #    path: ~/go/pkg/mod
+    #    key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
+    #    restore-keys: |
+    #      ${{ runner.os }}-go
+
+    - name: checkout repository
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v2.5.2
+      with:
+        version: v1.40.1
