@@ -283,8 +283,16 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 		return nil, err
 	}
 
-	if len(service.Status.LoadBalancer.Ingress) == 1 {
-		return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
+	//nolint:exhaustive
+	switch service.Spec.Type {
+	case corev1.ServiceTypeLoadBalancer:
+		if len(service.Status.LoadBalancer.Ingress) == 1 {
+			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
+		}
+	default:
+		if service.Spec.ClusterIP != "" {
+			return url.Parse(fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, port))
+		}
 	}
 
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
