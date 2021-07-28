@@ -1,4 +1,4 @@
-package cmd
+package ktf
 
 import (
 	"github.com/spf13/cobra"
