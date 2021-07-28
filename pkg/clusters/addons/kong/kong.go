@@ -100,7 +100,12 @@ func (a *Addon) Name() clusters.AddonName {
 }
 
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
-	// TODO: derive kubeconfig from cluster object
+	// generate a temporary kubeconfig since we're going to be using the helm CLI
+	kubeconfig, err := tempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
 
 	stderr := new(bytes.Buffer)
 	cmd := exec.CommandContext(ctx, "helm", "repo", "add", "kong", KongHelmRepoURL)
@@ -153,7 +158,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
-	// TODO: derive kubeconfig from cluster object
+	// generate a temporary kubeconfig since we're going to be using the helm CLI
+	kubeconfig, err := tempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
 
 	stderr := new(bytes.Buffer)
 	cmd := exec.Command("helm", "uninstall", DefaultDeploymentName, "--namespace", a.namespace)
@@ -267,4 +277,33 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	}
 
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
+}
+
+// tempKubeconfig produces a kubeconfig tempfile given a cluster.
+// the caller is responsible for cleaning up the file if they want it removed.
+func tempKubeconfig(cluster clusters.Cluster) (*os.File, error) {
+	// generate a kubeconfig from the cluster rest.Config
+	kubeconfigBytes, err := generators.NewKubeConfigForRestConfig(cluster.Name(), cluster.Config())
+	if err != nil {
+		return nil, err
+	}
+
+	// create a tempfile to store the kubeconfig contents
+	kubeconfig, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("-kubeconfig-%s", cluster.Name()))
+	if err != nil {
+		return nil, err
+	}
+
+	// write the contents
+	c, err := kubeconfig.Write(kubeconfigBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// validate the file integrity
+	if c != len(kubeconfigBytes) {
+		return nil, fmt.Errorf("failed to write kubeconfig to %s (only %d/%d written)", kubeconfig.Name(), c, len(kubeconfigBytes))
+	}
+
+	return kubeconfig, nil
 }
