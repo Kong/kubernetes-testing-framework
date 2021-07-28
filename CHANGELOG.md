@@ -1,5 +1,22 @@
 # Changelog
 
+## v0.3.0 (TBD)
+
+### Improvements
+
+* GKE Cluster implementation added.
+  ([#32](https://github.com/Kong/kubernetes-testing-framework/issues/32))
+
+### Breaking Changes
+
+* Previously when KIND was the only Cluster implementation
+  we defaulted to exposing the Kong Admin API via a LoadBalancer
+  type service as this would not be accessible outside of the
+  local docker network. Now that a GKE Cluster implementation
+  exists this default would no longer be secure, so the default
+  has been changed to ClusterIP.
+  ([#32](https://github.com/Kong/kubernetes-testing-framework/issues/32))
+
 ## v0.2.2
 
 ### Security Fixes
