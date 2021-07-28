@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.16
 
 require (
-	cloud.google.com/go v0.81.0
+	cloud.google.com/go v0.87.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/blang/semver/v4 v4.0.0
 	github.com/containerd/containerd v1.4.8 // indirect
@@ -25,8 +25,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
-	google.golang.org/api v0.44.0
+	google.golang.org/api v0.51.0
 	google.golang.org/genproto v0.0.0-20210726200206-e7812ac95cc0
 	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.21.3
