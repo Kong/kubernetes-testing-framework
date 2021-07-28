@@ -61,20 +61,20 @@ func TestEnvironmentWithMetallb(t *testing.T) {
 	require.Len(t, waitForObjects, 0)
 	require.True(t, ready)
 
-	t.Logf("verifying that the kong proxy admin service %s gets provisioned an IP address by metallb", kongaddon.DefaultAdminServiceName)
-	adminURL, err := kong.ProxyAdminURL(ctx, env.Cluster())
+	t.Logf("verifying that the kong proxy service %s gets provisioned an IP address by metallb", kongaddon.DefaultProxyServiceName)
+	proxyURL, err := kong.ProxyURL(ctx, env.Cluster())
 	require.NoError(t, err)
-	require.NotNil(t, adminURL)
+	require.NotNil(t, proxyURL)
 
-	t.Logf("found url %s for proxy admin, now verifying it is routable", adminURL)
+	t.Logf("found url %s for proxy, now verifying it is routable", proxyURL)
 	httpc := http.Client{Timeout: time.Second * 3}
 	require.Eventually(t, func() bool {
-		resp, err := httpc.Get(adminURL.String())
+		resp, err := httpc.Get(proxyURL.String())
 		if err != nil {
 			return false
 		}
 		defer resp.Body.Close()
-		return resp.StatusCode == http.StatusOK
+		return resp.StatusCode == http.StatusNotFound
 	}, time.Minute*1, time.Second*1)
 
 	t.Log("cleaning up the metallb addon")
