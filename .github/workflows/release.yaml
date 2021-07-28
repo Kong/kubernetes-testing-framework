@@ -74,7 +74,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ktf.linux.amd64
+        asset_path: ./build/ktf.linux.amd64
         asset_name: ktf.linux.amd64
         asset_content_type: application/octet-stream
 
@@ -86,7 +86,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./ktf.darwin.amd64
+        asset_path: ./build/ktf.darwin.amd64
         asset_name: ktf.darwin.amd64
         asset_content_type: application/octet-stream
 
@@ -96,9 +96,11 @@ jobs:
 
     - name: generate checksums for linux amd64 artifacts
       run: sha256sum ktf.linux.amd64 >> CHECKSUMS
+      working-directory: ./build/
 
     - name: generate checksums for mac amd64 artifacts
       run: sha256sum ktf.darwin.amd64 >> CHECKSUMS
+      working-directory: ./build/
 
     - name: upload checksums
       uses: actions/upload-release-asset@v1
@@ -106,7 +108,7 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: CHECKSUMS
+        asset_path: ./build/CHECKSUMS
         asset_name: CHECKSUMS
         asset_content_type: text/plain
 
