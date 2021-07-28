@@ -5,7 +5,9 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"os/exec"
 	"strings"
 
@@ -16,6 +18,7 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 // -----------------------------------------------------------------------------
@@ -25,12 +28,13 @@ import (
 const (
 	// AddonName is the unique name of the Kong cluster.Addon
 	AddonName clusters.AddonName = "kong"
+
+	httpPort = 80
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
 	namespace  string
-	name       string
 	deployArgs []string
 	dbmode     DBMode
 	proxyOnly  bool
@@ -60,7 +64,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, 80)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, httpPort)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
@@ -107,22 +111,25 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
+	// ensure the repo is added
 	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "helm", "repo", "add", "kong", KongHelmRepoURL)
+	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "kong", KongHelmRepoURL) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	// ensure all repos are up to date
 	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "helm", "repo", "update")
+	cmd = exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "update") //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	// configure for dbmode options
 	if a.dbmode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "env.database=postgres",
@@ -132,7 +139,6 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "postgresql.service.port=5432",
 		)
 	}
-
 	if a.proxyOnly {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "ingressController.enabled=false",
@@ -141,11 +147,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
-	args := []string{"install", DefaultDeploymentName, "kong/kong"}
+	// do the deployment and install the chart
+	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--create-namespace", "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
 	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "helm", args...) //nolint:gosec
+	cmd = exec.CommandContext(ctx, "helm", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
@@ -154,7 +161,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
-	return runUDPServiceHack(ctx, cluster, DefaultNamespace, DefaultDeploymentName)
+	// run any other cleanup jobs or ancillary tasks
+	return runUDPServiceHack(ctx, cluster, DefaultNamespace)
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
@@ -165,8 +173,9 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
+	// delete the chart release from the cluster
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("helm", "uninstall", DefaultDeploymentName, "--namespace", a.namespace)
+	cmd := exec.Command("helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultDeploymentName, "--namespace", a.namespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
@@ -183,9 +192,10 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 		return
 	}
 
-	for _, deployment := range deployments.Items {
+	for i := 0; i < len(deployments.Items); i++ {
+		deployment := &(deployments.Items[i])
 		if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
-			waitForObjects = append(waitForObjects, &deployment)
+			waitForObjects = append(waitForObjects, deployment)
 		}
 	}
 
@@ -195,9 +205,10 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 		return
 	}
 
-	for _, service := range services.Items {
+	for i := 0; i < len(services.Items); i++ {
+		service := &(services.Items[i])
 		if service.Spec.Type == corev1.ServiceTypeLoadBalancer && len(service.Status.LoadBalancer.Ingress) < 1 {
-			waitForObjects = append(waitForObjects, &service)
+			waitForObjects = append(waitForObjects, service)
 		}
 	}
 
@@ -239,7 +250,7 @@ func defaults() []string {
 
 // TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
 //       See: https://github.com/Kong/charts/issues/329
-func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
+func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace string) error {
 	udpServicePorts := []corev1.ServicePort{{
 		Name:     DefaultUDPServiceName,
 		Port:     DefaultUDPServicePort,

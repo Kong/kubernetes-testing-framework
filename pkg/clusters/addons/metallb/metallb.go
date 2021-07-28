@@ -70,7 +70,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", args...) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 
@@ -104,6 +104,7 @@ var (
 	defaultEndIP   = net.ParseIP("0.0.0.250")
 	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml"
 	metalConfig    = "config"
+	secretKeyLen   = 128
 )
 
 // -----------------------------------------------------------------------------
@@ -144,7 +145,7 @@ func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dock
 	}
 
 	// generate and deploy a metallb memberlist secret
-	secretKey := make([]byte, 128)
+	secretKey := make([]byte, secretKeyLen)
 	if _, err := rand.Read(secretKey); err != nil {
 		return err
 	}
@@ -196,7 +197,7 @@ func metallbDeployHack(clusterName string) error {
 	}
 
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kubectl", deployArgs...) //nolint:gosec
+	cmd := exec.Command("kubectl", deployArgs...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 
@@ -214,7 +215,7 @@ func metallbDeleteHack(clusterName string) error {
 	}
 
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kubectl", deployArgs...) //nolint:gosec
+	cmd := exec.Command("kubectl", deployArgs...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 

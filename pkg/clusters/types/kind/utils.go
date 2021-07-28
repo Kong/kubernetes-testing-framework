@@ -45,7 +45,7 @@ func createCluster(ctx context.Context, name string, extraArgs ...string) error 
 	args = append(args, extraArgs...)
 
 	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kind", args...) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kind", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
