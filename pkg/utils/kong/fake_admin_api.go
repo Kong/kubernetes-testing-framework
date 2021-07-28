@@ -12,6 +12,8 @@ import (
 // FakeAdminAPIServer - Public Types
 // -----------------------------------------------------------------------------
 
+const maxMocks = 1000
+
 // AdminAPIResponse represents an HTTP response from the Kong Admin API
 type AdminAPIResponse struct {
 	Status   int
@@ -38,7 +40,7 @@ type FakeAdminAPIServer struct {
 // that requires a *kong.Client or otherwise needs to communicate with the Kong Admin API.
 func NewFakeAdminAPIServer() (*FakeAdminAPIServer, error) {
 	// start up the fake admin api server
-	mocks := make(chan AdminAPIResponse, 1000)
+	mocks := make(chan AdminAPIResponse, maxMocks)
 	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		select {
 		case override := <-mocks:
@@ -49,7 +51,7 @@ func NewFakeAdminAPIServer() (*FakeAdminAPIServer, error) {
 
 			// for most tests you'll want to buffer several mock responses and then run through your requests in the same order
 			w.WriteHeader(override.Status)
-			fmt.Fprintf(w, string(override.Body))
+			fmt.Fprint(w, string(override.Body))
 		default:
 			// by default the response behavior is to provide a minimal root configuration for the server
 			w.WriteHeader(http.StatusOK)
@@ -60,7 +62,6 @@ func NewFakeAdminAPIServer() (*FakeAdminAPIServer, error) {
 				}
 			}`)
 		}
-		return
 	}))
 
 	// generate an http client for the fake admin api server

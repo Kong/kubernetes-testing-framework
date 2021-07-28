@@ -16,6 +16,8 @@ import (
 // Test Environment - Implementation
 // -----------------------------------------------------------------------------
 
+const objectWaitSleepTime = time.Millisecond * 200
+
 // environment is the default KTF Environment used for testing Kubernetes ingress.
 type environment struct {
 	name    string
@@ -48,20 +50,22 @@ func (env *environment) Ready(ctx context.Context) (waitForObjects []runtime.Obj
 		return
 	}
 
-	for _, deployment := range deployments.Items {
+	for i := 0; i < len(deployments.Items); i++ {
+		deployment := &(deployments.Items[i])
 		if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
-			waitForObjects = append(waitForObjects, &deployment)
+			waitForObjects = append(waitForObjects, deployment)
 		}
 	}
 
-	for _, daemonset := range daemonsets.Items {
+	for i := 0; i < len(daemonsets.Items); i++ {
+		daemonset := &(daemonsets.Items[i])
 		if daemonset.Status.NumberUnavailable > 0 {
-			waitForObjects = append(waitForObjects, &daemonset)
+			waitForObjects = append(waitForObjects, daemonset)
 		}
 	}
 
 	for _, addon := range env.Cluster().ListAddons() {
-		waitForAddonObjects := make([]runtime.Object, 0)
+		var waitForAddonObjects []runtime.Object
 		waitForAddonObjects, ready, err = addon.Ready(ctx, env.Cluster())
 		if err != nil {
 			return
@@ -95,7 +99,7 @@ func (env *environment) WaitForReady(ctx context.Context) chan error {
 					errs <- nil
 					return
 				}
-				time.Sleep(time.Millisecond * 200)
+				time.Sleep(objectWaitSleepTime)
 			}
 		}
 	}()

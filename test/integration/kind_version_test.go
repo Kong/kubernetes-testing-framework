@@ -31,10 +31,7 @@ func TestKindClusterOlderVersion(t *testing.T) {
 	t.Log("waiting for cluster api to become usable")
 	require.Eventually(t, func() bool {
 		_, err := cluster.Client().ServerVersion()
-		if err != nil {
-			return false
-		}
-		return true
+		return err == nil
 	}, time.Minute*1, time.Second*1)
 
 	t.Logf("verifying that the created cluster is kubernetes version %s", clusterVersion)
@@ -60,10 +57,7 @@ func TestKindClusterNewerVersion(t *testing.T) {
 	t.Log("waiting for cluster api to become usable")
 	require.Eventually(t, func() bool {
 		_, err := cluster.Client().ServerVersion()
-		if err != nil {
-			return false
-		}
-		return true
+		return err == nil
 	}, time.Minute*1, time.Second*1)
 
 	t.Logf("verifying that the created cluster is kubernetes version %s", clusterVersion)
