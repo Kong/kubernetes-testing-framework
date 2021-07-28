@@ -205,17 +205,15 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 // caller will be providing their own ingress controller separately.
 func defaults() []string {
 	return []string{
-		// exposing the admin API and enabling raw HTTP for using it is convenient,
-		// but again keep in mind this is meant ONLY for testing scenarios and isn't secure.
+		// we configure a cluster network exposed admin API over HTTP with no auth for testing convenience,
+		// but again keep in mind this is meant ONLY for transient testing scenarios and isn't secure.
 		"--set", "proxy.http.nodePort=30080",
 		"--set", "admin.enabled=true",
 		"--set", "admin.http.enabled=true",
 		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
+		"--set", "admin.type=ClusterIP",
 		"--set", "tls.enabled=false",
-		// this deployment expects a LoadBalancer Service provisioner (such as MetalLB).
-		"--set", "proxy.type=LoadBalancer",
-		"--set", "admin.type=LoadBalancer",
 		// we set up a few default ports for TCP and UDP proxy stream, it's up to
 		// test cases to use these how they see fit AND clean up after themselves.
 		"--set", "proxy.stream[0].containerPort=8888",
@@ -224,6 +222,8 @@ func defaults() []string {
 		"--set", "proxy.stream[1].servicePort=9999",
 		"--set", "proxy.stream[1].parameters[0]=udp",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
+		// the proxy expects a LoadBalancer Service provisioner (such as MetalLB).
+		"--set", "proxy.type=LoadBalancer",
 	}
 }
 
