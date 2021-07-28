@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.3.0 (TBD)
+## v0.3.0
 
 ### Improvements
 
