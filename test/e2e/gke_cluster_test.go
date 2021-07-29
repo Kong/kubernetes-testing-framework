@@ -56,6 +56,10 @@ func TestGKECluster(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("server version found: %s", version)
 
+	t.Logf("verifying that the cluster can be loaded as an existing cluster")
+	cluster, err = gke.NewFromExisting(ctx, cluster.Name(), gkeProject, gkeLocation, []byte(gkeCreds))
+	require.NoError(t, err)
+
 	t.Log("loading the gke cluster into a testing environment and deploying kong addon")
 	env, err := environments.NewBuilder().WithAddons(kong.New()).WithExistingCluster(cluster).Build(ctx)
 	require.NoError(t, err)
