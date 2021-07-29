@@ -30,6 +30,53 @@ type gkeCluster struct {
 	l         *sync.RWMutex
 }
 
+// NewFromExistingWithEnv provides a new clusters.Cluster backed by an existing GKE cluster,
+// but allows some of the configuration to be filled in from the ENV instead of arguments.
+func NewFromExistingWithEnv(ctx context.Context, name string) (clusters.Cluster, error) {
+	// gather all the required env vars
+	jsonCreds := os.Getenv(GKECredsVar)
+	if jsonCreds == "" {
+		return nil, fmt.Errorf("%s was not set", GKECredsVar)
+	}
+	project := os.Getenv(GKEProjectVar)
+	if project == "" {
+		return nil, fmt.Errorf("%s was not set", GKEProjectVar)
+	}
+	location := os.Getenv(GKELocationVar)
+	if location == "" {
+		return nil, fmt.Errorf("%s was not set", GKELocationVar)
+	}
+
+	return NewFromExisting(ctx, name, project, location, []byte(jsonCreds))
+}
+
+// NewFromExisting provides a new clusters.Cluster backed by an existing GKE cluster.
+func NewFromExisting(ctx context.Context, name, project, location string, jsonCreds []byte) (clusters.Cluster, error) {
+	// generate an auth token and management client
+	mgrc, authToken, err := clientAuthFromCreds(ctx, jsonCreds)
+	if err != nil {
+		return nil, err
+	}
+	defer mgrc.Close()
+
+	// get the restconfig and kubernetes client for the cluster
+	cfg, client, err := clientForCluster(ctx, mgrc, authToken, name, project, location)
+	if err != nil {
+		return nil, err
+	}
+
+	return &gkeCluster{
+		name:      name,
+		project:   project,
+		location:  location,
+		jsonCreds: jsonCreds,
+		client:    client,
+		cfg:       cfg,
+		addons:    make(clusters.Addons),
+		l:         &sync.RWMutex{},
+	}, nil
+}
+
 // -----------------------------------------------------------------------------
 // GKE Cluster - Cluster Implementation
 // -----------------------------------------------------------------------------
