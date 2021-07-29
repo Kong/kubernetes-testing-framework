@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.3.1
+
+### Improvements
+
+* The Kong addon now supports all service types where it previously
+  only accepted (and assumed) type `LoadBalancer`.
+  ([#64](https://github.com/Kong/kubernetes-testing-framework/pull/64))
+
 ## v0.3.0
 
 ### Improvements
