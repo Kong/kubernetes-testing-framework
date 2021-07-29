@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.2
+
+### Improvements
+
+* Existing GKE clusters can now be loaded into a testing environment.
+  ([#67](https://github.com/Kong/kubernetes-testing-framework/pull/67))
+
 ## v0.3.1
 
 ### Improvements
