@@ -23,16 +23,10 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
-const (
-	gkeCredsVar    = "GOOGLE_APPLICATION_CREDENTIALS"
-	gkeProjectVar  = "GOOGLE_PROJECT"
-	gkeLocationVar = "GOOGLE_LOCATION"
-)
-
 var (
-	gkeCreds    = os.Getenv(gkeCredsVar)
-	gkeProject  = os.Getenv(gkeProjectVar)
-	gkeLocation = os.Getenv(gkeLocationVar)
+	gkeCreds    = os.Getenv(gke.GKECredsVar)
+	gkeProject  = os.Getenv(gke.GKEProjectVar)
+	gkeLocation = os.Getenv(gke.GKELocationVar)
 )
 
 func TestGKECluster(t *testing.T) {
@@ -40,9 +34,9 @@ func TestGKECluster(t *testing.T) {
 	defer cancel()
 
 	t.Log("configuring GKE cloud environment for tests")
-	require.NotEmpty(t, gkeCredsVar, "%s not set", gkeCredsVar)
-	require.NotEmpty(t, gkeProject, "%s not set", gkeProjectVar)
-	require.NotEmpty(t, gkeLocation, "%s not set", gkeLocationVar)
+	require.NotEmpty(t, gkeCreds, "%s not set", gke.GKECredsVar)
+	require.NotEmpty(t, gkeProject, "%s not set", gke.GKEProjectVar)
+	require.NotEmpty(t, gkeLocation, "%s not set", gke.GKELocationVar)
 
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
