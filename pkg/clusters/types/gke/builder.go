@@ -6,12 +6,8 @@ import (
 	"sync"
 	"time"
 
-	container "cloud.google.com/go/container/apiv1"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
-	"google.golang.org/api/compute/v1"
-	"google.golang.org/api/option"
-	"google.golang.org/api/transport"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
@@ -64,25 +60,12 @@ func (b *Builder) WithClusterMinorVersion(major, minor uint64) *Builder {
 
 // Build creates and configures clients for a GKE-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
-	// store the API options with the JSON credentials for auth
-	credsOpt := option.WithCredentialsJSON(b.jsonCreds)
-
-	// build the google api client to talk to GKE
-	mgrc, err := container.NewClusterManagerClient(ctx, credsOpt)
+	// generate an auth token and management client
+	mgrc, authToken, err := clientAuthFromCreds(ctx, b.jsonCreds)
 	if err != nil {
 		return nil, err
 	}
 	defer mgrc.Close()
-
-	// build the google api IAM client to authenticate to the cluster
-	gcreds, err := transport.Creds(ctx, credsOpt, option.WithScopes(compute.CloudPlatformScope))
-	if err != nil {
-		return nil, err
-	}
-	oauthToken, err := gcreds.TokenSource.Token()
-	if err != nil {
-		return nil, err
-	}
 
 	// configure the cluster creation request
 	parent := fmt.Sprintf("projects/%s/locations/%s", b.project, b.location)
@@ -144,7 +127,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	}
 
 	// get the restconfig and kubernetes client for the cluster
-	restCFG, k8s, err := clientForCluster(ctx, mgrc, oauthToken.AccessToken, b.Name, b.project, b.location)
+	restCFG, k8s, err := clientForCluster(ctx, mgrc, authToken, b.Name, b.project, b.location)
 	if err != nil {
 		if _, deleteErr := deleteCluster(ctx, mgrc, b.Name, b.project, b.location); deleteErr != nil {
 			return nil, fmt.Errorf("failed to get cluster client (%s), then failed to clean up: %w", err, deleteErr)

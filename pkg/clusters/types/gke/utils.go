@@ -7,6 +7,9 @@ import (
 
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/blang/semver/v4"
+	"google.golang.org/api/compute/v1"
+	"google.golang.org/api/option"
+	"google.golang.org/api/transport"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -116,4 +119,30 @@ func listLatestClusterPatchVersions(ctx context.Context, c *container.ClusterMan
 	}
 
 	return versionMap, nil
+}
+
+// clientAuthFromCreds provides a cluster management client and a generated access token, which is everything
+// required to create a GKE cluster and then starting accessing its API (assuming the jsonCreds provided refer
+// to an IAM user with the necessary permissions, if not an error will be received).
+func clientAuthFromCreds(ctx context.Context, jsonCreds []byte) (*container.ClusterManagerClient, string, error) {
+	// store the API options with the JSON credentials for auth
+	credsOpt := option.WithCredentialsJSON(jsonCreds)
+
+	// build the google api client to talk to GKE
+	mgrc, err := container.NewClusterManagerClient(ctx, credsOpt)
+	if err != nil {
+		return nil, "", err
+	}
+
+	// build the google api IAM client to authenticate to the cluster
+	gcreds, err := transport.Creds(ctx, credsOpt, option.WithScopes(compute.CloudPlatformScope))
+	if err != nil {
+		return nil, "", err
+	}
+	oauthToken, err := gcreds.TokenSource.Token()
+	if err != nil {
+		return nil, "", err
+	}
+
+	return mgrc, oauthToken.AccessToken, nil
 }
