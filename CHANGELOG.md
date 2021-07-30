@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.3
+
+### Improvements
+
+* Deployed GKE clusters default to no addons enabled.
+  ([#69](https://github.com/Kong/kubernetes-testing-framework/pull/69))
+
 ## v0.3.2
 
 ### Improvements
