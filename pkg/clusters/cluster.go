@@ -3,6 +3,7 @@ package clusters
 import (
 	"context"
 
+	"github.com/blang/semver/v4"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -21,6 +22,9 @@ type Cluster interface {
 
 	// Type indicates the type of Kubernetes Cluster (e.g. Kind, GKE, e.t.c.)
 	Type() Type
+
+	// Version indicates the Kubernetes server version of the cluster.
+	Version() (semver.Version, error)
 
 	// Client is the configured *kubernetes.Clientset which can be used to access the Cluster's API
 	Client() *kubernetes.Clientset
