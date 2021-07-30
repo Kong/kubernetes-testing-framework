@@ -1,6 +1,14 @@
 # Changelog
 
-## v0.3.4
+## v0.4.0
+
+### Improvements
+
+### Breaking Changes
+
+* The `clusters.Cluster` interface now requires that implementations
+  provide a method to retrieve the cluster version.
+  [(#72](https://github.com/Kong/kubernetes-testing-framework/pull/72))
 
 ### Improvements
 
