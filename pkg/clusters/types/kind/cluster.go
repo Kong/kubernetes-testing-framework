@@ -4,11 +4,13 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
+	"github.com/blang/semver/v4"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 
@@ -53,6 +55,14 @@ func (c *kindCluster) Name() string {
 
 func (c *kindCluster) Type() clusters.Type {
 	return KindClusterType
+}
+
+func (c *kindCluster) Version() (semver.Version, error) {
+	versionInfo, err := c.Client().ServerVersion()
+	if err != nil {
+		return semver.Version{}, err
+	}
+	return semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
 }
 
 func (c *kindCluster) Cleanup(ctx context.Context) error {

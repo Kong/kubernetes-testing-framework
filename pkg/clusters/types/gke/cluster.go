@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"sync"
 
 	container "cloud.google.com/go/container/apiv1"
+	"github.com/blang/semver/v4"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -87,6 +89,14 @@ func (c *gkeCluster) Name() string {
 
 func (c *gkeCluster) Type() clusters.Type {
 	return GKEClusterType
+}
+
+func (c *gkeCluster) Version() (semver.Version, error) {
+	versionInfo, err := c.Client().ServerVersion()
+	if err != nil {
+		return semver.Version{}, err
+	}
+	return semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
 }
 
 func (c *gkeCluster) Cleanup(ctx context.Context) error {

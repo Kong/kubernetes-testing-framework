@@ -35,9 +35,10 @@ func TestKindClusterOlderVersion(t *testing.T) {
 	}, time.Minute*1, time.Second*1)
 
 	t.Logf("verifying that the created cluster is kubernetes version %s", clusterVersion)
-	serverVersion, err := cluster.Client().ServerVersion()
+	serverVersion, err := cluster.Version()
 	require.NoError(t, err)
-	assert.Equal(t, "v"+clusterVersion.String(), serverVersion.String())
+	require.Equal(t, clusterVersion.String(), serverVersion.String())
+	require.True(t, clusterVersion.EQ(serverVersion))
 }
 
 func TestKindClusterNewerVersion(t *testing.T) {
@@ -61,7 +62,8 @@ func TestKindClusterNewerVersion(t *testing.T) {
 	}, time.Minute*1, time.Second*1)
 
 	t.Logf("verifying that the created cluster is kubernetes version %s", clusterVersion)
-	serverVersion, err := cluster.Client().ServerVersion()
+	serverVersion, err := cluster.Version()
 	require.NoError(t, err)
-	assert.Equal(t, "v"+clusterVersion.String(), serverVersion.String())
+	require.Equal(t, clusterVersion.String(), serverVersion.String())
+	require.True(t, clusterVersion.EQ(serverVersion))
 }
