@@ -72,6 +72,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	cluster := containerpb.Cluster{
 		Name:             b.Name,
 		InitialNodeCount: 1,
+		AddonsConfig:     &containerpb.AddonsConfig{}, // empty config to indicate that no addons are desired
 	}
 	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &cluster}
 
