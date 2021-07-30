@@ -12,11 +12,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/gke"
 	"github.com/kong/kubernetes-testing-framework/pkg/environments"
@@ -67,6 +69,14 @@ func TestGKECluster(t *testing.T) {
 	t.Log("waiting for addons to be ready")
 	require.NoError(t, <-env.WaitForReady(ctx))
 
+	t.Log("validating kubernetes cluster version")
+	versionInfo, err := env.Cluster().Client().ServerVersion()
+	require.NoError(t, err)
+	kubernetesVersion, err := semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
+	require.NoError(t, err)
+	require.Equal(t, 1, kubernetesVersion.Major)
+	require.Equal(t, 17, kubernetesVersion.Minor)
+
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongAddon, err := env.Cluster().GetAddon("kong")
 	require.NoError(t, err)
@@ -86,6 +96,10 @@ func TestGKECluster(t *testing.T) {
 	deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Create(ctx, deployment, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	defer func() {
+		assert.NoError(t, env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Delete(ctx, deployment.Name, metav1.DeleteOptions{}))
+	}()
+
 	t.Log("verifying the underlying pods deploy successfully")
 	require.Eventually(t, func() bool {
 		deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Get(ctx, deployment.Name, metav1.GetOptions{})
@@ -100,24 +114,31 @@ func TestGKECluster(t *testing.T) {
 	service, err = env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Create(ctx, service, metav1.CreateOptions{})
 	require.NoError(t, err)
 
+	defer func() {
+		assert.NoError(t, env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Delete(ctx, service.Name, metav1.DeleteOptions{}))
+	}()
+
 	t.Logf("creating an ingress for service %s with ingress.class kong", service.Name)
-	ingress := generators.NewLegacyIngressForService("/httpbin", map[string]string{
+	ingress := generators.NewIngressForServiceWithClusterVersion(kubernetesVersion, "/httpbin", map[string]string{
 		"kubernetes.io/ingress.class": "kong",
 		"konghq.com/strip-path":       "true",
 	}, service)
-	ingress, err = env.Cluster().Client().NetworkingV1beta1().Ingresses(corev1.NamespaceDefault).Create(ctx, ingress, metav1.CreateOptions{})
-	require.NoError(t, err)
+	require.NoError(t, clusters.DeployIngress(ctx, env.Cluster(), corev1.NamespaceDefault, ingress))
+
+	defer func() {
+		assert.NoError(t, clusters.DeleteIngress(ctx, env.Cluster(), corev1.NamespaceDefault, ingress))
+	}()
 
 	t.Logf("waiting for ingress status update to validate that the kong controller is functioning")
 	require.Eventually(t, func() bool {
-		ingress, err = env.Cluster().Client().NetworkingV1beta1().Ingresses(corev1.NamespaceDefault).Get(ctx, ingress.Name, metav1.GetOptions{})
+		lbstatus, err := clusters.GetIngressLoadbalancerStatus(ctx, env.Cluster(), corev1.NamespaceDefault, ingress)
 		if err != nil {
 			return false
 		}
-		return len(ingress.Status.LoadBalancer.Ingress) > 0
+		return len(lbstatus.Ingress) > 0
 	}, time.Minute*1, time.Second*1)
 
-	t.Logf("accessing the deployment via ingress %s to validate that the kong proxy is functioning", ingress.Name)
+	t.Logf("accessing the deployment via ingress to validate that the kong proxy is functioning")
 	httpc := http.Client{Timeout: time.Second * 3}
 	require.Eventually(t, func() bool {
 		resp, err := httpc.Get(fmt.Sprintf("%s/httpbin", proxyURL))
