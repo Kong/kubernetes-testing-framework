@@ -12,7 +12,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
@@ -70,12 +69,10 @@ func TestGKECluster(t *testing.T) {
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Log("validating kubernetes cluster version")
-	versionInfo, err := env.Cluster().Client().ServerVersion()
+	kubernetesVersion, err := env.Cluster().Version()
 	require.NoError(t, err)
-	kubernetesVersion, err := semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
-	require.NoError(t, err)
-	require.Equal(t, 1, kubernetesVersion.Major)
-	require.Equal(t, 17, kubernetesVersion.Minor)
+	require.Equal(t, uint64(1), kubernetesVersion.Major)
+	require.Equal(t, uint64(17), kubernetesVersion.Minor)
 
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongAddon, err := env.Cluster().GetAddon("kong")
