@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.3.4
+
+### Improvements
+
+* Added utilities for auto-handling Ingress resources on older clusters.
+  ([#70](https://github.com/Kong/kubernetes-testing-framework/pull/70))
+
 ## v0.3.3
 
 ### Improvements
