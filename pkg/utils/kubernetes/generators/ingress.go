@@ -1,16 +1,27 @@
 package generators
 
 import (
+	"github.com/blang/semver/v4"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	netv1beta1 "k8s.io/api/networking/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
 
 // -----------------------------------------------------------------------------
 // Public Functions - netv1.Ingress Helpers
 // -----------------------------------------------------------------------------
+
+// NewIngressForServiceWithClusterVersion provides an Ingress record for the provided service, but uses a provided
+// Kubernetes cluster version to determine which Ingress version to provide (provides latest available for release).
+func NewIngressForServiceWithClusterVersion(kubernetesVersion semver.Version, path string, annotations map[string]string, s *corev1.Service) runtime.Object {
+	if kubernetesVersion.Major < 2 && kubernetesVersion.Minor < 19 {
+		return NewLegacyIngressForService(path, annotations, s)
+	}
+	return NewIngressForService(path, annotations, s)
+}
 
 // NewIngressForService provides a basic and opinionated *netv1.Ingress object for the provided *corev1.Service to expose it via an ingress controller for testing purposes.
 func NewIngressForService(path string, annotations map[string]string, s *corev1.Service) *netv1.Ingress {
