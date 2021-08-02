@@ -1,5 +1,21 @@
 # Changelog
 
+## v0.5.0
+
+### Improvements
+
+* GKE clusters created by KTF now get a label added that indicate that
+  they were KTF-provisioned and by which IAM service account they were
+  created by.
+  ([#73](https://github.com/Kong/kubernetes-testing-framework/pull/73))
+
+### Breaking Changes
+
+* Removed a check when creating a cluster client that would validate
+  that the /version endpoint of the cluster was up, as some use cases
+  actually want to create the client first and then wait.
+  ([#73](https://github.com/Kong/kubernetes-testing-framework/pull/73))
+
 ## v0.4.0
 
 ### Improvements
