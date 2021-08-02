@@ -76,12 +76,6 @@ func clientForCluster(
 		return nil, nil, err
 	}
 
-	// perform a quick failfast validation that the client is actually useable
-	_, err = k.ServerVersion()
-	if err != nil {
-		return nil, nil, fmt.Errorf("configuration invalid: %w", err)
-	}
-
 	return &cfg, k, nil
 }
 
