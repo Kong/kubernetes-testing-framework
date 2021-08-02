@@ -5,6 +5,7 @@ package integration
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"os"
@@ -12,8 +13,11 @@ import (
 	"testing"
 	"time"
 
+	container "cloud.google.com/go/container/apiv1"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"google.golang.org/api/option"
+	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -39,6 +43,13 @@ func TestGKECluster(t *testing.T) {
 	require.NotEmpty(t, gkeProject, "%s not set", gke.GKEProjectVar)
 	require.NotEmpty(t, gkeLocation, "%s not set", gke.GKELocationVar)
 
+	t.Log("verifying integrity of the gcloud credentials")
+	var creds map[string]string
+	require.NoError(t, json.Unmarshal([]byte(gkeCreds), &creds))
+	clientID, ok := creds["client_id"]
+	require.True(t, ok)
+	require.NotEmpty(t, clientID)
+
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
 	builder.WithClusterMinorVersion(1, 17)
@@ -57,9 +68,22 @@ func TestGKECluster(t *testing.T) {
 	require.NoError(t, err)
 	t.Logf("server version found: %s", version)
 
-	t.Logf("verifying that the cluster can be loaded as an existing cluster")
+	t.Log("verifying that the cluster can be loaded as an existing cluster")
 	cluster, err = gke.NewFromExisting(ctx, cluster.Name(), gkeProject, gkeLocation, []byte(gkeCreds))
 	require.NoError(t, err)
+
+	t.Log("verifying cluster is labelled properly in GKE")
+	credsOpt := option.WithCredentialsJSON([]byte(gkeCreds))
+	mgrc, err := container.NewClusterManagerClient(ctx, credsOpt)
+	require.NoError(t, err)
+	getClusterReq := containerpb.GetClusterRequest{Name: fmt.Sprintf("projects/%s/locations/%s/clusters/%s", gkeProject, gkeLocation, cluster.Name())}
+	gkeCluster, err := mgrc.GetCluster(ctx, &getClusterReq)
+	require.NoError(t, err)
+
+	t.Log("verify integrity of the createdBy label")
+	createdBy, ok := gkeCluster.ResourceLabels[gke.GKECreateLabel]
+	require.True(t, ok)
+	require.Equal(t, clientID, createdBy)
 
 	t.Log("loading the gke cluster into a testing environment and deploying kong addon")
 	env, err := environments.NewBuilder().WithAddons(kong.New()).WithExistingCluster(cluster).Build(ctx)

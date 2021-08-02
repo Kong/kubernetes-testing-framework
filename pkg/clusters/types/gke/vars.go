@@ -12,6 +12,10 @@ import (
 // -----------------------------------------------------------------------------
 
 const (
+	// GKECreateLabel is the name of the label which be added to any cluster created with KTF and
+	// indicates which Google Cloud IAM Service Account created the cluster.
+	GKECreateLabel = "ktf_created_by"
+
 	// GKEClusterType indicates that the Kubernetes cluster was provisioned by Google Kubernetes Engine (GKE)
 	GKEClusterType clusters.Type = "gke"
 
