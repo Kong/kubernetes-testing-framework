@@ -2,6 +2,7 @@ package gke
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"sync"
 	"time"
@@ -60,6 +61,20 @@ func (b *Builder) WithClusterMinorVersion(major, minor uint64) *Builder {
 
 // Build creates and configures clients for a GKE-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
+	// validate the credential contents by finding the IAM service account
+	// ID which is creating this cluster.
+	var creds map[string]string
+	if err := json.Unmarshal(b.jsonCreds, &creds); err != nil {
+		return nil, err
+	}
+	createdByID, ok := creds["client_id"]
+	if !ok {
+		return nil, fmt.Errorf("provided credentials did not include required 'client_id'")
+	}
+	if createdByID == "" {
+		return nil, fmt.Errorf("provided credentials were invalid: 'client_id' can not be an empty string")
+	}
+
 	// generate an auth token and management client
 	mgrc, authToken, err := clientAuthFromCreds(ctx, b.jsonCreds)
 	if err != nil {
@@ -73,6 +88,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		Name:             b.Name,
 		InitialNodeCount: 1,
 		AddonsConfig:     &containerpb.AddonsConfig{}, // empty config to indicate that no addons are desired
+		ResourceLabels:   map[string]string{GKECreateLabel: createdByID},
 	}
 	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &cluster}
 
