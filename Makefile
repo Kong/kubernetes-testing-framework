@@ -28,9 +28,9 @@ test.unit:
 
 .PHONY: test.e2e
 test.e2e:
-	@GOFLAGS="-tags=e2e_tests" go test -race -v -timeout 15m ./test/e2e/...
+	@GOFLAGS="-tags=e2e_tests" go test -timeout 30m -race -v ./test/e2e/...
 
 .PHONY: test.integration
 test.integration:
-	@GOFLAGS="-tags=integration_tests" go test -race -v \
+	@GOFLAGS="-tags=integration_tests" go test -timeout 20m -race -v \
 		-covermode=atomic -coverprofile=coverage.out ./...
