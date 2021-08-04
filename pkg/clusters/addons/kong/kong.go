@@ -112,7 +112,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// ensure the repo is added
 	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "kong", KongHelmRepoURL) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "--force-update", "kong", KongHelmRepoURL) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
