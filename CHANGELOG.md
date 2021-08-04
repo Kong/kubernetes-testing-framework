@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6.0
+
+### Improvements
+
+* Knative is now available as a cluster addon.
+  ([#77](https://github.com/Kong/kubernetes-testing-framework/pull/77))
+
 ## v0.5.0
 
 ### Improvements
