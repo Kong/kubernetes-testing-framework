@@ -1,5 +1,28 @@
 # Changelog
 
+## v0.6.1
+
+### Improvements
+
+* Utilities for generating and cleaning up transient testing namespaces
+  were added in support of simplified setup in Golang test suites when
+  using the KTF Go libraries for integration tests.
+  ([#17](https://github.com/Kong/kubernetes-testing-framework/issues/17))
+
+### Bug Fixes
+
+* Fixed an issue where the Kong addon was not idempotent because adding
+  the relevant helm repository could fail on re-entry despite the
+  repository being present.
+  ([#80](https://github.com/Kong/kubernetes-testing-framework/issues/80))
+
+### Under The Hood
+
+* Golang dependencies for several Kubernetes libraries were updated to
+  the latest `v0.22.0` release (corresponds with Kubernetes `v1.22.0`
+  release).
+  ([k8s@v1.22.0](https://github.com/kubernetes/kubernetes/releases/tag/v1.22.0))
+
 ## v0.6.0
 
 ### Improvements
