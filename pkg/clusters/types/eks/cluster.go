@@ -1,9 +1,8 @@
-package EKS
+package eks
 
 import (
 	"context"
 	"fmt"
-	"os"
 	"strings"
 	"sync"
 
@@ -63,13 +62,7 @@ func (c *eKSCluster) Version() (semver.Version, error) {
 }
 
 func (c *eKSCluster) Cleanup(ctx context.Context) error {
-	c.l.Lock()
-	defer c.l.Unlock()
-
-	if os.Getenv(EnvKeepCluster) == "" {
-		return deleteEKSCluster(ctx, c.name)
-	}
-
+	fmt.Printf("currently we do not cleanup eks cluster.")
 	return nil
 }
 

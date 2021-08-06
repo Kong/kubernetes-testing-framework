@@ -1,4 +1,4 @@
-package kind
+package eks
 
 import (
 	"bytes"
@@ -17,13 +17,13 @@ import (
 
 // NewFromExisting provides a Cluster object for a given kind cluster by name.
 func NewFromExisting(name string) (clusters.Cluster, error) {
-	cfg, kc, err := clientForCluster(name)
+	cfg, eks, err := clientForCluster(name)
 	if err != nil {
 		return nil, err
 	}
 	return &eKSCluster{
 		name:   name,
-		client: kc,
+		client: eks,
 		cfg:    cfg,
 		l:      &sync.RWMutex{},
 		addons: make(clusters.Addons),
