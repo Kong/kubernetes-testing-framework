@@ -232,7 +232,7 @@ func defaults() []string {
 		"--set", "admin.http.enabled=true",
 		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
-		"--set", "admin.type=ClusterIP",
+		"--set", "admin.type=LoadBalancer", // break on EKS
 		"--set", "tls.enabled=false",
 		// we set up a few default ports for TCP and UDP proxy stream, it's up to
 		// test cases to use these how they see fit AND clean up after themselves.
