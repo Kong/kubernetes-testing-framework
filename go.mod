@@ -25,7 +25,7 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20210726213435-c6fcb2dbf985 // indirect
-	google.golang.org/api v0.52.0
+	google.golang.org/api v0.53.0
 	google.golang.org/genproto v0.0.0-20210811021853-ddbe55d93216
 	gotest.tools/v3 v3.0.3 // indirect
 	k8s.io/api v0.22.0
