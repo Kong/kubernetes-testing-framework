@@ -39,10 +39,10 @@ body:
     required: false
 - type: textarea
   attributes:
-    label: Kong Ingress Controller version
+    label: Kong Kubernetes Testing Framework Version
     description: |
-      example: v1.3.1
-    placeholder: 'Please put the KIC version here.'
+      example: v0.6.1
+    placeholder: 'Please put the KTF version here.'
     render: shell
   validations:
     required: false
