@@ -79,8 +79,8 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 
 const (
 	// TODO: later handle targeting specific versions of Knative
-	knativeCRDs = "https://github.com/knative/serving/releases/download/v0.16.0/serving-crds.yaml"
-	knativeCore = "https://github.com/knative/serving/releases/download/v0.16.0/serving-core.yaml"
+	knativeCRDs = "https://github.com/knative/serving/releases/download/v0.18.0/serving-crds.yaml"
+	knativeCore = "https://github.com/knative/serving/releases/download/v0.18.0/serving-core.yaml"
 )
 
 func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
