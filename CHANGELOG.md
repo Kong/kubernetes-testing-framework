@@ -2,6 +2,12 @@
 
 ## v0.6.1
 
+### Under The Hood
+
+* Knative resources bumped to v0.18.0 for Kubernetes 1.22 compatibility.
+
+## v0.6.1
+
 ### Improvements
 
 * Utilities for generating and cleaning up transient testing namespaces
