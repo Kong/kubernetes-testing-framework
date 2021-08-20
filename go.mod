@@ -28,7 +28,7 @@ require (
 	google.golang.org/api v0.54.0
 	google.golang.org/genproto v0.0.0-20210813162853-db860fec028c
 	gotest.tools/v3 v3.0.3 // indirect
-	k8s.io/api v0.22.0
-	k8s.io/apimachinery v0.22.0
-	k8s.io/client-go v0.22.0
+	k8s.io/api v0.22.1
+	k8s.io/apimachinery v0.22.1
+	k8s.io/client-go v0.22.1
 )
