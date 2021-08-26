@@ -146,6 +146,13 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
+	if a.dbmode == EnterpriseDBLess {
+		a.deployArgs = append(a.deployArgs,
+			"--set", "image.repository=kong/kong-gateway",
+			"--set", "image.tag=\"2.5.0.0-alpine\"",
+		)
+	}
+
 	// do the deployment and install the chart
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--create-namespace", "--namespace", a.namespace)

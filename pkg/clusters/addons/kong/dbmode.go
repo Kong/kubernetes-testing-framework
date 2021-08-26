@@ -13,4 +13,7 @@ const (
 
 	// PostgreSQL indicates that the Kong Proxy should be deployed with a PostgreSQL storage backend.
 	PostgreSQL DBMode = "postgres"
+
+	// EnterpriseDBLess indicates that the Kong Proxy should be deployed with Dbless enterprise version
+	EnterpriseDBLess DBMode = "enterprisedbless"
 )
