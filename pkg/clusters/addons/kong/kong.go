@@ -29,6 +29,12 @@ const (
 	AddonName clusters.AddonName = "kong"
 
 	httpPort = 80
+
+	// DefaultEnterpriseImageRepo default kong enterprise image
+	DefaultEnterpriseImageRepo = "kong/kong-gateway"
+
+	// DefaultEnterpriseImageTag latest kong enterprise image tag
+	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -37,6 +43,7 @@ type Addon struct {
 	deployArgs []string
 	dbmode     DBMode
 	proxyOnly  bool
+	enterprise bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -146,10 +153,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
-	if a.dbmode == EnterpriseDBLess {
+	imageRepo := fmt.Sprintf("image.repository=%s", DefaultEnterpriseImageRepo)
+	imageTag := fmt.Sprintf("image.tag=%s", DefaultEnterpriseImageTag)
+	if a.enterprise {
 		a.deployArgs = append(a.deployArgs,
-			"--set", "image.repository=kong/kong-gateway",
-			"--set", "image.tag=\"2.5.0.0-alpine\"",
+			"--set", imageRepo,
+			"--set", imageTag,
 		)
 	}
 

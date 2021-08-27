@@ -11,6 +11,9 @@ type Builder struct {
 	deployArgs []string
 	dbmode     DBMode
 	proxyOnly  bool
+	enterprise bool
+	repo       string
+	tag        string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -33,6 +36,19 @@ func (b *Builder) WithDBLess() *Builder {
 // WithPostgreSQL configures the resulting Addon to deploy a PostgreSQL proxy backend.
 func (b *Builder) WithPostgreSQL() *Builder {
 	b.dbmode = PostgreSQL
+	return b
+}
+
+// WithEnterprise deploying kong enterpise
+func (b *Builder) WithEnterprise() *Builder {
+	b.enterprise = true
+	return b
+}
+
+// WithImage specify docker image repo and tag
+func (b *Builder) WithImage(repo, tag string) *Builder {
+	b.repo = repo
+	b.tag = tag
 	return b
 }
 
