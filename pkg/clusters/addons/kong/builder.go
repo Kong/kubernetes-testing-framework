@@ -36,6 +36,11 @@ func (b *Builder) WithPostgreSQL() *Builder {
 	return b
 }
 
+func (b *Builder) WithEnterprise(dbmode DBMode) *Builder {
+	b.dbmode = dbmode
+	return b
+}
+
 // WithControllerDisabled configures the Addon in proxy only mode (bring your own control plane).
 func (b *Builder) WithControllerDisabled() *Builder {
 	b.proxyOnly = true
