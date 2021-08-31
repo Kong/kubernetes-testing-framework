@@ -30,11 +30,11 @@ const (
 
 	httpPort = 80
 
-	// EnterpriseImageRepo default kong enterprise image
-	EnterpriseImageRepo = "kong/kong-gateway"
+	// DefaultEnterpriseImageRepo default kong enterprise image
+	DefaultEnterpriseImageRepo = "kong/kong-gateway"
 
-	// EnterpriseImageTag latest kong enterprise image tag
-	EnterpriseImageTag = "2.5.0.0-alpine"
+	// DefaultEnterpriseImageTag latest kong enterprise image tag
+	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -153,8 +153,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
-	imageRepo := fmt.Sprintf("image.repository=%s", EnterpriseImageRepo)
-	imageTag := fmt.Sprintf("image.tag=%s", EnterpriseImageTag)
+	imageRepo := fmt.Sprintf("image.repository=%s", DefaultEnterpriseImageRepo)
+	imageTag := fmt.Sprintf("image.tag=%s", DefaultEnterpriseImageTag)
 	if a.enterperise {
 		a.deployArgs = append(a.deployArgs,
 			"--set", imageRepo,

@@ -21,7 +21,7 @@ func TestKongEnterpriseWithDBLessMode(t *testing.T) {
 
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
-	kong := kongaddon.NewBuilder().WithEnterprise(kongaddon.DBLESS).WithImage(kongaddon.EnterpriseImageRepo, kongaddon.EnterpriseImageTag).Build()
+	kong := kongaddon.NewBuilder().WithEnterprise().WithDBLess().WithImage(kongaddon.EnterpriseImageRepo, kongaddon.EnterpriseImageTag).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")

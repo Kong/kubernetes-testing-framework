@@ -39,12 +39,13 @@ func (b *Builder) WithPostgreSQL() *Builder {
 	return b
 }
 
-func (b *Builder) WithEnterprise(dbMode DBMode) *Builder {
-	b.dbmode = dbMode
+// WithEnterprise deploying kong enterpise
+func (b *Builder) WithEnterprise() *Builder {
 	b.enterprise = true
 	return b
 }
 
+// WithImage specify docker image repo and tag
 func (b *Builder) WithImage(repo, tag string) *Builder {
 	b.repo = repo
 	b.tag = tag
