@@ -149,7 +149,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if a.dbmode == EnterpriseDBLess {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "image.repository=kong/kong-gateway",
-			"--set", "image.tag=\"2.5.0.0-alpine\"",
+			"--set", "image.tag=2.5.0.0-alpine",
 		)
 	}
 

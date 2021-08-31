@@ -36,8 +36,8 @@ func (b *Builder) WithPostgreSQL() *Builder {
 	return b
 }
 
-func (b *Builder) WithEnterprise(dbmode DBMode) *Builder {
-	b.dbmode = dbmode
+func (b *Builder) WithEnterprise() *Builder {
+	b.dbmode = EnterpriseDBLess
 	return b
 }
 
