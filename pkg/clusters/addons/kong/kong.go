@@ -30,8 +30,11 @@ const (
 
 	httpPort = 80
 
+	// EnterpriseImageRepo default kong enterprise image
 	EnterpriseImageRepo = "kong/kong-gateway"
-	EnterpriseImageTag  = "2.5.0.0-alpine"
+
+	// EnterpriseImageTag latest kong enterprise image tag
+	EnterpriseImageTag = "2.5.0.0-alpine"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
