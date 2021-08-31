@@ -39,11 +39,11 @@ const (
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
-	namespace   string
-	deployArgs  []string
-	dbmode      DBMode
-	proxyOnly   bool
-	enterperise bool
+	namespace  string
+	deployArgs []string
+	dbmode     DBMode
+	proxyOnly  bool
+	enterprise bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
