@@ -11,6 +11,9 @@ type Builder struct {
 	deployArgs []string
 	dbmode     DBMode
 	proxyOnly  bool
+	enterprise bool
+	repo       string
+	tag        string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -36,8 +39,15 @@ func (b *Builder) WithPostgreSQL() *Builder {
 	return b
 }
 
-func (b *Builder) WithEnterprise() *Builder {
-	b.dbmode = EnterpriseDBLess
+func (b *Builder) WithEnterprise(dbMode DBMode) *Builder {
+	b.dbmode = dbMode
+	b.enterprise = true
+	return b
+}
+
+func (b *Builder) WithImage(repo, tag string) *Builder {
+	b.repo = repo
+	b.tag = tag
 	return b
 }
 
