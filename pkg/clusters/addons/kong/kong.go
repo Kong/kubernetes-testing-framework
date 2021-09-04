@@ -44,6 +44,8 @@ type Addon struct {
 	dbmode     DBMode
 	proxyOnly  bool
 	enterprise bool
+	repo       string
+	tag        string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
