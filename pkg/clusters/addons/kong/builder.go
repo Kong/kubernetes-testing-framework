@@ -42,6 +42,8 @@ func (b *Builder) WithPostgreSQL() *Builder {
 // WithEnterprise deploying kong enterpise
 func (b *Builder) WithEnterprise() *Builder {
 	b.enterprise = true
+	b.repo = DefaultEnterpriseImageRepo
+	b.tag = DefaultEnterpriseImageTag
 	return b
 }
 
@@ -66,5 +68,8 @@ func (b *Builder) Build() *Addon {
 		namespace:  b.namespace,
 		deployArgs: b.deployArgs,
 		proxyOnly:  b.proxyOnly,
+		enterprise: b.enterprise,
+		repo:       b.repo,
+		tag:        b.tag,
 	}
 }
