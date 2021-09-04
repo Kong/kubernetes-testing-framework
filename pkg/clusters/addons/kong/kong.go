@@ -155,8 +155,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
-	imageRepo := fmt.Sprintf("image.repository=%s", DefaultEnterpriseImageRepo)
-	imageTag := fmt.Sprintf("image.tag=%s", DefaultEnterpriseImageTag)
+	imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
+	imageTag := fmt.Sprintf("image.tag=%s", a.tag)
 	if a.enterprise {
 		a.deployArgs = append(a.deployArgs,
 			"--set", imageRepo,
