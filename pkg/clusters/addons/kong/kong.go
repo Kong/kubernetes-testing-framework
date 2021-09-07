@@ -3,6 +3,7 @@ package kong
 import (
 	"bytes"
 	"context"
+	"encoding/base64"
 	"fmt"
 	"io"
 	"net/url"
@@ -35,6 +36,9 @@ const (
 
 	// DefaultEnterpriseImageTag latest kong enterprise image tag
 	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
+
+	// KONG_LICENSE_SECRET_NAME is the kong license data secret name
+	KONG_LICENSE_SECRET_NAME = "kong-enterprise-license"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -155,13 +159,24 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
-	imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
-	imageTag := fmt.Sprintf("image.tag=%s", a.tag)
 	if a.enterprise {
+		imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
+		imageTag := fmt.Sprintf("image.tag=%s", a.tag)
 		a.deployArgs = append(a.deployArgs,
 			"--set", imageRepo,
 			"--set", imageTag,
 		)
+
+		if a.dbmode == PostgreSQL {
+			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KONG_LICENSE_SECRET_NAME); err != nil {
+				return fmt.Errorf("failed deploying kong enterprise license. err %v", err)
+			}
+			enterprise_license_secret := fmt.Sprintf("license_secret=%s", KONG_LICENSE_SECRET_NAME)
+			a.deployArgs = append(a.deployArgs,
+				"--set", enterprise_license_secret,
+				"--set", "enterprise.rbac.enabled=true",
+			)
+		}
 	}
 
 	// do the deployment and install the chart
@@ -313,4 +328,47 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	}
 
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
+}
+
+func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
+	license := os.Getenv("LICENSE_KEY")
+	signature := os.Getenv("SIGNATURE")
+	licenseJson := `
+	{
+		"license": {
+		  "payload": {
+			"admin_seats": "5",
+			"customer": "automation",
+			"dataplanes": "100",
+			"license_creation_date": "2021-07-26",
+			"license_expiration_date": "2021-10-31",
+			"license_key": ` + license + `,
+			"product_subscription": "Konnect Enterprise",
+			"support_plan": "None"
+		  },
+		  "signature": ` + signature + `,
+		  "version": "1"
+		}
+	  }
+	  }
+	`
+	encoded := base64.StdEncoding.EncodeToString([]byte(licenseJson))
+	// encodebase64 from the license json and convert into bytes
+	newSecret := &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      name,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"license": []byte(encoded),
+		},
+	}
+
+	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed creating kong-enterprise-license secret")
+	}
+	fmt.Printf("successfully deploy kong-enterprise-license secret into the cluster.")
+	return nil
 }
