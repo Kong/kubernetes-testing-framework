@@ -171,9 +171,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KONG_LICENSE_SECRET_NAME); err != nil {
 				return fmt.Errorf("failed deploying kong enterprise license. err %v", err)
 			}
-			enterprise_license_secret := fmt.Sprintf("license_secret=%s", KONG_LICENSE_SECRET_NAME)
+			enterpriseLicenseSecret := fmt.Sprintf("license_secret=%s", KONG_LICENSE_SECRET_NAME)
 			a.deployArgs = append(a.deployArgs,
-				"--set", enterprise_license_secret,
+				"--set", enterpriseLicenseSecret,
 				"--set", "enterprise.rbac.enabled=true",
 			)
 		}
@@ -333,7 +333,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
 	license := os.Getenv("LICENSE_KEY")
 	signature := os.Getenv("SIGNATURE")
-	licenseJson := `
+	licenseJSON := `
 	{
 		"license": {
 		  "payload": {
@@ -352,8 +352,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	  }
 	  }
 	`
-	encoded := base64.StdEncoding.EncodeToString([]byte(licenseJson))
-	// encodebase64 from the license json and convert into bytes
+	encoded := base64.StdEncoding.EncodeToString([]byte(licenseJSON))
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
