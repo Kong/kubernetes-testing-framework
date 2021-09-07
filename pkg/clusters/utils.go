@@ -75,3 +75,31 @@ func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace stri
 		return nil, fmt.Errorf("%T is not a supported ingress type", ingress)
 	}
 }
+
+// CreateNamespace create customized namespace
+func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) error {
+	nsName := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
+
+	fmt.Printf("creating namespace %s.", namespace)
+	_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed creating namespace %s, err %v", namespace, err)
+	}
+
+	nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return fmt.Errorf("failed creating namespace %v", err)
+	}
+	for _, item := range nsList.Items {
+		if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
+			fmt.Printf("created namespace %s successfully.", namespace)
+			return nil
+		}
+	}
+
+	return fmt.Errorf("failed creating namespace %s", namespace)
+}

@@ -15,13 +15,13 @@ import (
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
 )
 
-func TestKongEnterpriseWithDBLessMode(t *testing.T) {
+func TestKongEnterprisePostgres(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
-	kong := kongaddon.NewBuilder().WithEnterprise().WithDBLess().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).Build()
+	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")
