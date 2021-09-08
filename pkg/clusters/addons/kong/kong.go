@@ -366,6 +366,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	  }
 	`
 	encoded := base64.StdEncoding.EncodeToString([]byte(licenseJSON))
+	fmt.Printf("removing me %s", encoded)
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
