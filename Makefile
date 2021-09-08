@@ -32,5 +32,6 @@ test.e2e:
 
 .PHONY: test.integration
 test.integration:
+	echo ${KONG_ENTERPRISE_LICENSE}
 	@GOFLAGS="-tags=integration_tests" go test -timeout 20m -race -v \
 		-covermode=atomic -coverprofile=coverage.out ./...

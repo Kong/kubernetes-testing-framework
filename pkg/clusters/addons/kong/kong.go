@@ -339,7 +339,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 }
 
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
-	license := os.Getenv(EnterpriseLicense)
+	license := os.Getenv("KONG_ENTERPRISE_LICENSE")
 	if license == "" {
 		return fmt.Errorf("failed retrieving license key from environment")
 	}
