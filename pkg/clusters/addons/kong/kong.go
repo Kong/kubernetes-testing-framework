@@ -173,7 +173,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 		if a.dbmode == PostgreSQL {
 			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
-				return fmt.Errorf("failed deploying kong enterprise license. err %v", err)
+				return err
 			}
 			enterpriseLicenseSecret := fmt.Sprintf("license_secret=%s", KongLicenseSecretName)
 			a.deployArgs = append(a.deployArgs,
@@ -380,7 +380,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 
 	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed creating kong-enterprise-license secret")
+		return fmt.Errorf("failed creating kong-enterprise-license secret, err %v", err)
 	}
 	fmt.Printf("successfully deploy kong-enterprise-license secret into the cluster.")
 	return nil
