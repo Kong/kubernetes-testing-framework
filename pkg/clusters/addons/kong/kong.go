@@ -159,6 +159,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
+	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
+		return err
+	}
+
 	if a.enterprise {
 		imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
 		imageTag := fmt.Sprintf("image.tag=%s", a.tag)
@@ -175,12 +179,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			a.deployArgs = append(a.deployArgs,
 				"--set", enterpriseLicenseSecret,
 				"--set", "enterprise.rbac.enabled=true",
+				"--set", "admin.type=LoadBalancer",
 			)
 		}
-	}
-
-	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
-		return err
 	}
 
 	// do the deployment and install the chart
