@@ -179,9 +179,13 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
+	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
+		return err
+	}
+
 	// do the deployment and install the chart
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
-	args = append(args, "--create-namespace", "--namespace", a.namespace)
+	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
 	stderr = new(bytes.Buffer)
 	cmd = exec.CommandContext(ctx, "helm", args...)
@@ -332,7 +336,15 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
 	license := os.Getenv("LICENSE_KEY")
+	if license == "" {
+		return fmt.Errorf("failed retrieving license key from environment")
+	}
+
 	signature := os.Getenv("SIGNATURE")
+	if signature == "" {
+		return fmt.Errorf("failed retrieving license signature from environment")
+	}
+
 	licenseJSON := `
 	{
 		"license": {
