@@ -14,6 +14,7 @@ type Builder struct {
 	enterprise bool
 	repo       string
 	tag        string
+	license    string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -44,6 +45,7 @@ func (b *Builder) WithEnterprise() *Builder {
 	b.enterprise = true
 	b.repo = DefaultEnterpriseImageRepo
 	b.tag = DefaultEnterpriseImageTag
+	b.license = KongLicenseSecretName
 	return b
 }
 
@@ -51,6 +53,12 @@ func (b *Builder) WithEnterprise() *Builder {
 func (b *Builder) WithImage(repo, tag string) *Builder {
 	b.repo = repo
 	b.tag = tag
+	return b
+}
+
+// WithLicense specify licese secret name
+func (b *Builder) WithLicense(license string) *Builder {
+	b.license = license
 	return b
 }
 
@@ -71,5 +79,6 @@ func (b *Builder) Build() *Addon {
 		enterprise: b.enterprise,
 		repo:       b.repo,
 		tag:        b.tag,
+		license:    b.license,
 	}
 }

@@ -12,6 +12,7 @@ on:
 
 jobs:
   tests-and-coverage:
+    environment: "ENTERPRISE"
     runs-on: ubuntu-latest
     steps:
     - name: setup golang
@@ -29,6 +30,8 @@ jobs:
       uses: actions/checkout@v2
     - name: run all tests
       run: make test.all
+      env:
+        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.0.3
       with:
