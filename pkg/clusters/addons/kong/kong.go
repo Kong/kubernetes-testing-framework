@@ -344,7 +344,6 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 		return fmt.Errorf("failed retrieving license key from environment")
 	}
 
-	fmt.Printf("removing me %s", license)
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
