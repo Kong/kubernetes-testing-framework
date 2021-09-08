@@ -3,7 +3,6 @@ package kong
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"net/url"
@@ -39,6 +38,9 @@ const (
 
 	// KongLicenseSecretName is the kong license data secret name
 	KongLicenseSecretName = "kong-enterprise-license"
+
+	// Enterpriselicense is the kong enterprise test license
+	EnterpriseLicense = "KONG_ENTERPRISE_LICENSE"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -336,37 +338,12 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 }
 
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
-	license := os.Getenv("LICENSE_KEY")
+	license := os.Getenv(EnterpriseLicense)
 	if license == "" {
 		return fmt.Errorf("failed retrieving license key from environment")
 	}
 
-	signature := os.Getenv("SIGNATURE")
-	if signature == "" {
-		return fmt.Errorf("failed retrieving license signature from environment")
-	}
-
-	licenseJSON := `
-	{
-		"license": {
-		  "payload": {
-			"admin_seats": "5",
-			"customer": "automation",
-			"dataplanes": "100",
-			"license_creation_date": "2021-07-26",
-			"license_expiration_date": "2021-10-31",
-			"license_key": ` + license + `,
-			"product_subscription": "Konnect Enterprise",
-			"support_plan": "None"
-		  },
-		  "signature": ` + signature + `,
-		  "version": "1"
-		}
-	  }
-	  }
-	`
-	encoded := base64.StdEncoding.EncodeToString([]byte(licenseJSON))
-	fmt.Printf("removing me %s", encoded)
+	fmt.Printf("removing me %s", license)
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
@@ -374,7 +351,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"license": []byte(encoded),
+			"license": []byte(license),
 		},
 	}
 
