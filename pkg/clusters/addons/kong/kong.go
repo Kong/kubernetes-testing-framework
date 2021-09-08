@@ -52,6 +52,7 @@ type Addon struct {
 	enterprise bool
 	repo       string
 	tag        string
+	license    string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -173,17 +174,17 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", imageTag,
 		)
 
-		if a.dbmode == PostgreSQL {
-			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
-				return err
-			}
-			enterpriseLicenseSecret := fmt.Sprintf("license_secret=%s", KongLicenseSecretName)
-			a.deployArgs = append(a.deployArgs,
-				"--set", enterpriseLicenseSecret,
-				"--set", "enterprise.rbac.enabled=true",
-				"--set", "admin.type=LoadBalancer",
-			)
+		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
+			return err
 		}
+
+		enterpriseLicenseSecret := fmt.Sprintf("license_secret=%s", a.license)
+		a.deployArgs = append(a.deployArgs,
+			"--set", enterpriseLicenseSecret,
+			"--set", "enterprise.rbac.enabled=true",
+			"--set", "admin.type=LoadBalancer",
+		)
+
 	}
 
 	// do the deployment and install the chart
