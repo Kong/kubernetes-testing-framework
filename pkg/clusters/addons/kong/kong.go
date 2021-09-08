@@ -39,7 +39,7 @@ const (
 	// KongLicenseSecretName is the kong license data secret name
 	KongLicenseSecretName = "kong-enterprise-license"
 
-	// Enterpriselicense is the kong enterprise test license
+	// EnterpriseLicense is the kong enterprise test license
 	EnterpriseLicense = "KONG_ENTERPRISE_LICENSE"
 )
 
