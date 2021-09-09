@@ -228,7 +228,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.enterprise && a.dbmode == PostgreSQL {
 		// do the deployment and installation
-		args := []string{"-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/a7e77b555534904241fc82b438ff18042f83b6f7/test/integration/enterprise-postgress.yaml"}
+		args := []string{"-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/97fd265c465c3241de1c9e4c215bcfc155f3f09e/test/integration/enterprise-postgress.yaml"}
 		stderr = new(bytes.Buffer)
 		cmd = exec.CommandContext(ctx, "kubectl", args...)
 		cmd.Stdout = io.Discard
