@@ -226,6 +226,22 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	}
 
+	if a.enterprise && a.dbmode == PostgreSQL {
+		// do the deployment and installation
+		args := []string{"kubectl", "-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/af79866cd582915ef91a260ca143c58b90ac53b6/test/integration/enterprise-postgress.yaml"}
+		stderr = new(bytes.Buffer)
+		cmd = exec.CommandContext(ctx, "helm", args...)
+		cmd.Stdout = io.Discard
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			if !strings.Contains(stderr.String(), "cannot re-use") {
+				return fmt.Errorf("%s: %w", stderr.String(), err)
+			}
+		}
+
+		return runUDPServiceHack(ctx, cluster, DefaultNamespace)
+	}
+
 	// do the deployment and install the chart
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--namespace", a.namespace)
