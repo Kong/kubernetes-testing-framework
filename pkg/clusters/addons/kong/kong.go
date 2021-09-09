@@ -434,9 +434,9 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 		return fmt.Errorf("failed getting current dir, err %v", err)
 	}
 
-	gui_f := pwd + "/admin_gui_session_conf"
+	guiF := pwd + "/admin_gui_session_conf"
 
-	fi, err := os.Create(gui_f)
+	fi, err := os.Create(guiF)
 	if err != nil {
 		panic(err)
 	}
@@ -446,8 +446,8 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 		}
 	}()
 
-	portal_f := pwd + "/portal_session_conf"
-	fp, err := os.Create(portal_f)
+	portalF := pwd + "/portal_session_conf"
+	fp, err := os.Create(portalF)
 	if err != nil {
 		panic(err)
 	}
@@ -457,19 +457,19 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 		}
 	}()
 
-	err = ioutil.WriteFile(gui_f, []byte(`{"cookie_name":"admin_session","cookie_samesite":"off","secret":"admin-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0644)
+	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"admin_session","cookie_samesite":"off","secret":"admin-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0600)
 	if err != nil {
 		return fmt.Errorf("failed writing file admin_gui_session_conf, err %v", err)
 	}
 
-	err = ioutil.WriteFile(portal_f, []byte(`{"cookie_name":"portal_session","cookie_samesite":"off","secret":"portal-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0644)
+	err = ioutil.WriteFile(portalF, []byte(`{"cookie_name":"portal_session","cookie_samesite":"off","secret":"portal-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0600)
 	if err != nil {
 		return fmt.Errorf("failed writing file portal_session_conf, err %v", err)
 	}
 
-	gui_file := fmt.Sprintf("--from-file=%s", gui_f)
-	port_file := fmt.Sprintf("--from-file=%s", portal_f)
-	cmd = exec.CommandContext(ctx, "kubectl", "-n", namespace, "create", "secret", "generic", "kong-session-config", gui_file, port_file)
+	guiFile := fmt.Sprintf("--from-file=%s", guiF)
+	portFile := fmt.Sprintf("--from-file=%s", portalF)
+	cmd = exec.CommandContext(ctx, "kubectl", "-n", namespace, "create", "secret", "generic", "kong-session-config", guiFile, portFile)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
