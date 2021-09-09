@@ -45,13 +45,14 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, err)
 	require.NotNil(t, proxyURL)
 
-	url := kong.ProxyAdminURL() + "/rbac/users"
+	adminURL, err := kong.ProxyAdminURL(ctx, env.Cluster())
+	require.NoError(t, err)
+	require.NotNil(t, adminURL)
+	url := adminURL.String() + "/workspaces"
 	fmt.Println("URL:>", url)
 
 	var jsonStr = []byte(`{
-        "enabled": True,
-        "name": "user_name",
-        "user_token": user_token,
+        "name": "test-workspace",
     }
 	`)
 

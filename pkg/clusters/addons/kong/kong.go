@@ -228,7 +228,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.enterprise && a.dbmode == PostgreSQL {
 		// do the deployment and installation
-		args := []string{"-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/97fd265c465c3241de1c9e4c215bcfc155f3f09e/test/integration/enterprise-postgress.yaml"}
+		args := []string{"-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/2486cfecf1cac9be7f285f6b077765a75cdc649e/test/integration/enterprise-postgress.yaml"}
 		stderr = new(bytes.Buffer)
 		cmd = exec.CommandContext(ctx, "kubectl", args...)
 		cmd.Stdout = io.Discard
@@ -382,7 +382,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
-			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
+			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, service.Spec.Ports[0].Port))
 		}
 	default:
 		if service.Spec.ClusterIP != "" {
