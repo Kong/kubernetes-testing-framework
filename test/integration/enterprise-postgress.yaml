@@ -1178,7 +1178,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   name: kong-leader-election
-
+  namespace: kong-system
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
@@ -1186,7 +1186,7 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kong-serviceaccount
-
+  namespace: kong-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -1199,13 +1199,13 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: kong-serviceaccount
-
+  namespace: kong-system
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: kong-admin
-
+  namespace: kong-system
 spec:
   externalTrafficPolicy: Local
   ports:
@@ -1221,7 +1221,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kong-manager
-
+  namespace: kong-system
 spec:
   externalTrafficPolicy: Local
   ports:
@@ -1240,7 +1240,7 @@ metadata:
     service.beta.kubernetes.io/aws-load-balancer-backend-protocol: tcp
     service.beta.kubernetes.io/aws-load-balancer-type: nlb
   name: kong-proxy
-
+  namespace: kong-system
 spec:
   ports:
   - name: proxy
@@ -1259,7 +1259,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: kong-validation-webhook
-
+  namespace: kong-system
 spec:
   ports:
   - name: webhook
@@ -1273,7 +1273,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: postgres
-
+  namespace: kong-system
 spec:
   ports:
   - name: pgql
@@ -1289,7 +1289,7 @@ metadata:
   labels:
     app: ingress-kong
   name: ingress-kong
-
+  namespace: kong-system
 spec:
   replicas: 1
   selector:
@@ -1390,7 +1390,7 @@ apiVersion: apps/v1
 kind: StatefulSet
 metadata:
   name: postgres
-
+  namespace: kong-system
 spec:
   replicas: 1
   selector:
@@ -1435,7 +1435,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: kong-migrations
-
+  namespace: kong-system
 spec:
   template:
     metadata:
