@@ -3,7 +3,10 @@
 package integration
 
 import (
+	"bytes"
 	"context"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 	"testing"
 	"time"
@@ -41,6 +44,32 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	proxyURL, err := kong.ProxyURL(ctx, env.Cluster())
 	require.NoError(t, err)
 	require.NotNil(t, proxyURL)
+
+	url := kong.ProxyAdminURL() + "/rbac/users"
+	fmt.Println("URL:>", url)
+
+	var jsonStr = []byte(`{
+        "enabled": True,
+        "name": "user_name",
+        "user_token": user_token,
+    }
+	`)
+
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+	req.Header.Set("kong-admin-token", "password")
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer resp.Body.Close()
+
+	fmt.Println("response Status:", resp.Status)
+	fmt.Println("response Headers:", resp.Header)
+	body, _ := ioutil.ReadAll(resp.Body)
+	fmt.Println("response Body:", string(body))
 
 	t.Logf("found url %s for proxy, now verifying it is routable", proxyURL)
 	httpc := http.Client{Timeout: time.Second * 3}
