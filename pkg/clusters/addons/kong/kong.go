@@ -182,12 +182,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			return err
 		}
 
-		imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
-		imageTag := fmt.Sprintf("image.tag=%s", a.tag)
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
 		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
-			"--set", "ingressController.installCRDs=false", "--set", "env.kong_password=password", "--set", imageRepo, "--set", imageTag,
+			"--set", "ingressController.installCRDs=false", "--set", "env.kong_password=password",
 			"--skip-crds")
 	} else {
 		args = append(args, a.deployArgs...)
