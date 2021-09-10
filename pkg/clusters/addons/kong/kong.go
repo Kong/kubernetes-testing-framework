@@ -173,14 +173,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return err
 	}
 
+	// do the deployment and install the chart
+	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
+	args = append(args, "--namespace", a.namespace)
 	if a.enterprise {
-		imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
-		imageTag := fmt.Sprintf("image.tag=%s", a.tag)
-		a.deployArgs = append(a.deployArgs,
-			"--set", imageRepo,
-			"--set", imageTag,
-		)
-
 		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
 			return err
 		}
@@ -189,39 +185,18 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			return err
 		}
 
-		enterpriseLicenseSecret := fmt.Sprintf("enterprise.license_secret=%s", a.license)
-		postgresspwd := fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", EnterpriseSuperUseerPwd)
-		a.deployArgs = append(a.deployArgs,
-
-			"--set", "enterprise.enabled=true",
-			"--set", enterpriseLicenseSecret,
-			"--set", "enterprise.rbac.enabled=true",
-			"--set", "enterprise.vitals.enabled=false",
-			"--set", "enterprise.portal.enabled=false",
-			"--set", "enterprise.smtp.enabled=false",
-
-			"--set", "portal.enabled=false",
-			"--set", "portalapi.enabled=false",
-
-			"--set", "env.prefix=/kong_prefix/",
-			"--set", "env.database=postgres",
-			"--set", postgresspwd,
-			"--set", "env.password.valueFrom.secretKeyRef.key=password",
-
-			"--set", "admin.type=LoadBalancer",
-			"--set", "admin.annotations.konghq.com/protocol=http",
-			"--set", "admin.http.servicePort=8001",
-			"--set", "admin.http.containerPort=8001",
-			"--version", "2.3.0",
-		)
+		imageRepo := fmt.Sprintf("image.repository=%s", a.repo)
+		imageTag := fmt.Sprintf("image.tag=%s", a.tag)
+		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
+		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
+			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
+			"--set", "ingressController.installCRDs=false", "--set", "env.kong_password=password", "--set", imageRepo, "--set", imageTag,
+			"--skip-crds")
+	} else {
+		args = append(args, a.deployArgs...)
 	}
 
-	// do the deployment and install the chart
-	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
-	args = append(args, "--namespace", a.namespace)
-	args = append(args, a.deployArgs...)
 	stderr = new(bytes.Buffer)
-	fmt.Printf(" helm args %s", args)
 	cmd = exec.CommandContext(ctx, "helm", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr

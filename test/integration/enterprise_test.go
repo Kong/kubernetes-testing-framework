@@ -51,10 +51,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	url := adminURL.String() + "/workspaces"
 	fmt.Println("URL:>", url)
 
-	var jsonStr = []byte(`{
-        "name": "test-workspace",
-    }
-	`)
+	var jsonStr = []byte(`{"name": "test-workspace"}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
 	req.Header.Set("kong-admin-token", "password")
@@ -68,7 +65,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println("response Body:", string(body))
+	require.Equal(t, resp.StatusCode, 201)
 
 	t.Logf("found url %s for proxy, now verifying it is routable", proxyURL)
 	httpc := http.Client{Timeout: time.Second * 3}
