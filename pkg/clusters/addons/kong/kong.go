@@ -362,7 +362,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 
 	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed creating kong-enterprise-license secret, err %v", err)
+		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
 	fmt.Printf("successfully deployed kong-enterprise-license into the cluster.")
 	return nil

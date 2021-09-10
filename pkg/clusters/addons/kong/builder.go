@@ -56,7 +56,7 @@ func (b *Builder) WithImage(repo, tag string) *Builder {
 	return b
 }
 
-// WithLicense specify licese secret name
+// WithLicense specify license secret name
 func (b *Builder) WithLicense(license string) *Builder {
 	b.license = license
 	return b
