@@ -84,7 +84,6 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 		},
 	}
 
-	fmt.Printf("creating namespace %s.", namespace)
 	_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed creating namespace %s, err %v", namespace, err)

@@ -40,11 +40,8 @@ const (
 	// KongLicenseSecretName is the kong license data secret name
 	KongLicenseSecretName = "kong-enterprise-license"
 
-	// EnterpriseLicense is the kong enterprise test license
-	EnterpriseLicense = "KONG_ENTERPRISE_LICENSE"
-
-	// EnterpriseSuperUseerPwd is the super user password
-	EnterpriseSuperUseerPwd = "kong-enterprise-superuser-password"
+	// EnterpriseAdminPasswordSecretName is the kong admin seed password
+	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
 
 	// EnterprisePWD is password
 	EnterprisePWD = "password"
@@ -371,7 +368,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 func prepareSecrets(ctx context.Context, namespace string) error {
 	stderr := new(bytes.Buffer)
 	pwd := fmt.Sprintf("--from-literal=password=%s", EnterprisePWD)
-	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseSuperUseerPwd, "-n", namespace, pwd)
+	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
