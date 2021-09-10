@@ -194,6 +194,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	stderr = new(bytes.Buffer)
+	fmt.Printf("deployment args %s", args)
 	cmd = exec.CommandContext(ctx, "helm", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
