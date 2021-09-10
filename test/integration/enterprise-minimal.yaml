@@ -1,0 +1,52 @@
+image:
+  repository: kong/kong-gateway
+  tag: "2.5.0.0-alpine"
+
+admin:
+  enabled: true
+  type: LoadBalancer
+  annotations:
+    konghq.com/protocol: "http"
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+
+enterprise:
+  enabled: true
+  # CHANGEME: https://github.com/Kong/charts/blob/main/charts/kong/README.md#kong-enterprise-license
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: false
+  portal:
+    enabled: false
+  rbac:
+    enabled: true
+  smtp:
+    enabled: false
+
+portal:
+  enabled: false
+
+portalapi:
+  enabled: false
+
+env:
+  prefix: /kong_prefix/
+  database: postgres
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password #CHANGEME
+        key: password #CHANGEME
+
+postgresql:
+  enabled: true
+  postgresqlUsername: kong
+  postgresqlDatabase: kong
+  service:
+    port: 5432
+
+ingressController:
+  enabled: false
+  installCRDs: false
