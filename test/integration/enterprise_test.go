@@ -65,7 +65,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	defer resp.Body.Close()
 
 	body, _ := ioutil.ReadAll(resp.Body)
-	require.Equal(t, resp.StatusCode, 201)
+	require.Equal(t, 201, resp.StatusCode)
 	t.Logf("successfully created workspace %s", body)
 
 	t.Logf("found url %s for proxy, now verifying it is routable", proxyURL)
