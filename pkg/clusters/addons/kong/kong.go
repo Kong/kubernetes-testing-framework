@@ -192,54 +192,28 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		enterpriseLicenseSecret := fmt.Sprintf("enterprise.license_secret=%s", a.license)
 		postgresspwd := fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", EnterpriseSuperUseerPwd)
 		a.deployArgs = append(a.deployArgs,
-			"--set", enterpriseLicenseSecret,
-			"--set", "enterprise.rbac.enabled=true",
-			"--set", "kong_password=password",
 
-			"--set", "admin.type=LoadBalancer",
-			"--set", "admin.enabled=true",
-			"--set", "admin.http.enabled=true",
-			"--set", "admin.tls.enabled=false",
-			"--set", "tls.enabled=false",
-			"--set", "env.prefix=/kong_prefix/",
-			"--set", "admin.tls.enabled=false",
 			"--set", "enterprise.enabled=true",
 			"--set", enterpriseLicenseSecret,
-			"--set", "enterprise.vitals.enabled=true",
-			"--set", "enterprise.portal.enabled=true",
 			"--set", "enterprise.rbac.enabled=true",
-			"--set", "manager.enabled=true",
-			"--set", "manager.type=LoadBalancer",
-			"--set", "manager.http.enabled=true",
-			"--set", "manager.tls.enabled=false",
-			"--set", "manager.ingress.enabled=true",
+			"--set", "enterprise.vitals.enabled=false",
+			"--set", "enterprise.portal.enabled=false",
+			"--set", "enterprise.smtp.enabled=false",
+
+			"--set", "portal.enabled=false",
+			"--set", "portalapi.enabled=false",
+
+			"--set", "env.prefix=/kong_prefix/",
+			"--set", "env.database=postgres",
+			"--set", postgresspwd,
+			"--set", "env.password.valueFrom.secretKeyRef.key=password",
+
+			"--set", "admin.type=LoadBalancer",
+			"--set", "admin.annotations.konghq.com/protocol=http",
+			"--set", "admin.http.servicePort=8001",
+			"--set", "admin.http.containerPort=8001",
+			"--version", "2.3.0",
 		)
-
-		if a.dbmode == PostgreSQL {
-			a.deployArgs = append(a.deployArgs,
-				"--set", "env.database=postgres",
-				"--set", postgresspwd,
-				"--set", "env.password.valueFrom.secretKeyRef.key=password",
-			)
-
-		}
-
-	}
-
-	if a.enterprise && a.dbmode == PostgreSQL {
-		// do the deployment and installation
-		args := []string{"-n", a.namespace, "apply", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/2486cfecf1cac9be7f285f6b077765a75cdc649e/test/integration/enterprise-postgress.yaml"}
-		stderr = new(bytes.Buffer)
-		cmd = exec.CommandContext(ctx, "kubectl", args...)
-		cmd.Stdout = io.Discard
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			if !strings.Contains(stderr.String(), "cannot re-use") {
-				return fmt.Errorf("%s: %w", stderr.String(), err)
-			}
-		}
-
-		return runUDPServiceHack(ctx, cluster, DefaultNamespace)
 	}
 
 	// do the deployment and install the chart
@@ -247,12 +221,13 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
 	stderr = new(bytes.Buffer)
+	fmt.Printf(" helm args %s", args)
 	cmd = exec.CommandContext(ctx, "helm", args...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf("%s: %w", stderr.String(), err)
+			return fmt.Errorf("err message %s: %w", stderr.String(), err)
 		}
 	}
 
@@ -414,7 +389,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	if err != nil {
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %v", err)
 	}
-	fmt.Printf("successfully deploy kong-enterprise-license secret into the cluster.")
+	fmt.Printf("successfully deployed kong-enterprise-license into the cluster.")
 	return nil
 }
 
@@ -427,14 +402,14 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed creating super-admin secret %s: %w", stderr.String(), err)
 	}
-	fmt.Printf("successfully created super-admin secret.")
+	fmt.Printf("successfully created kong admin secret.")
 
 	pwd, err := os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed getting current dir, err %v", err)
 	}
 
-	guiF := pwd + "/admin_gui_session_conf"
+	guiF := pwd + "/secret_conf"
 
 	fi, err := os.Create(guiF)
 	if err != nil {
@@ -446,29 +421,13 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 		}
 	}()
 
-	portalF := pwd + "/portal_session_conf"
-	fp, err := os.Create(portalF)
-	if err != nil {
-		panic(err)
-	}
-	defer func() {
-		if err := fp.Close(); err != nil {
-			panic(err)
-		}
-	}()
-
-	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"admin_session","cookie_samesite":"off","secret":"admin-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0600)
+	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`), 0600)
 	if err != nil {
 		return fmt.Errorf("failed writing file admin_gui_session_conf, err %v", err)
 	}
 
-	err = ioutil.WriteFile(portalF, []byte(`{"cookie_name":"portal_session","cookie_samesite":"off","secret":"portal-secret-CHANGEME","cookie_secure":true,"storage":"kong"}`), 0600)
-	if err != nil {
-		return fmt.Errorf("failed writing file portal_session_conf, err %v", err)
-	}
-
-	guiFile := fmt.Sprintf("--from-file=%s", guiF)
-	portFile := fmt.Sprintf("--from-file=%s", portalF)
+	guiFile := fmt.Sprintf("--from-file=admin_gui_session_conf=%s", guiF)
+	portFile := fmt.Sprintf("--from-file=portal_session_conf=%s", guiF)
 	cmd = exec.CommandContext(ctx, "kubectl", "-n", namespace, "create", "secret", "generic", "kong-session-config", guiFile, portFile)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
