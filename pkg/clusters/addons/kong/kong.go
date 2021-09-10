@@ -202,7 +202,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf("err message %s: %w", stderr.String(), err)
+			return fmt.Errorf(" %s: %w", stderr.String(), err)
 		}
 	}
 
@@ -332,7 +332,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
-			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, service.Spec.Ports[0].Port))
+			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
 		}
 	default:
 		if service.Spec.ClusterIP != "" {
