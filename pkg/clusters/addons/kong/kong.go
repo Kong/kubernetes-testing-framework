@@ -198,7 +198,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf(" %s: %w", stderr.String(), err)
+			return fmt.Errorf("%s: %w", stderr.String(), err)
 		}
 	}
 
@@ -225,11 +225,11 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.license != "" && a.license == KongLicenseSecretName {
 		stderr := new(bytes.Buffer)
-		cmd := exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace)
+		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace) //nolint:gosec
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("%s: %w", stderr.String(), err)
+			return fmt.Errorf("delete secret err msg %s: %w", stderr.String(), err)
 		}
 	}
 
@@ -338,7 +338,6 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
-			fmt.Printf("svc name <%s> ingress ip <%s> ", nsn.Name, service.Status.LoadBalancer.Ingress[0].IP)
 			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
 		}
 	default:
@@ -371,7 +370,8 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	if err != nil {
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
-	fmt.Printf("successfully deployed kong-enterprise-license into the cluster.")
+
+	fmt.Printf("successfully deployed kong-enterprise-license into the cluster .")
 	return nil
 }
 
@@ -388,18 +388,19 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed getting current dir, err %v", err)
+		return fmt.Errorf("failed getting current dir, err %w", err)
 	}
 
 	guiF := pwd + "/secret_conf"
 
 	fi, err := os.Create(guiF)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() {
 		if err := fi.Close(); err != nil {
-			panic(err)
+			fmt.Println("failed closing file %w", err)
+			return
 		}
 	}()
 
