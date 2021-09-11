@@ -225,11 +225,11 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.license != "" && a.license == KongLicenseSecretName {
 		stderr := new(bytes.Buffer)
-		cmd := exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace)
+		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace)
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("%s: %w", stderr.String(), err)
+			return fmt.Errorf("delete secret err msg %s: %w", stderr.String(), err)
 		}
 	}
 
