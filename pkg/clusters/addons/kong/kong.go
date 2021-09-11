@@ -223,6 +223,16 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	if a.license != "" && a.license == KongLicenseSecretName {
+		stderr := new(bytes.Buffer)
+		cmd := exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace)
+		cmd.Stdout = io.Discard
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("%s: %w", stderr.String(), err)
+		}
+	}
+
 	return nil
 }
 
@@ -328,6 +338,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
+			fmt.Printf("svc name <%s> ingress ip <%s> ", nsn.Name, service.Status.LoadBalancer.Ingress[0].IP)
 			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
 		}
 	default:
