@@ -33,4 +33,4 @@ test.e2e:
 .PHONY: test.integration
 test.integration:
 	@GOFLAGS="-tags=integration_tests" go test -timeout 20m -race -v \
-		-covermode=atomic -coverprofile=coverage.out ./test/integration
+		-covermode=atomic -coverprofile=coverage.out ./...
