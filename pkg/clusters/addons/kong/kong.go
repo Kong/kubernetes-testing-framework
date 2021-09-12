@@ -385,7 +385,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	if err != nil {
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
-	fmt.Printf("successfully deployed kong-enterprise-license %v into the cluster .", *createdSecret)
+	fmt.Printf("successfully deployed kong-enterprise-license %s into the cluster .", createdSecret.Data["license"])
 	return nil
 }
 

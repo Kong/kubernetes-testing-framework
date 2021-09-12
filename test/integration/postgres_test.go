@@ -1,5 +1,3 @@
-//+build integration_tests
-
 package integration
 
 import (
