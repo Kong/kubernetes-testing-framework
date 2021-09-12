@@ -225,7 +225,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.license != "" && a.license == KongLicenseSecretName {
 		stderr := new(bytes.Buffer)
-		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace)
+		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace) //nolint:gosec
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
@@ -328,7 +328,21 @@ func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace 
 	return err
 }
 
+func debugFailureOnlyOnGH(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName) {
+
+	services, err := cluster.Client().CoreV1().Services(nsn.Namespace).List(ctx, metav1.ListOptions{})
+	if err != nil {
+		panic(err)
+	}
+	for _, srv := range services.Items {
+		fmt.Printf("svc list on GH <%v> \n", srv)
+	}
+}
+
 func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (*url.URL, error) {
+	if nsn.Name == DefaultAdminServiceName {
+		debugFailureOnlyOnGH(ctx, cluster, nsn)
+	}
 	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -371,7 +385,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	if err != nil {
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
-	fmt.Printf("successfully deployed kong-enterprise-license into the cluster.")
+	fmt.Printf("successfully deployed kong-enterprise-license %v into the cluster .", newSecret)
 	return nil
 }
 
