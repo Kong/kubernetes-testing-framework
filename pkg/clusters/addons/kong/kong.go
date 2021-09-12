@@ -381,11 +381,23 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 		},
 	}
 
-	createdSecret, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
+	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
-	fmt.Printf("successfully deployed kong-enterprise-license %s into the cluster .", createdSecret.Data["license"])
+
+	kubeconfig, err := utils.TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+	stderr := new(bytes.Buffer)
+	out, err := exec.Command("kubectl", "-n", namespace, "get", "secret", name, "-o", "yaml").Output()
+	if err != nil {
+		return fmt.Errorf("dump err %s: %w", stderr.String(), err)
+	}
+
+	fmt.Printf("successfully deployed kong-enterprise-license %s :::: %s into the cluster .", out)
 	return nil
 }
 
