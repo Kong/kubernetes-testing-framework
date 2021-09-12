@@ -328,21 +328,7 @@ func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace 
 	return err
 }
 
-func debugFailureOnlyOnGH(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName) {
-
-	services, err := cluster.Client().CoreV1().Services(nsn.Namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		panic(err)
-	}
-	for _, srv := range services.Items {
-		fmt.Printf("svc list on GH <%v> \n", srv)
-	}
-}
-
 func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (*url.URL, error) {
-	if nsn.Name == DefaultAdminServiceName {
-		debugFailureOnlyOnGH(ctx, cluster, nsn)
-	}
 	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
 	if err != nil {
 		return nil, err
@@ -352,7 +338,6 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
-			fmt.Printf("svc name <%s> ingress ip <%s> ", nsn.Name, service.Status.LoadBalancer.Ingress[0].IP)
 			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
 		}
 	default:
@@ -386,18 +371,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
 
-	kubeconfig, err := utils.TempKubeconfig(cluster)
-	if err != nil {
-		return err
-	}
-	defer os.Remove(kubeconfig.Name())
-	stderr := new(bytes.Buffer)
-	out, err := exec.Command("kubectl", "-n", namespace, "get", "secret", name, "-o", "yaml").Output()
-	if err != nil {
-		return fmt.Errorf("dump err %s: %w", stderr.String(), err)
-	}
-
-	fmt.Printf("successfully deployed kong-enterprise-license %s :::: %s into the cluster .", out)
+	fmt.Printf("successfully deployed kong-enterprise-license into the cluster .")
 	return nil
 }
 
