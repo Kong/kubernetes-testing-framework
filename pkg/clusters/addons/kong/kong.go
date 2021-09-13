@@ -43,20 +43,21 @@ const (
 	// EnterpriseAdminPasswordSecretName is the kong admin seed password
 	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
 
-	// EnterprisePWD is password
-	EnterprisePWD = "password"
+	// EnterpriseKongAdminDefaultPWD is kong admin password
+	EnterpriseKongAdminDefaultPWD = "password"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
-	namespace  string
-	deployArgs []string
-	dbmode     DBMode
-	proxyOnly  bool
-	enterprise bool
-	repo       string
-	tag        string
-	license    string
+	namespace         string
+	deployArgs        []string
+	dbmode            DBMode
+	proxyOnly         bool
+	enterprise        bool
+	repo              string
+	tag               string
+	license           string
+	kongAdminPassword string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -174,8 +175,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--namespace", a.namespace)
 	if a.enterprise {
-		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
-			return err
+
+		if a.license != "" && a.license == KongLicenseSecretName {
+			fmt.Printf("user does not specify license, deploying test license.")
+			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
+				return err
+			}
 		}
 
 		if err := prepareSecrets(ctx, a.namespace); err != nil {
@@ -183,10 +188,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
+		license := fmt.Sprintf("enterprise.license_secret=%s", a.license)
 		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false", "--set", "env.kong_password=password",
-			"--skip-crds")
+			"--skip-crds", "--set", license)
 	} else {
 		args = append(args, a.deployArgs...)
 	}
