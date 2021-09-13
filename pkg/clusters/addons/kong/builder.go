@@ -46,7 +46,7 @@ func (b *Builder) WithEnterprise() *Builder {
 	b.enterprise = true
 	b.repo = DefaultEnterpriseImageRepo
 	b.tag = DefaultEnterpriseImageTag
-	b.license = KongLicenseSecretName
+	b.license = KongEnterpriseTestLicense
 	b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
 	return b
 }
