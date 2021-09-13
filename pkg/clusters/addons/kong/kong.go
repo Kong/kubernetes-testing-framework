@@ -388,7 +388,7 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 
 	pwd, err := os.Getwd()
 	if err != nil {
-		return fmt.Errorf("failed getting current dir, err %v", err)
+		return fmt.Errorf("failed getting current dir, err %w", err)
 	}
 
 	guiF := pwd + "/secret_conf"
