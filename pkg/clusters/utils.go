@@ -91,7 +91,7 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 
 	nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return fmt.Errorf("failed creating namespace %v", err)
+		return fmt.Errorf("failed creating namespace: %w", err)
 	}
 	for _, item := range nsList.Items {
 		if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
