@@ -382,7 +382,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 
 func prepareSecrets(ctx context.Context, namespace string) error {
 	stderr := new(bytes.Buffer)
-	pwd := fmt.Sprintf("--from-literal=password=%s", EnterprisePWD)
+	pwd := fmt.Sprintf("--from-literal=password=%s", EnterpriseKongAdminDefaultPWD)
 	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
