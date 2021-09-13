@@ -6,15 +6,16 @@ package kong
 
 // Builder is a configuration tool for Kong cluster.Addons
 type Builder struct {
-	namespace  string
-	name       string
-	deployArgs []string
-	dbmode     DBMode
-	proxyOnly  bool
-	enterprise bool
-	repo       string
-	tag        string
-	license    string
+	namespace         string
+	name              string
+	deployArgs        []string
+	dbmode            DBMode
+	proxyOnly         bool
+	enterprise        bool
+	repo              string
+	tag               string
+	license           string
+	kongAdminPassword string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -46,6 +47,7 @@ func (b *Builder) WithEnterprise() *Builder {
 	b.repo = DefaultEnterpriseImageRepo
 	b.tag = DefaultEnterpriseImageTag
 	b.license = KongLicenseSecretName
+	b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
 	return b
 }
 
@@ -62,6 +64,11 @@ func (b *Builder) WithLicense(license string) *Builder {
 	return b
 }
 
+func (b *Builder) WithKongAdminPassword(password string) *Builder {
+	b.kongAdminPassword = password
+	return b
+}
+
 // WithControllerDisabled configures the Addon in proxy only mode (bring your own control plane).
 func (b *Builder) WithControllerDisabled() *Builder {
 	b.proxyOnly = true
@@ -72,13 +79,14 @@ func (b *Builder) WithControllerDisabled() *Builder {
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
 	return &Addon{
-		dbmode:     b.dbmode,
-		namespace:  b.namespace,
-		deployArgs: b.deployArgs,
-		proxyOnly:  b.proxyOnly,
-		enterprise: b.enterprise,
-		repo:       b.repo,
-		tag:        b.tag,
-		license:    b.license,
+		dbmode:            b.dbmode,
+		namespace:         b.namespace,
+		deployArgs:        b.deployArgs,
+		proxyOnly:         b.proxyOnly,
+		enterprise:        b.enterprise,
+		repo:              b.repo,
+		tag:               b.tag,
+		license:           b.license,
+		kongAdminPassword: b.kongAdminPassword,
 	}
 }
