@@ -395,7 +395,7 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 
 	fi, err := os.Create(guiF)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer func() {
 		if err := fi.Close(); err != nil {
