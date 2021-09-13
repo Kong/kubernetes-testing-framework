@@ -198,7 +198,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf(" %s: %w", stderr.String(), err)
+			return fmt.Errorf("%s: %w", stderr.String(), err)
 		}
 	}
 
