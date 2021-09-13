@@ -37,8 +37,8 @@ const (
 	// DefaultEnterpriseImageTag latest kong enterprise image tag
 	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
 
-	// KongLicenseSecretName is the kong license data secret name
-	KongLicenseSecretName = "kong-enterprise-license"
+	// KongEnterpriseTestLicense is the kong license data secret name
+	KongEnterpriseTestLicense = "kong-enterprise-license"
 
 	// EnterpriseAdminPasswordSecretName is the kong admin seed password
 	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
@@ -175,10 +175,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--namespace", a.namespace)
 	if a.enterprise {
-
-		if a.license != "" && a.license == KongLicenseSecretName {
-			fmt.Printf("user does not specify license, deploying test license.")
-			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongLicenseSecretName); err != nil {
+		if a.license != "" && a.license == KongEnterpriseTestLicense {
+			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseTestLicense); err != nil {
 				return err
 			}
 		}
@@ -189,9 +187,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
 		license := fmt.Sprintf("enterprise.license_secret=%s", a.license)
+		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
 		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
-			"--set", "ingressController.installCRDs=false", "--set", "env.kong_password=password",
+			"--set", "ingressController.installCRDs=false", "--set", password,
 			"--skip-crds", "--set", license)
 	} else {
 		args = append(args, a.deployArgs...)
@@ -229,7 +228,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	if a.license != "" && a.license == KongLicenseSecretName {
+	if a.license != "" && a.license == KongEnterpriseTestLicense {
 		stderr := new(bytes.Buffer)
 		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace) //nolint:gosec
 		cmd.Stdout = io.Discard
@@ -383,7 +382,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 
 func prepareSecrets(ctx context.Context, namespace string) error {
 	stderr := new(bytes.Buffer)
-	pwd := fmt.Sprintf("--from-literal=password=%s", EnterprisePWD)
+	pwd := fmt.Sprintf("--from-literal=password=%s", EnterpriseKongAdminDefaultPWD)
 	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
