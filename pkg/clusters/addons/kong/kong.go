@@ -399,7 +399,8 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 	}
 	defer func() {
 		if err := fi.Close(); err != nil {
-			panic(err)
+			fmt.Println("failed closing file %w", err)
+			return
 		}
 	}()
 

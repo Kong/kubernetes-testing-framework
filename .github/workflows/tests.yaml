@@ -12,7 +12,7 @@ on:
 
 jobs:
   tests-and-coverage:
-    environment: "ENTERPRISE"
+    environment: "Configure ci"
     runs-on: ubuntu-latest
     steps:
     - name: setup golang
