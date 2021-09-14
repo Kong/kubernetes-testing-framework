@@ -6,16 +6,20 @@ package kong
 
 // Builder is a configuration tool for Kong cluster.Addons
 type Builder struct {
-	namespace         string
-	name              string
-	deployArgs        []string
-	dbmode            DBMode
-	proxyOnly         bool
-	enterprise        bool
-	repo              string
-	tag               string
-	license           string
-	kongAdminPassword string
+	namespace  string
+	name       string
+	deployArgs []string
+	dbmode     DBMode
+
+	// proxy options
+	proxyOnly     bool
+	proxyImage    string
+	proxyImageTag string
+
+	// enterprise options
+	enterpriseEnabled           bool
+	enterpriseLicenseSecretName string
+	enterpriseSuperuserPassword string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -43,29 +47,25 @@ func (b *Builder) WithPostgreSQL() *Builder {
 
 // WithEnterprise deploying kong enterpise
 func (b *Builder) WithEnterprise() *Builder {
-	b.enterprise = true
-	b.repo = DefaultEnterpriseImageRepo
-	b.tag = DefaultEnterpriseImageTag
-	b.license = KongEnterpriseTestLicense
-	b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
+	b.enterpriseEnabled = true
 	return b
 }
 
 // WithImage specify docker image repo and tag
-func (b *Builder) WithImage(repo, tag string) *Builder {
-	b.repo = repo
-	b.tag = tag
+func (b *Builder) WithImage(image, tag string) *Builder {
+	b.proxyImage = image
+	b.proxyImageTag = tag
 	return b
 }
 
 // WithLicense specify license secret name
 func (b *Builder) WithLicense(license string) *Builder {
-	b.license = license
+	b.enterpriseLicenseSecretName = license
 	return b
 }
 
 func (b *Builder) WithKongAdminPassword(password string) *Builder {
-	b.kongAdminPassword = password
+	b.enterpriseSuperuserPassword = password
 	return b
 }
 
@@ -78,15 +78,31 @@ func (b *Builder) WithControllerDisabled() *Builder {
 // Build generates a new kong cluster.Addon which can be loaded and deployed
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
+	if b.enterpriseEnabled {
+		// if no specific name was selected for the license secret, use the default
+		if b.enterpriseLicenseSecretName == "" {
+			b.enterpriseLicenseSecretName = DefaultEnterpriseLicenseSecretName
+		}
+
+		// if no specific image name or tag was provided, but enterprise was enabled
+		// use the default image and tag for enterprise.
+		if b.proxyImage == "" {
+			b.proxyImage = DefaultEnterpriseImageRepo
+		}
+		if b.proxyImageTag == "" {
+			b.proxyImageTag = DefaultEnterpriseImageTag
+		}
+	}
+
 	return &Addon{
-		dbmode:            b.dbmode,
-		namespace:         b.namespace,
-		deployArgs:        b.deployArgs,
-		proxyOnly:         b.proxyOnly,
-		enterprise:        b.enterprise,
-		repo:              b.repo,
-		tag:               b.tag,
-		license:           b.license,
-		kongAdminPassword: b.kongAdminPassword,
+		dbmode:                      b.dbmode,
+		namespace:                   b.namespace,
+		deployArgs:                  b.deployArgs,
+		proxyOnly:                   b.proxyOnly,
+		proxyImage:                  b.proxyImage,
+		proxyImageTag:               b.proxyImageTag,
+		enterpriseEnabled:           b.enterpriseEnabled,
+		enterpriseLicenseSecretName: b.enterpriseLicenseSecretName,
+		enterpriseSuperuserPassword: b.enterpriseSuperuserPassword,
 	}
 }
