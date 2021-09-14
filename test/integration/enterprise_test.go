@@ -24,7 +24,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	defer cancel()
 
 	t.Log("configuring the testing environment")
-	adminPassword, err := password.Generate(64, 10, 10, false, false)
+	adminPassword, err := password.Generate(10, 5, 0, false, false)
 	require.NoError(t, err)
 
 	metallb := metallbaddon.New()
