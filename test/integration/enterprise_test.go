@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
-	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
-	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
 )
 
@@ -23,13 +23,16 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 
-	t.Log("configuring the testing environment")
-	adminPassword, err := password.Generate(64, 10, 10, false, false)
-	require.NoError(t, err)
+	t.Log("gathering the kong enterprise license from env")
+	enterpriseLicense := os.Getenv("KONG_ENTERPRISE_LICENSE")
+	require.NotEmpty(t, enterpriseLicense)
 
-	metallb := metallbaddon.New()
-	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithLicense("kong-enterprise-license").WithKongAdminPassword(adminPassword).Build()
-	builder := environment.NewBuilder().WithAddons(kong, metallb)
+	t.Log("configuring the testing environment")
+	kongAddon := kongaddon.NewBuilder().
+		WithEnterprise(enterpriseLicense).
+		WithPostgreSQL().
+		Build()
+	builder := environment.NewBuilder().WithAddons(metallb.New(), kongAddon)
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
@@ -45,11 +48,11 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Logf("verifying that the kong proxy service %s gets provisioned an IP address by metallb", kongaddon.DefaultProxyServiceName)
-	proxyURL, err := kong.ProxyURL(ctx, env.Cluster())
+	proxyURL, err := kongAddon.ProxyURL(ctx, env.Cluster())
 	require.NoError(t, err)
 	require.NotNil(t, proxyURL)
 
-	adminURL, err := kong.ProxyAdminURL(ctx, env.Cluster())
+	adminURL, err := kongAddon.ProxyAdminURL(ctx, env.Cluster())
 	require.NoError(t, err)
 	require.NotNil(t, adminURL)
 	url := adminURL.String() + "/workspaces"

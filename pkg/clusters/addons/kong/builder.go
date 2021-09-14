@@ -18,6 +18,7 @@ type Builder struct {
 
 	// enterprise options
 	enterpriseEnabled           bool
+	enterpriseLicense           string
 	enterpriseLicenseSecretName string
 	enterpriseSuperuserPassword string
 }
@@ -46,25 +47,21 @@ func (b *Builder) WithPostgreSQL() *Builder {
 }
 
 // WithEnterprise deploying kong enterpise
-func (b *Builder) WithEnterprise() *Builder {
+func (b *Builder) WithEnterprise(license string) *Builder {
 	b.enterpriseEnabled = true
+	b.enterpriseLicense = license
 	return b
 }
 
-// WithImage specify docker image repo and tag
-func (b *Builder) WithImage(image, tag string) *Builder {
+// WithProxyImage configures the image name and tag for the Kong Proxy (not the ingress controller).
+func (b *Builder) WithProxyImage(image, tag string) *Builder {
 	b.proxyImage = image
 	b.proxyImageTag = tag
 	return b
 }
 
-// WithLicense specify license secret name
-func (b *Builder) WithLicense(license string) *Builder {
-	b.enterpriseLicenseSecretName = license
-	return b
-}
-
-func (b *Builder) WithKongAdminPassword(password string) *Builder {
+// WithEnterpriseSuperuserPassword configures the superuser password for the Kong Admin when deploying in Enterprise mode.
+func (b *Builder) WithEnterpriseSuperuserPassword(password string) *Builder {
 	b.enterpriseSuperuserPassword = password
 	return b
 }
@@ -85,7 +82,7 @@ func (b *Builder) Build() *Addon {
 		}
 
 		// if no specific image name or tag was provided, but enterprise was enabled
-		// use the default image and tag for enterprise.
+		// use the default image and tag names for enterprise.
 		if b.proxyImage == "" {
 			b.proxyImage = DefaultEnterpriseImageRepo
 		}
@@ -102,6 +99,7 @@ func (b *Builder) Build() *Addon {
 		proxyImage:                  b.proxyImage,
 		proxyImageTag:               b.proxyImageTag,
 		enterpriseEnabled:           b.enterpriseEnabled,
+		enterpriseLicense:           b.enterpriseLicense,
 		enterpriseLicenseSecretName: b.enterpriseLicenseSecretName,
 		enterpriseSuperuserPassword: b.enterpriseSuperuserPassword,
 	}
