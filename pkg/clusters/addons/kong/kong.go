@@ -191,7 +191,14 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false", "--set", password,
-			"--skip-crds", "--set", license)
+			"--skip-crds", "--set", license,
+			// expose new ports
+			"--set", "proxy.stream[0].containerPort=8888",
+			"--set", "proxy.stream[0].servicePort=8888",
+			"--set", "proxy.stream[1].containerPort=9999",
+			"--set", "proxy.stream[1].servicePort=9999",
+			"--set", "proxy.stream[1].parameters[0]=udp",
+			"--set", "proxy.stream[1].parameters[1]=reuseport")
 	} else {
 		args = append(args, a.deployArgs...)
 	}

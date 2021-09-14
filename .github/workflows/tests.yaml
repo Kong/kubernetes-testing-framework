@@ -33,6 +33,6 @@ jobs:
       env:
         KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v2.0.3
+      uses: codecov/codecov-action@v2.1.0
       with:
         fail_ci_if_error: true

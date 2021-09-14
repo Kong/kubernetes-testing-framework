@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -23,8 +24,11 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	defer cancel()
 
 	t.Log("configuring the testing environment")
+	adminPassword, err := password.Generate(64, 10, 10, false, false)
+	require.NoError(t, err)
+
 	metallb := metallbaddon.New()
-	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).Build()
+	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithLicense("kong-enterprise-license").WithKongAdminPassword(adminPassword).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")
