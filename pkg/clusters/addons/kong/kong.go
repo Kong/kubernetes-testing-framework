@@ -56,7 +56,7 @@ type Addon struct {
 	enterprise                  bool
 	proxyImage                  string
 	proxyImageTag               string
-	enterpriseLicenseJsonString string
+	enterpriseLicenseJSONString string
 	kongAdminPassword           string
 }
 
@@ -176,15 +176,15 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args = append(args, "--namespace", a.namespace)
 	if a.enterprise {
 
-		if a.enterpriseLicenseJsonString == "" {
+		if a.enterpriseLicenseJSONString == "" {
 			fmt.Printf("apply license json from environment variable")
-			a.enterpriseLicenseJsonString = os.Getenv("KONG_ENTERPRISE_LICENSE")
-			if a.enterpriseLicenseJsonString == "" {
+			a.enterpriseLicenseJSONString = os.Getenv("KONG_ENTERPRISE_LICENSE")
+			if a.enterpriseLicenseJSONString == "" {
 				return fmt.Errorf("license json should not be empty")
 			}
 		}
 
-		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseLicense, a.enterpriseLicenseJsonString); err != nil {
+		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseLicense, a.enterpriseLicenseJSONString); err != nil {
 			return err
 		}
 
@@ -242,7 +242,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	if a.enterpriseLicenseJsonString != "" {
+	if a.enterpriseLicenseJSONString != "" {
 		stderr := new(bytes.Buffer)
 		cmd = exec.Command("kubectl", "delete", "secret", KongEnterpriseLicense, "--namespace", a.namespace) //nolint:gosec
 		cmd.Stdout = io.Discard
@@ -369,7 +369,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 }
 
 // deployKongEnterpriseLicenseSecret deploy secret using license json data
-func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name, licenseJson string) error {
+func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name, licenseJSON string) error {
 
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
@@ -378,7 +378,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"license": []byte(licenseJson),
+			"license": []byte(licenseJSON),
 		},
 	}
 

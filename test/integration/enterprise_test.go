@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 	"time"
 
@@ -28,8 +29,8 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, err)
 
 	metallb := metallbaddon.New()
-	licenseJson := os.Getenv("KONG_ENTERPRISE_LICENSE")
-	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJson).WithKongAdminPassword(adminPassword).Build()
+	licenseJSON := os.Getenv("KONG_ENTERPRISE_LICENSE")
+	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJSON).WithKongAdminPassword(adminPassword).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")

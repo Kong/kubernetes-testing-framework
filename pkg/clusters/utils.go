@@ -3,11 +3,13 @@ package clusters
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
 	netv1 "k8s.io/api/networking/v1"
 	netv1beta1 "k8s.io/api/networking/v1beta1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -84,20 +86,25 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 		},
 	}
 
-	_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed creating namespace %s, err %v", namespace, err)
-	}
-
-	nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return fmt.Errorf("failed creating namespace: %w", err)
-	}
-	for _, item := range nsList.Items {
-		if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
-			fmt.Printf("created namespace %s successfully.", namespace)
-			return nil
+	for i := 0; i < 3; i++ {
+		_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
+		if err != nil && !errors.IsAlreadyExists(err) {
+			time.Sleep(1 * time.Second)
+			continue
 		}
+
+		nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			continue
+		}
+		for _, item := range nsList.Items {
+			if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
+				fmt.Printf("created namespace %s successfully.", namespace)
+				return nil
+			}
+		}
+
 	}
 
 	return fmt.Errorf("failed creating namespace %s", namespace)

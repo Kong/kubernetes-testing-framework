@@ -14,7 +14,7 @@ type Builder struct {
 	enterprise                  bool
 	proxyImage                  string
 	proxyImageTag               string
-	enterpriseLicenseJsonString string
+	enterpriseLicenseJSONString string
 	kongAdminPassword           string
 }
 
@@ -63,9 +63,9 @@ func (b *Builder) WithImage(repo, tag string) *Builder {
 	return b
 }
 
-// WithLicense specify license json data
+// WithEnterpriseLicense specify license json data
 func (b *Builder) WithEnterpriseLicense(licenseJason string) *Builder {
-	b.enterpriseLicenseJsonString = licenseJason
+	b.enterpriseLicenseJSONString = licenseJason
 	return b
 }
 
@@ -91,7 +91,7 @@ func (b *Builder) Build() *Addon {
 		enterprise:                  b.enterprise,
 		proxyImage:                  b.proxyImage,
 		proxyImageTag:               b.proxyImageTag,
-		enterpriseLicenseJsonString: b.enterpriseLicenseJsonString,
+		enterpriseLicenseJSONString: b.enterpriseLicenseJSONString,
 		kongAdminPassword:           b.kongAdminPassword,
 	}
 }
