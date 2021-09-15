@@ -60,7 +60,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	var jsonStr = []byte(`{"name": "test-workspace"}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("kong-admin-token", "password")
+	req.Header.Set("kong-admin-token", adminPassword)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}

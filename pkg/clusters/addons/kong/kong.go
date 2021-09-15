@@ -159,7 +159,6 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "postgresql.service.port=5432",
 		}
 		a.deployArgs = append(a.deployArgs, dbmodedeployArgs...)
-		args = append(args, dbmodedeployArgs...)
 	}
 
 	if a.proxyOnly {
