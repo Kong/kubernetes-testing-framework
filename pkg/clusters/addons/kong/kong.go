@@ -37,8 +37,8 @@ const (
 	// DefaultEnterpriseImageTag latest kong enterprise image tag
 	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
 
-	// KongEnterpriseTestLicense is the kong license data secret name
-	KongEnterpriseTestLicense = "kong-enterprise-license"
+	// KongEnterpriseLicense is the kong license data secret name
+	KongEnterpriseLicense = "kong-enterprise-license"
 
 	// EnterpriseAdminPasswordSecretName is the kong admin seed password
 	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
@@ -49,15 +49,15 @@ const (
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
-	namespace         string
-	deployArgs        []string
-	dbmode            DBMode
-	proxyOnly         bool
-	enterprise        bool
-	repo              string
-	tag               string
-	license           string
-	kongAdminPassword string
+	namespace                   string
+	deployArgs                  []string
+	dbmode                      DBMode
+	proxyOnly                   bool
+	enterprise                  bool
+	proxyImage                  string
+	proxyImageTag               string
+	enterpriseLicenseJsonString string
+	kongAdminPassword           string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -175,10 +175,17 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--namespace", a.namespace)
 	if a.enterprise {
-		if a.license != "" && a.license == KongEnterpriseTestLicense {
-			if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseTestLicense); err != nil {
-				return err
+
+		if a.enterpriseLicenseJsonString == "" {
+			fmt.Printf("apply license json from environment variable")
+			a.enterpriseLicenseJsonString = os.Getenv("KONG_ENTERPRISE_LICENSE")
+			if a.enterpriseLicenseJsonString == "" {
+				return fmt.Errorf("license json should not be empty")
 			}
+		}
+
+		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseLicense, a.enterpriseLicenseJsonString); err != nil {
+			return err
 		}
 
 		if err := prepareSecrets(ctx, a.namespace); err != nil {
@@ -186,7 +193,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
-		license := fmt.Sprintf("enterprise.license_secret=%s", a.license)
+		license := fmt.Sprintf("enterprise.license_secret=%s", KongEnterpriseLicense)
 		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
 		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
@@ -235,9 +242,9 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	if a.license != "" && a.license == KongEnterpriseTestLicense {
+	if a.enterpriseLicenseJsonString != "" {
 		stderr := new(bytes.Buffer)
-		cmd = exec.Command("kubectl", "delete", "secret", a.license, "--namespace", a.namespace) //nolint:gosec
+		cmd = exec.Command("kubectl", "delete", "secret", KongEnterpriseLicense, "--namespace", a.namespace) //nolint:gosec
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
@@ -361,11 +368,8 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
 }
 
-func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name string) error {
-	license := os.Getenv("KONG_ENTERPRISE_LICENSE")
-	if license == "" {
-		return fmt.Errorf("failed kong enterprise license from environment setting")
-	}
+// deployKongEnterpriseLicenseSecret deploy secret using license json data
+func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name, licenseJson string) error {
 
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
@@ -374,7 +378,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"license": []byte(license),
+			"license": []byte(licenseJson),
 		},
 	}
 
@@ -418,7 +422,7 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 
 	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`), 0600)
 	if err != nil {
-		return fmt.Errorf("failed writing file admin_gui_session_conf, err %v", err)
+		return fmt.Errorf("failed writing file admin_gui_session_conf, err %w", err)
 	}
 
 	guiFile := fmt.Sprintf("--from-file=admin_gui_session_conf=%s", guiF)
@@ -429,6 +433,5 @@ func prepareSecrets(ctx context.Context, namespace string) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed creating kong-session-config secret %s: %w", stderr.String(), err)
 	}
-	fmt.Printf("successfully created kong-session-config secret.")
 	return nil
 }

@@ -28,7 +28,8 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, err)
 
 	metallb := metallbaddon.New()
-	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithLicense("kong-enterprise-license").WithKongAdminPassword(adminPassword).Build()
+	licenseJson := os.Getenv("KONG_ENTERPRISE_LICENSE")
+	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJson).WithKongAdminPassword(adminPassword).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")

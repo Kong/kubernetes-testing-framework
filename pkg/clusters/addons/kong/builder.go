@@ -6,16 +6,16 @@ package kong
 
 // Builder is a configuration tool for Kong cluster.Addons
 type Builder struct {
-	namespace         string
-	name              string
-	deployArgs        []string
-	dbmode            DBMode
-	proxyOnly         bool
-	enterprise        bool
-	repo              string
-	tag               string
-	license           string
-	kongAdminPassword string
+	namespace                   string
+	name                        string
+	deployArgs                  []string
+	dbmode                      DBMode
+	proxyOnly                   bool
+	enterprise                  bool
+	proxyImage                  string
+	proxyImageTag               string
+	enterpriseLicenseJsonString string
+	kongAdminPassword           string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -44,23 +44,28 @@ func (b *Builder) WithPostgreSQL() *Builder {
 // WithEnterprise deploying kong enterpise
 func (b *Builder) WithEnterprise() *Builder {
 	b.enterprise = true
-	b.repo = DefaultEnterpriseImageRepo
-	b.tag = DefaultEnterpriseImageTag
-	b.license = KongEnterpriseTestLicense
-	b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
+	if b.proxyImage == "" {
+		b.proxyImage = DefaultEnterpriseImageRepo
+	}
+	if b.proxyImageTag == "" {
+		b.proxyImageTag = DefaultEnterpriseImageTag
+	}
+	if b.kongAdminPassword == "" {
+		b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
+	}
 	return b
 }
 
 // WithImage specify docker image repo and tag
 func (b *Builder) WithImage(repo, tag string) *Builder {
-	b.repo = repo
-	b.tag = tag
+	b.proxyImage = repo
+	b.proxyImageTag = tag
 	return b
 }
 
-// WithLicense specify license secret name
-func (b *Builder) WithLicense(license string) *Builder {
-	b.license = license
+// WithLicense specify license json data
+func (b *Builder) WithEnterpriseLicense(licenseJason string) *Builder {
+	b.enterpriseLicenseJsonString = licenseJason
 	return b
 }
 
@@ -79,14 +84,14 @@ func (b *Builder) WithControllerDisabled() *Builder {
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
 	return &Addon{
-		dbmode:            b.dbmode,
-		namespace:         b.namespace,
-		deployArgs:        b.deployArgs,
-		proxyOnly:         b.proxyOnly,
-		enterprise:        b.enterprise,
-		repo:              b.repo,
-		tag:               b.tag,
-		license:           b.license,
-		kongAdminPassword: b.kongAdminPassword,
+		dbmode:                      b.dbmode,
+		namespace:                   b.namespace,
+		deployArgs:                  b.deployArgs,
+		proxyOnly:                   b.proxyOnly,
+		enterprise:                  b.enterprise,
+		proxyImage:                  b.proxyImage,
+		proxyImageTag:               b.proxyImageTag,
+		enterpriseLicenseJsonString: b.enterpriseLicenseJsonString,
+		kongAdminPassword:           b.kongAdminPassword,
 	}
 }
