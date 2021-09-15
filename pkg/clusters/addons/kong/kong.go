@@ -19,6 +19,7 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/sethvargo/go-password/password"
 )
 
 // -----------------------------------------------------------------------------
@@ -147,26 +148,34 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	// configure for dbmode options
 	if a.dbmode == PostgreSQL {
-		a.deployArgs = append(a.deployArgs,
+		dbmodedeployArgs := []string{
 			"--set", "env.database=postgres",
 			"--set", "postgresql.enabled=true",
 			"--set", "postgresql.postgresqlUsername=kong",
 			"--set", "postgresql.postgresqlDatabase=kong",
 			"--set", "postgresql.service.port=5432",
-		)
+		}
+		a.deployArgs = append(a.deployArgs, dbmodedeployArgs...)
+		args = append(args, dbmodedeployArgs...)
 	}
+
 	if a.proxyOnly {
-		a.deployArgs = append(a.deployArgs,
+		proxyOnlyArgs := []string{
 			"--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false",
 			"--skip-crds",
-		)
+		}
+		a.deployArgs = append(a.deployArgs, proxyOnlyArgs...)
+		args = append(args, proxyOnlyArgs...)
 	}
 
 	if a.adminServiceTypeLoadBalancer {
-		a.deployArgs = append(a.deployArgs, "--set", "admin.type=LoadBalancer")
+		adminServiceTypeLoadBalancerArgs := []string{"--set", "admin.type=LoadBalancer"}
+		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
+		args = append(args, adminServiceTypeLoadBalancerArgs...)
 	}
 
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
@@ -174,13 +183,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// do the deployment and install the chart
-	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
-	args = append(args, "--namespace", a.namespace)
-	args = append(args, a.deployArgs...)
-	if a.enterprise {
 
+	args = append(args, "--namespace", a.namespace)
+	if a.enterprise {
 		if a.enterpriseLicenseJSONString == "" {
-			fmt.Printf("apply license json from environment variable")
 			a.enterpriseLicenseJSONString = os.Getenv("KONG_ENTERPRISE_LICENSE")
 			if a.enterpriseLicenseJSONString == "" {
 				return fmt.Errorf("license json should not be empty")
@@ -192,13 +198,17 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 
 		if a.kongAdminPassword == "" {
-			return fmt.Errorf("kong admin password should not be empty")
+			adminPassword, err := password.Generate(10, 5, 0, false, false)
+			if err != nil {
+				return fmt.Errorf("kong admin password failure %v", err)
+			}
+			a.kongAdminPassword = adminPassword
 		}
 		if err := prepareSecrets(ctx, a.namespace, a.kongAdminPassword); err != nil {
 			return err
 		}
 
-		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
+		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/f319365b08d5910b028d602fe04dba5a4bc6b831/configs/enterprise-default.yaml")
 		license := fmt.Sprintf("enterprise.license_secret=%s", KongEnterpriseLicense)
 		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
 		args = append(args,
@@ -214,6 +224,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "proxy.stream[1].servicePort=9999",
 			"--set", "proxy.stream[1].parameters[0]=udp",
 			"--set", "proxy.stream[1].parameters[1]=reuseport")
+	} else {
+		args = append(args, a.deployArgs...)
 	}
 
 	stderr = new(bytes.Buffer)
