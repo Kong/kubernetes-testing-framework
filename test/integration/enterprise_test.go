@@ -30,7 +30,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 
 	metallb := metallbaddon.New()
 	licenseJSON := os.Getenv("KONG_ENTERPRISE_LICENSE")
-	kong := kongaddon.NewBuilder().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJSON).WithKongAdminPassword(adminPassword).Build()
+	kong := kongaddon.NewBuilder().WithControllerDisabled().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJSON).WithKongAdminPassword(adminPassword).Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")
@@ -60,7 +60,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	var jsonStr = []byte(`{"name": "test-workspace"}`)
 
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
-	req.Header.Set("kong-admin-token", "password")
+	req.Header.Set("kong-admin-token", adminPassword)
 	req.Header.Set("Content-Type", "application/json")
 
 	client := &http.Client{}
