@@ -197,10 +197,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 
 		if a.kongAdminPassword == "" {
-			len := 10
+			pwdLen := 10
 			numDigits := 5
 			numSymbol := 0
-			adminPassword, err := password.Generate(len, numDigits, numSymbol, false, false)
+			adminPassword, err := password.Generate(pwdLen, numDigits, numSymbol, false, false)
 			if err != nil {
 				return fmt.Errorf("kong admin password failure %v", err)
 			}
