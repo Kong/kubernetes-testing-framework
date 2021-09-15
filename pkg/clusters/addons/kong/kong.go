@@ -188,7 +188,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			return err
 		}
 
-		if err := prepareSecrets(ctx, a.namespace); err != nil {
+		if a.kongAdminPassword == "" {
+			return fmt.Errorf("kong admin password should not be empty")
+		}
+		if err := prepareSecrets(ctx, a.namespace, a.kongAdminPassword); err != nil {
 			return err
 		}
 
@@ -370,7 +373,6 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 
 // deployKongEnterpriseLicenseSecret deploy secret using license json data
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name, licenseJSON string) error {
-
 	newSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
@@ -391,9 +393,9 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 	return nil
 }
 
-func prepareSecrets(ctx context.Context, namespace string) error {
+func prepareSecrets(ctx context.Context, namespace, password string) error {
 	stderr := new(bytes.Buffer)
-	pwd := fmt.Sprintf("--from-literal=password=%s", EnterpriseKongAdminDefaultPWD)
+	pwd := fmt.Sprintf("--from-literal=password=%s", password)
 	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
