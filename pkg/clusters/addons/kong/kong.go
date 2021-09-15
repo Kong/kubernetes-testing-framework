@@ -43,8 +43,6 @@ const (
 	// EnterpriseAdminPasswordSecretName is the kong admin seed password
 	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
 
-	// EnterpriseKongAdminDefaultPWD is kong admin password
-	EnterpriseKongAdminDefaultPWD = "password"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -424,7 +422,7 @@ func prepareSecrets(ctx context.Context, namespace, password string) error {
 
 	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`), 0600)
 	if err != nil {
-		return fmt.Errorf("failed writing file admin_gui_session_conf, err %w", err)
+		return fmt.Errorf("failed writing file admin_gui_session_conf, err %v", err)
 	}
 
 	guiFile := fmt.Sprintf("--from-file=admin_gui_session_conf=%s", guiF)

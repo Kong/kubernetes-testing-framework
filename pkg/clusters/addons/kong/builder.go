@@ -50,9 +50,6 @@ func (b *Builder) WithEnterprise() *Builder {
 	if b.proxyImageTag == "" {
 		b.proxyImageTag = DefaultEnterpriseImageTag
 	}
-	if b.kongAdminPassword == "" {
-		b.kongAdminPassword = EnterpriseKongAdminDefaultPWD
-	}
 	return b
 }
 
