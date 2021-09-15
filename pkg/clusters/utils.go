@@ -85,26 +85,27 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 			Name: namespace,
 		},
 	}
-	attempts := 3
-	for i := 0; i < attempts; i++ {
+	attempts := 5
+	for attempts > 0 {
 		_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
 		if err != nil && !errors.IsAlreadyExists(err) {
 			time.Sleep(1 * time.Second)
-			continue
+			attempts--
 		}
 
 		nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			time.Sleep(1 * time.Second)
-			continue
+			attempts--
 		}
 		for _, item := range nsList.Items {
 			if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
 				fmt.Printf("created namespace %s successfully.", namespace)
 				return nil
 			}
+			time.Sleep(1 * time.Second)
+			attempts--
 		}
-
 	}
 
 	return fmt.Errorf("failed creating namespace %s", namespace)
