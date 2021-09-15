@@ -405,7 +405,6 @@ func prepareSecrets(ctx context.Context, namespace, password string) error {
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed creating super-admin secret %s: %w", stderr.String(), err)
 	}
-	fmt.Printf("successfully created kong admin secret.")
 
 	pwd, err := os.Getwd()
 	if err != nil {
