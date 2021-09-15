@@ -6,16 +6,17 @@ package kong
 
 // Builder is a configuration tool for Kong cluster.Addons
 type Builder struct {
-	namespace                   string
-	name                        string
-	deployArgs                  []string
-	dbmode                      DBMode
-	proxyOnly                   bool
-	enterprise                  bool
-	proxyImage                  string
-	proxyImageTag               string
-	enterpriseLicenseJSONString string
-	kongAdminPassword           string
+	namespace                    string
+	name                         string
+	deployArgs                   []string
+	dbmode                       DBMode
+	proxyOnly                    bool
+	enterprise                   bool
+	proxyImage                   string
+	proxyImageTag                string
+	enterpriseLicenseJSONString  string
+	kongAdminPassword            string
+	adminServiceTypeLoadBalancer bool
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
@@ -50,6 +51,7 @@ func (b *Builder) WithEnterprise() *Builder {
 	if b.proxyImageTag == "" {
 		b.proxyImageTag = DefaultEnterpriseImageTag
 	}
+	b.adminServiceTypeLoadBalancer = true
 	return b
 }
 
@@ -77,18 +79,24 @@ func (b *Builder) WithControllerDisabled() *Builder {
 	return b
 }
 
+func (b *Builder) WithAdminServiceTypeLoadBalancer() *Builder {
+	b.adminServiceTypeLoadBalancer = true
+	return b
+}
+
 // Build generates a new kong cluster.Addon which can be loaded and deployed
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
 	return &Addon{
-		dbmode:                      b.dbmode,
-		namespace:                   b.namespace,
-		deployArgs:                  b.deployArgs,
-		proxyOnly:                   b.proxyOnly,
-		enterprise:                  b.enterprise,
-		proxyImage:                  b.proxyImage,
-		proxyImageTag:               b.proxyImageTag,
-		enterpriseLicenseJSONString: b.enterpriseLicenseJSONString,
-		kongAdminPassword:           b.kongAdminPassword,
+		dbmode:                       b.dbmode,
+		namespace:                    b.namespace,
+		deployArgs:                   b.deployArgs,
+		proxyOnly:                    b.proxyOnly,
+		enterprise:                   b.enterprise,
+		proxyImage:                   b.proxyImage,
+		proxyImageTag:                b.proxyImageTag,
+		enterpriseLicenseJSONString:  b.enterpriseLicenseJSONString,
+		kongAdminPassword:            b.kongAdminPassword,
+		adminServiceTypeLoadBalancer: b.adminServiceTypeLoadBalancer,
 	}
 }

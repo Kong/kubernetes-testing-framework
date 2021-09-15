@@ -42,20 +42,20 @@ const (
 
 	// EnterpriseAdminPasswordSecretName is the kong admin seed password
 	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
-
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
-	namespace                   string
-	deployArgs                  []string
-	dbmode                      DBMode
-	proxyOnly                   bool
-	enterprise                  bool
-	proxyImage                  string
-	proxyImageTag               string
-	enterpriseLicenseJSONString string
-	kongAdminPassword           string
+	namespace                    string
+	deployArgs                   []string
+	dbmode                       DBMode
+	proxyOnly                    bool
+	enterprise                   bool
+	proxyImage                   string
+	proxyImageTag                string
+	enterpriseLicenseJSONString  string
+	kongAdminPassword            string
+	adminServiceTypeLoadBalancer bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -165,6 +165,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
+	if a.adminServiceTypeLoadBalancer {
+		a.deployArgs = append(a.deployArgs, "--set", "admin.type=LoadBalancer")
+	}
+
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
 		return err
 	}
@@ -172,6 +176,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// do the deployment and install the chart
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	args = append(args, "--namespace", a.namespace)
+	args = append(args, a.deployArgs...)
 	if a.enterprise {
 
 		if a.enterpriseLicenseJSONString == "" {
@@ -196,10 +201,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/charts/main/charts/kong/example-values/minimal-k4k8s-with-kong-enterprise.yaml")
 		license := fmt.Sprintf("enterprise.license_secret=%s", KongEnterpriseLicense)
 		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
-		args = append(args, "--set", "admin.type=LoadBalancer", "--set", "admin.annotations.konghq.com/protocol=http", "--set", "enterprise.rbac.enabled=true",
-			"--set", "env.enforce_rbac=on", "--set", "ingressController.enabled=false",
-			"--set", "ingressController.installCRDs=false", "--set", password,
-			"--skip-crds", "--set", license,
+		args = append(args,
+			"--set", "admin.annotations.konghq.com/protocol=http",
+			"--set", "enterprise.rbac.enabled=true",
+			"--set", "env.enforce_rbac=on",
+			"--set", password,
+			"--set", license,
 			// expose new ports
 			"--set", "proxy.stream[0].containerPort=8888",
 			"--set", "proxy.stream[0].servicePort=8888",
@@ -207,8 +214,6 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "proxy.stream[1].servicePort=9999",
 			"--set", "proxy.stream[1].parameters[0]=udp",
 			"--set", "proxy.stream[1].parameters[1]=reuseport")
-	} else {
-		args = append(args, a.deployArgs...)
 	}
 
 	stderr = new(bytes.Buffer)
