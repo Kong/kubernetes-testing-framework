@@ -261,7 +261,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	if a.enterpriseLicenseJSONString != "" {
 		stderr := new(bytes.Buffer)
-		cmd = exec.Command("kubectl", "delete", "secret", KongEnterpriseLicense, "--namespace", a.namespace) //nolint:gosec
+		cmd = exec.Command("kubectl", "delete", "secret", KongEnterpriseLicense, "--namespace", a.namespace, "--kubeconfig", kubeconfig.Name()) //nolint:gosec
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {

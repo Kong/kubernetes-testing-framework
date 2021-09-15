@@ -85,8 +85,8 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 			Name: namespace,
 		},
 	}
-
-	for i := 0; i < 3; i++ {
+	attemps := 3
+	for i := 0; i < attemps; i++ {
 		_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
 		if err != nil && !errors.IsAlreadyExists(err) {
 			time.Sleep(1 * time.Second)
