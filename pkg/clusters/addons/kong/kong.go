@@ -168,13 +168,13 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--skip-crds",
 		}
 		a.deployArgs = append(a.deployArgs, proxyOnlyArgs...)
-		args = append(args, proxyOnlyArgs...)
 	}
 
 	if a.adminServiceTypeLoadBalancer {
 		adminServiceTypeLoadBalancerArgs := []string{"--set", "admin.type=LoadBalancer"}
 		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
-		args = append(args, adminServiceTypeLoadBalancerArgs...)
+		//args = append(args, adminServiceTypeLoadBalancerArgs...)
+		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
 	}
 
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
@@ -184,6 +184,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// do the deployment and install the chart
 
 	args = append(args, "--namespace", a.namespace)
+	args = append(args, a.deployArgs...)
 	if a.enterprise {
 		if a.enterpriseLicenseJSONString == "" {
 			a.enterpriseLicenseJSONString = os.Getenv("KONG_ENTERPRISE_LICENSE")
@@ -227,7 +228,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "proxy.stream[1].parameters[0]=udp",
 			"--set", "proxy.stream[1].parameters[1]=reuseport")
 	} else {
-		args = append(args, a.deployArgs...)
+		args = append(args, defaults()...)
 	}
 
 	stderr = new(bytes.Buffer)

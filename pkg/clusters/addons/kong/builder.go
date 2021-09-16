@@ -25,7 +25,7 @@ func NewBuilder() *Builder {
 	builder := &Builder{
 		namespace:  DefaultNamespace,
 		name:       DefaultDeploymentName,
-		deployArgs: defaults(),
+		deployArgs: []string{},
 	}
 	return builder.WithDBLess()
 }
