@@ -3,11 +3,13 @@ package clusters
 import (
 	"context"
 	"fmt"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
 	netv1 "k8s.io/api/networking/v1"
 	netv1beta1 "k8s.io/api/networking/v1beta1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 )
@@ -74,4 +76,38 @@ func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace stri
 	default:
 		return nil, fmt.Errorf("%T is not a supported ingress type", ingress)
 	}
+}
+
+// CreateNamespace create customized namespace
+func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) error {
+	nsName := &corev1.Namespace{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: namespace,
+		},
+	}
+	attempts := 5
+	for attempts > 0 {
+		_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
+		if err != nil && !errors.IsAlreadyExists(err) {
+			time.Sleep(1 * time.Second)
+			attempts--
+			continue
+		}
+
+		nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
+		if err != nil {
+			time.Sleep(1 * time.Second)
+			attempts--
+			continue
+		}
+		for _, item := range nsList.Items {
+			if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
+				return nil
+			}
+			time.Sleep(1 * time.Second)
+			attempts--
+		}
+	}
+
+	return fmt.Errorf("failed creating namespace %s", namespace)
 }
