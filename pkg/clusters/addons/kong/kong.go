@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"os"
 	"os/exec"
@@ -177,6 +176,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
+	args = append(args, exposePortsDefault()...)
 	if a.enterprise {
 		if a.enterpriseLicenseJSONString == "" {
 			a.enterpriseLicenseJSONString = os.Getenv("KONG_ENTERPRISE_LICENSE")
@@ -212,14 +212,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "enterprise.rbac.enabled=true",
 			"--set", "env.enforce_rbac=on",
 			"--set", password,
-			"--set", license,
-			// expose new ports
-			"--set", "proxy.stream[0].containerPort=8888",
-			"--set", "proxy.stream[0].servicePort=8888",
-			"--set", "proxy.stream[1].containerPort=9999",
-			"--set", "proxy.stream[1].servicePort=9999",
-			"--set", "proxy.stream[1].parameters[0]=udp",
-			"--set", "proxy.stream[1].parameters[1]=reuseport")
+			"--set", license)
 	} else {
 		args = append(args, defaults()...)
 	}
@@ -318,16 +311,21 @@ func defaults() []string {
 		"--set", "admin.tls.enabled=false",
 		"--set", "admin.type=ClusterIP",
 		"--set", "tls.enabled=false",
-		// we set up a few default ports for TCP and UDP proxy stream, it's up to
-		// test cases to use these how they see fit AND clean up after themselves.
+		// the proxy expects a LoadBalancer Service provisioner (such as MetalLB).
+		"--set", "proxy.type=LoadBalancer",
+	}
+}
+
+// we set up a few default ports for TCP and UDP proxy stream, it's up to
+// test cases to use these how they see fit AND clean up after themselves.
+func exposePortsDefault() []string {
+	return []string{
 		"--set", "proxy.stream[0].containerPort=8888",
 		"--set", "proxy.stream[0].servicePort=8888",
 		"--set", "proxy.stream[1].containerPort=9999",
 		"--set", "proxy.stream[1].servicePort=9999",
 		"--set", "proxy.stream[1].parameters[0]=udp",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
-		// the proxy expects a LoadBalancer Service provisioner (such as MetalLB).
-		"--set", "proxy.type=LoadBalancer",
 	}
 }
 
@@ -409,45 +407,42 @@ func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, pa
 	}
 	defer os.Remove(kubeconfig.Name())
 
-	stderr := new(bytes.Buffer)
-	pwd := fmt.Sprintf("--from-literal=password=%s", password)
-	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd, "--kubeconfig", kubeconfig.Name())
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed creating super-admin secret %s: %w", stderr.String(), err)
+	secretJson := `{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`
+
+	secretName := "kong-session-config"
+	newSecret := &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      secretName,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"admin_gui_session_conf": []byte(secretJson),
+			"portal_session_conf":    []byte(secretJson),
+		},
 	}
 
-	pwd, err = os.Getwd()
+	_, err = cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed getting current dir, err %w", err)
+		return fmt.Errorf("failed creating %s, err %w", secretName, err)
 	}
 
-	guiF := pwd + "/secret_conf"
+	newSecret = &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      EnterpriseAdminPasswordSecretName,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"password": []byte(password),
+		},
+	}
 
-	fi, err := os.Create(guiF)
+	_, err = cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
-		return err
-	}
-	defer func() {
-		if err := fi.Close(); err != nil {
-			fmt.Println("failed closing file %w", err)
-			return
-		}
-	}()
-
-	err = ioutil.WriteFile(guiF, []byte(`{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`), 0600)
-	if err != nil {
-		return fmt.Errorf("failed writing file admin_gui_session_conf, err %v", err)
+		return fmt.Errorf("failed creating %s, err %w", EnterpriseAdminPasswordSecretName, err)
 	}
 
-	guiFile := fmt.Sprintf("--from-file=admin_gui_session_conf=%s", guiF)
-	portFile := fmt.Sprintf("--from-file=portal_session_conf=%s", guiF)
-	cmd = exec.CommandContext(ctx, "kubectl", "-n", namespace, "create", "secret", "generic", "kong-session-config", guiFile, portFile)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed creating kong-session-config secret %s: %w", stderr.String(), err)
-	}
 	return nil
+
 }
