@@ -91,16 +91,17 @@ func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) err
 		if err != nil && !errors.IsAlreadyExists(err) {
 			time.Sleep(1 * time.Second)
 			attempts--
+			continue
 		}
 
 		nsList, err := cluster.Client().CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			time.Sleep(1 * time.Second)
 			attempts--
+			continue
 		}
 		for _, item := range nsList.Items {
 			if item.Name == namespace && item.Status.Phase == corev1.NamespaceActive {
-				fmt.Printf("created namespace %s successfully.", namespace)
 				return nil
 			}
 			time.Sleep(1 * time.Second)

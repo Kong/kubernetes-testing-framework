@@ -30,7 +30,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 
 	metallb := metallbaddon.New()
 	licenseJSON := os.Getenv("KONG_ENTERPRISE_LICENSE")
-	kong := kongaddon.NewBuilder().WithControllerDisabled().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJSON).WithKongAdminPassword(adminPassword).Build()
+	kong := kongaddon.NewBuilder().WithControllerDisabled().WithEnterprise().WithPostgreSQL().WithImage(kongaddon.DefaultEnterpriseImageRepo, kongaddon.DefaultEnterpriseImageTag).WithEnterpriseLicense(licenseJSON).WithKongAdminPassword(adminPassword).WithAdminServiceTypeLoadBalancer().Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
 
 	t.Log("building the testing environment and Kubernetes cluster")

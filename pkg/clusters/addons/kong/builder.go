@@ -51,7 +51,6 @@ func (b *Builder) WithEnterprise() *Builder {
 	if b.proxyImageTag == "" {
 		b.proxyImageTag = DefaultEnterpriseImageTag
 	}
-	b.adminServiceTypeLoadBalancer = true
 	return b
 }
 
@@ -63,11 +62,12 @@ func (b *Builder) WithImage(repo, tag string) *Builder {
 }
 
 // WithEnterpriseLicense specify license json data
-func (b *Builder) WithEnterpriseLicense(licenseJason string) *Builder {
-	b.enterpriseLicenseJSONString = licenseJason
+func (b *Builder) WithEnterpriseLicense(licenseJSON string) *Builder {
+	b.enterpriseLicenseJSONString = licenseJSON
 	return b
 }
 
+//WithKongAdminPassword specify kong admin password
 func (b *Builder) WithKongAdminPassword(password string) *Builder {
 	b.kongAdminPassword = password
 	return b
@@ -79,6 +79,7 @@ func (b *Builder) WithControllerDisabled() *Builder {
 	return b
 }
 
+// WithAdminServiceTypeLoadBalancer sets the Kong admin API's Kubernetes Service type
 func (b *Builder) WithAdminServiceTypeLoadBalancer() *Builder {
 	b.adminServiceTypeLoadBalancer = true
 	return b

@@ -202,11 +202,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			numSymbol := 0
 			adminPassword, err := password.Generate(pwdLen, numDigits, numSymbol, false, false)
 			if err != nil {
-				return fmt.Errorf("kong admin password failure %v", err)
+				return fmt.Errorf("kong admin password failure %w", err)
 			}
 			a.kongAdminPassword = adminPassword
 		}
-		if err := prepareSecrets(ctx, a.namespace, a.kongAdminPassword); err != nil {
+		if err := prepareSecrets(ctx, cluster, a.namespace, a.kongAdminPassword); err != nil {
 			return err
 		}
 
@@ -405,21 +405,26 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
 	}
 
-	fmt.Printf("successfully deployed kong-enterprise-license into the cluster .")
 	return nil
 }
 
-func prepareSecrets(ctx context.Context, namespace, password string) error {
+func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, password string) error {
+	kubeconfig, err := utils.TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+
 	stderr := new(bytes.Buffer)
 	pwd := fmt.Sprintf("--from-literal=password=%s", password)
-	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd)
+	cmd := exec.CommandContext(ctx, "kubectl", "create", "secret", "generic", EnterpriseAdminPasswordSecretName, "-n", namespace, pwd, "--kubeconfig", kubeconfig.Name())
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("failed creating super-admin secret %s: %w", stderr.String(), err)
 	}
 
-	pwd, err := os.Getwd()
+	pwd, err = os.Getwd()
 	if err != nil {
 		return fmt.Errorf("failed getting current dir, err %w", err)
 	}
