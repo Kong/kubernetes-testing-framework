@@ -149,7 +149,6 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
-	// configure for dbmode options
 	if a.dbmode == PostgreSQL {
 		dbmodedeployArgs := []string{
 			"--set", "env.database=postgres",
@@ -173,15 +172,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if a.adminServiceTypeLoadBalancer {
 		adminServiceTypeLoadBalancerArgs := []string{"--set", "admin.type=LoadBalancer"}
 		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
-		//args = append(args, adminServiceTypeLoadBalancerArgs...)
-		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
 	}
 
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
 		return err
 	}
-
-	// do the deployment and install the chart
 
 	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
