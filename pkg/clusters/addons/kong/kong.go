@@ -407,7 +407,7 @@ func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, pa
 	}
 	defer os.Remove(kubeconfig.Name())
 
-	secretJson := `{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`
+	secretJSON := `{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`
 
 	secretName := "kong-session-config"
 	newSecret := &corev1.Secret{
@@ -417,8 +417,8 @@ func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, pa
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
-			"admin_gui_session_conf": []byte(secretJson),
-			"portal_session_conf":    []byte(secretJson),
+			"admin_gui_session_conf": []byte(secretJSON),
+			"portal_session_conf":    []byte(secretJSON),
 		},
 	}
 
