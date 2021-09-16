@@ -150,28 +150,25 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	if a.dbmode == PostgreSQL {
-		dbmodedeployArgs := []string{
+		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "env.database=postgres",
 			"--set", "postgresql.enabled=true",
 			"--set", "postgresql.postgresqlUsername=kong",
 			"--set", "postgresql.postgresqlDatabase=kong",
 			"--set", "postgresql.service.port=5432",
-		}
-		a.deployArgs = append(a.deployArgs, dbmodedeployArgs...)
+		}...)
 	}
 
 	if a.proxyOnly {
-		proxyOnlyArgs := []string{
+		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false",
 			"--skip-crds",
-		}
-		a.deployArgs = append(a.deployArgs, proxyOnlyArgs...)
+		}...)
 	}
 
 	if a.adminServiceTypeLoadBalancer {
-		adminServiceTypeLoadBalancerArgs := []string{"--set", "admin.type=LoadBalancer"}
-		a.deployArgs = append(a.deployArgs, adminServiceTypeLoadBalancerArgs...)
+		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
 	}
 
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
