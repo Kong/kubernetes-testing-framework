@@ -203,6 +203,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			return err
 		}
 
+		// follow up issue https://github.com/Kong/kubernetes-testing-framework/issues/113
 		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/f319365b08d5910b028d602fe04dba5a4bc6b831/configs/enterprise-default.yaml")
 		license := fmt.Sprintf("enterprise.license_secret=%s", KongEnterpriseLicense)
 		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
