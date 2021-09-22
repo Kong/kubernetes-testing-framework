@@ -84,6 +84,11 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		cluster = b.existingCluster
 	}
 
+	for _, addon := range b.addons {
+		if err := cluster.DeployAddon(ctx, addon); err != nil {
+			return nil, err
+		}
+	}
 
 	return &environment{
 		name:    b.Name,
