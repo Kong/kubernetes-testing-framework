@@ -10,6 +10,8 @@ import (
 	"os/exec"
 	"strings"
 
+	pwgen "github.com/sethvargo/go-password/password"
+	"github.com/sirupsen/logrus"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -18,7 +20,6 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	"github.com/sethvargo/go-password/password"
 )
 
 // -----------------------------------------------------------------------------
@@ -29,33 +30,50 @@ const (
 	// AddonName is the unique name of the Kong cluster.Addon
 	AddonName clusters.AddonName = "kong"
 
-	httpPort = 80
-
 	// DefaultEnterpriseImageRepo default kong enterprise image
 	DefaultEnterpriseImageRepo = "kong/kong-gateway"
 
 	// DefaultEnterpriseImageTag latest kong enterprise image tag
 	DefaultEnterpriseImageTag = "2.5.0.0-alpine"
 
-	// KongEnterpriseLicense is the kong license data secret name
-	KongEnterpriseLicense = "kong-enterprise-license"
+	// DefaultEnterpriseLicenseSecretName is the name that will be used by default for the
+	// Kubernetes secret containing the Kong enterprise license that will be
+	// deployed when enterprise mode is enabled.
+	DefaultEnterpriseLicenseSecretName = "kong-enterprise-license"
 
-	// EnterpriseAdminPasswordSecretName is the kong admin seed password
-	EnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
+	// DefaultEnterpriseAdminPasswordSecretName is the secret name that will be used
+	// by default for the Kubernetes secret that will be deployed containing the
+	// superuser admin password in enterprise mode.
+	DefaultEnterpriseAdminPasswordSecretName = "kong-enterprise-superuser-password"
+
+	// DefaultAdminGUISessionConfSecretName is the secret name that will be used by
+	// default for the Kbuernetes secret that will be deployed containing the
+	// session configuration for the Kong Admin GUI in enterprise mode.
+	DefaultAdminGUISessionConfSecretName = "kong-session-config"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
 type Addon struct {
-	namespace                    string
-	deployArgs                   []string
-	dbmode                       DBMode
-	proxyOnly                    bool
-	enterprise                   bool
-	proxyImage                   string
-	proxyImageTag                string
-	enterpriseLicenseJSONString  string
-	kongAdminPassword            string
-	adminServiceTypeLoadBalancer bool
+	logger *logrus.Logger
+
+	// kubernetes and helm chart related configuration options
+	namespace  string
+	name       string
+	deployArgs []string
+
+	// ingress controller configuration options
+	ingressControllerDisabled bool
+
+	// proxy server general configuration options
+	proxyAdminServiceTypeLoadBalancer bool
+	proxyDBMode                       DBMode
+	proxyImage                        string
+	proxyImageTag                     string
+
+	// proxy server enterprise mode configuration options
+	proxyEnterpriseEnabled            bool
+	proxyEnterpriseSuperAdminPassword string
+	proxyEnterpriseLicenseJSON        string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -71,6 +89,10 @@ func (a *Addon) Namespace() string {
 	return a.namespace
 }
 
+// -----------------------------------------------------------------------------
+// Kong Addon - Proxy Endpoint Methods
+// -----------------------------------------------------------------------------
+
 // ProxyURL provides a routable *url.URL for accessing the Kong proxy.
 func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
 	waitForObjects, ready, err := a.Ready(ctx, cluster)
@@ -82,7 +104,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, httpPort)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, 80)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
@@ -147,8 +169,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	// if the dbmode is postgres, set several related values
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
-	if a.dbmode == PostgreSQL {
+	if a.proxyDBMode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "env.database=postgres",
 			"--set", "postgresql.enabled=true",
@@ -158,7 +181,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}...)
 	}
 
-	if a.proxyOnly {
+	// if the ingress controller is disabled flag it in the chart and don't install any CRDs
+	if a.ingressControllerDisabled {
 		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false",
@@ -166,57 +190,64 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}...)
 	}
 
-	if a.adminServiceTypeLoadBalancer {
-		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
+	// set the container image values if provided by the caller
+	if a.proxyImage != "" {
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("image.repository=%s", a.proxyImage)}...)
+	}
+	if a.proxyImageTag != "" {
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("image.tag=%s", a.proxyImageTag)}...)
 	}
 
+	// set the service type of the proxy admin's Kubernetes service
+	if a.proxyAdminServiceTypeLoadBalancer {
+		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
+	} else {
+		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=ClusterIP"}...)
+	}
+
+	// create a namespace ahead of deployment so things like license secrets and other configurations
+	// can be preloaded.
 	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
 		return err
 	}
 
-	args = append(args, "--namespace", a.namespace)
-	args = append(args, a.deployArgs...)
-	args = append(args, exposePortsDefault()...)
-	if a.enterprise {
-		if a.enterpriseLicenseJSONString == "" {
-			a.enterpriseLicenseJSONString = os.Getenv("KONG_ENTERPRISE_LICENSE")
-			if a.enterpriseLicenseJSONString == "" {
-				return fmt.Errorf("license json should not be empty")
-			}
-		}
-
-		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, KongEnterpriseLicense, a.enterpriseLicenseJSONString); err != nil {
+	// deploy licenses and other configurations for enterprise mode
+	if a.proxyEnterpriseEnabled {
+		// deploy the license as a Kubernetes secret to enable enterprise features for the proxy
+		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, DefaultEnterpriseLicenseSecretName, a.proxyEnterpriseLicenseJSON); err != nil {
 			return err
 		}
 
-		if a.kongAdminPassword == "" {
-			pwdLen := 10
-			numDigits := 5
-			numSymbol := 0
-			adminPassword, err := password.Generate(pwdLen, numDigits, numSymbol, false, false)
-			if err != nil {
-				return fmt.Errorf("kong admin password failure %w", err)
-			}
-			a.kongAdminPassword = adminPassword
+		// deploy the superadmin password as a Kubernetes secret adjacent to the proxy pod and configure
+		// the chart to use that secret to configure controller auth to the admin API.
+		a.proxyEnterpriseSuperAdminPassword, err = deployEnterpriseSuperAdminPasswordSecret(ctx, cluster, a.namespace, a.proxyEnterpriseSuperAdminPassword)
+		if err != nil {
+			return err
 		}
-		if err := prepareSecrets(ctx, cluster, a.namespace, a.kongAdminPassword); err != nil {
+		if !a.ingressControllerDisabled {
+			a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.env.kong_admin_token.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName)}...)
+			a.deployArgs = append(a.deployArgs, []string{"--set", "ingressController.env.kong_admin_token.valueFrom.secretKeyRef.key=password"}...)
+		}
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName)}...)
+		a.deployArgs = append(a.deployArgs, []string{"--set", "env.password.valueFrom.secretKeyRef.key=password"}...)
+
+		// deploy the admin session configuration needed for enterprise enabled mode
+		if err := deployKongEnterpriseAdminGUISessionConf(ctx, cluster, a.namespace); err != nil {
 			return err
 		}
 
-		// follow up issue https://github.com/Kong/kubernetes-testing-framework/issues/113
-		args = append(args, "--version", "2.3.0", "-f", "https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/f319365b08d5910b028d602fe04dba5a4bc6b831/configs/enterprise-default.yaml")
-		license := fmt.Sprintf("enterprise.license_secret=%s", KongEnterpriseLicense)
-		password := fmt.Sprintf("env.kong_password=%s", a.kongAdminPassword)
-		args = append(args,
-			"--set", "admin.annotations.konghq.com/protocol=http",
-			"--set", "enterprise.rbac.enabled=true",
-			"--set", "env.enforce_rbac=on",
-			"--set", password,
-			"--set", license)
-	} else {
-		args = append(args, defaults()...)
+		// set the enterprise defaults helm installation values
+		a.deployArgs = append(a.deployArgs, enterpriseDefaults()...)
 	}
 
+	// compile the helm installation values
+	args = append(args, "--namespace", a.namespace)
+	args = append(args, a.deployArgs...)
+	args = append(args, defaults()...)
+	args = append(args, exposePortsDefault()...)
+	a.logger.Debugf("helm install arguments: %+v", args)
+
+	// run the helm install command
 	stderr = new(bytes.Buffer)
 	cmd = exec.CommandContext(ctx, "helm", args...)
 	cmd.Stdout = io.Discard
@@ -248,9 +279,9 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	if a.enterpriseLicenseJSONString != "" {
+	if a.proxyEnterpriseLicenseJSON != "" {
 		stderr := new(bytes.Buffer)
-		cmd = exec.Command("kubectl", "delete", "secret", KongEnterpriseLicense, "--namespace", a.namespace, "--kubeconfig", kubeconfig.Name()) //nolint:gosec
+		cmd = exec.Command("kubectl", "delete", "secret", DefaultEnterpriseLicenseSecretName, "--namespace", a.namespace, "--kubeconfig", kubeconfig.Name()) //nolint:gosec
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
@@ -293,6 +324,23 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 }
 
 // -----------------------------------------------------------------------------
+// Kong Addon - Private Secret Generation Config Options
+// -----------------------------------------------------------------------------
+
+// all of these configuration options govern the length contents and complexity
+// of secrets/passwords that are generated by this addon for things such as
+// created kong admin passwords, e.t.c.
+//
+// See: https://pkg.go.dev/github.com/sethvargo/go-password/password
+const (
+	secretMinLength     = 32
+	secretMinNumeric    = 8
+	secretMinAlphabetic = 8
+	secretNoUpper       = false
+	secretAllowRepeat   = false
+)
+
+// -----------------------------------------------------------------------------
 // Kong Addon - Private Functions
 // -----------------------------------------------------------------------------
 
@@ -309,10 +357,20 @@ func defaults() []string {
 		"--set", "admin.http.enabled=true",
 		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
-		"--set", "admin.type=ClusterIP",
 		"--set", "tls.enabled=false",
 		// the proxy expects a LoadBalancer Service provisioner (such as MetalLB).
 		"--set", "proxy.type=LoadBalancer",
+	}
+}
+
+// enterpriseDefaults provides the default values needed to enable enterprise mode for the Kong proxy server.
+func enterpriseDefaults() []string {
+	return []string{
+		"--set", "enterprise.enabled=true",
+		"--set", "enterprise.rbac.enabled=true",
+		"--set", "env.enforce_rbac=on",
+		"--set", "admin.annotations.konghq.com/protocol=http",
+		"--set", fmt.Sprintf("enterprise.license_secret=%s", DefaultEnterpriseLicenseSecretName),
 	}
 }
 
@@ -379,9 +437,14 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
 }
 
-// deployKongEnterpriseLicenseSecret deploy secret using license json data
+// deployKongEnterpriseLicenseSecret deploys a Kubernetes secret containing the enterprise license data
+// which the Kong proxy will use to validate an enable enterprise featuresets.
 func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Cluster, namespace, name, licenseJSON string) error {
-	newSecret := &corev1.Secret{
+	if licenseJSON == "" {
+		return fmt.Errorf("enterprise mode was enabled but no license was provided")
+	}
+
+	kongLicenseSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      name,
@@ -392,45 +455,29 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 		},
 	}
 
-	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
+	_, err := cluster.Client().CoreV1().Secrets(namespace).Create(ctx, kongLicenseSecret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed creating kong-enterprise-license secret, err %w", err)
+		return fmt.Errorf("failed to create the enterprise license secret: %w", err)
 	}
 
 	return nil
 }
 
-func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, password string) error {
-	kubeconfig, err := utils.TempKubeconfig(cluster)
-	if err != nil {
-		return err
+// deployEnterpriseSuperAdminPasswordSecret will deploy a secret for the provided kong admin superuser password that is provided.
+// If no specific password is provided, one will be automatically generated.
+func deployEnterpriseSuperAdminPasswordSecret(ctx context.Context, cluster clusters.Cluster, namespace, password string) (string, error) {
+	var err error
+	if password == "" {
+		password, err = pwgen.Generate(secretMinLength, secretMinNumeric, secretMinAlphabetic, secretNoUpper, secretAllowRepeat)
+		if err != nil {
+			return "", fmt.Errorf("no admin password was provided so an attempt was made to generate one, but it failed: %w", err)
+		}
 	}
-	defer os.Remove(kubeconfig.Name())
 
-	secretJSON := `{"cookie_name":"04tm34l","secret":"change-this-secret","cookie_secure":false,"storage":"kong"}`
-
-	secretName := "kong-session-config"
-	newSecret := &corev1.Secret{
+	kongSuperAdminPasswordSecret := &corev1.Secret{
 		Type: corev1.SecretTypeOpaque,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      secretName,
-			Namespace: namespace,
-		},
-		Data: map[string][]byte{
-			"admin_gui_session_conf": []byte(secretJSON),
-			"portal_session_conf":    []byte(secretJSON),
-		},
-	}
-
-	_, err = cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
-	if err != nil {
-		return fmt.Errorf("failed creating %s, err %w", secretName, err)
-	}
-
-	newSecret = &corev1.Secret{
-		Type: corev1.SecretTypeOpaque,
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      EnterpriseAdminPasswordSecretName,
+			Name:      DefaultEnterpriseAdminPasswordSecretName,
 			Namespace: namespace,
 		},
 		Data: map[string][]byte{
@@ -438,11 +485,39 @@ func prepareSecrets(ctx context.Context, cluster clusters.Cluster, namespace, pa
 		},
 	}
 
+	_, err = cluster.Client().CoreV1().Secrets(namespace).Create(ctx, kongSuperAdminPasswordSecret, metav1.CreateOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to create the superuser admin password secret: %w", err)
+	}
+
+	return password, nil
+}
+
+// deployKongEnterpriseAdminGUISessionConf generates a session configuration for enterprise mode admin GUI and deploys that
+// as a secret to the cluster to be picked up by the enterprise enabled proxy.
+func deployKongEnterpriseAdminGUISessionConf(ctx context.Context, cluster clusters.Cluster, namespace string) error {
+	sessionSecret, err := pwgen.Generate(secretMinLength, secretMinNumeric, secretMinAlphabetic, secretNoUpper, secretAllowRepeat)
+	if err != nil {
+		return fmt.Errorf("failed to generate a secure secret for the admin gui session config: %w", err)
+	}
+	sessionConfJSON := fmt.Sprintf(`{"cookie_secure":false,"storage":"kong","cookie_name":"admin_session","cookie_lifetime":31557600,"cookie_samesite":"off","secret":"%s"}`, sessionSecret)
+
+	newSecret := &corev1.Secret{
+		Type: corev1.SecretTypeOpaque,
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      DefaultAdminGUISessionConfSecretName,
+			Namespace: namespace,
+		},
+		Data: map[string][]byte{
+			"admin_gui_session_conf": []byte(sessionConfJSON),
+			"portal_session_conf":    []byte(sessionConfJSON),
+		},
+	}
+
 	_, err = cluster.Client().CoreV1().Secrets(namespace).Create(ctx, newSecret, metav1.CreateOptions{})
 	if err != nil {
-		return fmt.Errorf("failed creating %s, err %w", EnterpriseAdminPasswordSecretName, err)
+		return fmt.Errorf("failed to create secret for admin gui session config: %w", err)
 	}
 
 	return nil
-
 }
