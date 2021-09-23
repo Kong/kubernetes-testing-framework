@@ -11,6 +11,7 @@ require (
 	github.com/docker/docker v20.10.8+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.4.0 // indirect
+	github.com/go-logr/logr v0.4.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0 // indirect
 	github.com/imdario/mergo v0.3.11 // indirect

@@ -16,6 +16,8 @@ import (
 )
 
 func TestKongWithPostgresDBMode(t *testing.T) {
+	t.Parallel()
+
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
 	defer cancel()
 

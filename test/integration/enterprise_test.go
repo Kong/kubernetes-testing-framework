@@ -21,7 +21,9 @@ import (
 )
 
 func TestKongEnterprisePostgres(t *testing.T) {
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
+	t.Parallel()
+
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
 	defer cancel()
 
 	t.Log("configuring the testing environment")

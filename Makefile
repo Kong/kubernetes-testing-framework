@@ -1,5 +1,6 @@
 GOOS ?= "linux"
 GOARCH ?= "amd64"
+NCPU ?= $(shell getconf _NPROCESSORS_ONLN)
 
 all: build
 
@@ -32,5 +33,11 @@ test.e2e:
 
 .PHONY: test.integration
 test.integration:
-	@GOFLAGS="-tags=integration_tests" go test -timeout 20m -race -v \
-		-covermode=atomic -coverprofile=coverage.out ./...
+	@GOFLAGS="-tags=integration_tests" go test \
+		-timeout 20m \
+		-race \
+		-v \
+		-covermode=atomic \
+		-coverprofile=coverage.out \
+		-parallel $(NCPU) \
+		./...
