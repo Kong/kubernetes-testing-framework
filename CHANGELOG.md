@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.7.0
+
+### Breaking Changes
+
+* Several public builder methods for the Kong cluster addon had name
+  changes intended to make the naming more consistent and use prefixes
+  as indices to improve readability and understanding of which components
+  are being effected.
+  ([#121](https://github.com/Kong/kubernetes-testing-framework/pull/121))
+
 ## v0.6.2
 
 ### Under The Hood
