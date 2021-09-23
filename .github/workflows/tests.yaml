@@ -12,13 +12,14 @@ on:
 
 jobs:
   tests-and-coverage:
-    environment: "Configure ci"
+    environment: "integration-tests"
     runs-on: ubuntu-latest
     steps:
     - name: setup golang
       uses: actions/setup-go@v2
       with:
         go-version: '^1.16'
+
     - name: cache go modules
       uses: actions/cache@v2.1.6
       with:
@@ -26,12 +27,20 @@ jobs:
         key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go
+
     - name: checkout repository
       uses: actions/checkout@v2
-    - name: run all tests
-      run: make test.all
+      with:
+        fetch-depth: 0
+
+    - name: run unit tests
+      run: make test.unit
+
+    - name: run integration tests
+      run: make test.integration
       env:
         KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
+
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0
       with:

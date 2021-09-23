@@ -4,7 +4,6 @@ package integration
 
 import (
 	"bytes"
-	"context"
 	"fmt"
 	"net/http"
 	"strings"
@@ -23,9 +22,6 @@ import (
 
 func TestEnvWithKindCluster(t *testing.T) {
 	t.Parallel()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
-	defer cancel()
 
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()
@@ -126,9 +122,6 @@ func TestEnvWithKindCluster(t *testing.T) {
 
 func TestEnvWithKindClusterKongProxyOnlyMode(t *testing.T) {
 	t.Parallel()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
-	defer cancel()
 
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()

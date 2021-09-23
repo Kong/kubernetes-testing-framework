@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"context"
 	"testing"
 	"time"
 
@@ -17,9 +16,7 @@ import (
 func TestKindClusterOlderVersion(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	clusterVersion := semver.MustParse("1.20.7")
-
 	t.Logf("deploying a kind cluster with kubernetes version %s", clusterVersion)
 	builder := kind.NewBuilder().WithClusterVersion(clusterVersion)
 	cluster, err := builder.Build(ctx)
@@ -46,9 +43,7 @@ func TestKindClusterOlderVersion(t *testing.T) {
 func TestKindClusterNewerVersion(t *testing.T) {
 	t.Parallel()
 
-	ctx := context.Background()
 	clusterVersion := semver.MustParse("1.21.1")
-
 	t.Logf("deploying a kind cluster with kubernetes version %s", clusterVersion)
 	builder := kind.NewBuilder().WithClusterVersion(clusterVersion)
 	cluster, err := builder.Build(ctx)
