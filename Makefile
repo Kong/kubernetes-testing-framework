@@ -21,7 +21,7 @@ lint:
 test: test.unit
 
 .PHONY: test.all
-test.all: test.integration
+test.all: test.unit test.integration
 
 .PHONY: test.unit
 test.unit:
@@ -34,10 +34,10 @@ test.e2e:
 .PHONY: test.integration
 test.integration:
 	@GOFLAGS="-tags=integration_tests" go test \
-		-timeout 20m \
+		-timeout 30m \
 		-race \
 		-v \
 		-covermode=atomic \
 		-coverprofile=coverage.out \
 		-parallel $(NCPU) \
-		./...
+		./test/integration/...

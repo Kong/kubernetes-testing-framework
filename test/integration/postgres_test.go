@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -17,9 +16,6 @@ import (
 
 func TestKongWithPostgresDBMode(t *testing.T) {
 	t.Parallel()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
-	defer cancel()
 
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()

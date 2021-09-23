@@ -3,10 +3,8 @@
 package integration
 
 import (
-	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -19,9 +17,6 @@ import (
 
 func TestEnvironmentWithKnative(t *testing.T) {
 	t.Parallel()
-
-	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*10)
-	defer cancel()
 
 	t.Log("configuring the testing environment")
 	knativeAddon := knative.New()

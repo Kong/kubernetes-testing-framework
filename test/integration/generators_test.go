@@ -3,29 +3,20 @@
 package integration
 
 import (
-	"context"
 	"testing"
-	"time"
 
 	"github.com/google/uuid"
-	"github.com/kong/kubernetes-testing-framework/pkg/environments"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-)
 
-const (
-	httpbinWait = time.Minute * 2
-	waitTick    = time.Second
+	"github.com/kong/kubernetes-testing-framework/pkg/environments"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 func TestGenerators(t *testing.T) {
 	t.Parallel()
-
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
 	t.Log("creating a test environment to test generators")
 	env, err := environments.NewBuilder().Build(ctx)
