@@ -15,6 +15,8 @@ import (
 )
 
 func TestKindClusterOlderVersion(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	clusterVersion := semver.MustParse("1.20.7")
 
@@ -42,6 +44,8 @@ func TestKindClusterOlderVersion(t *testing.T) {
 }
 
 func TestKindClusterNewerVersion(t *testing.T) {
+	t.Parallel()
+
 	ctx := context.Background()
 	clusterVersion := semver.MustParse("1.21.1")
 
