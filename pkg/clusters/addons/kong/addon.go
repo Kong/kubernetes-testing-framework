@@ -12,7 +12,6 @@ import (
 
 	pwgen "github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
-	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -293,34 +292,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 }
 
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObjects []runtime.Object, ready bool, err error) {
-	var deployments *appsv1.DeploymentList
-	deployments, err = cluster.Client().AppsV1().Deployments(a.namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-
-	for i := 0; i < len(deployments.Items); i++ {
-		deployment := &(deployments.Items[i])
-		if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
-			waitForObjects = append(waitForObjects, deployment)
-		}
-	}
-
-	var services *corev1.ServiceList
-	services, err = cluster.Client().CoreV1().Services(a.namespace).List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return
-	}
-
-	for i := 0; i < len(services.Items); i++ {
-		service := &(services.Items[i])
-		if service.Spec.Type == corev1.ServiceTypeLoadBalancer && len(service.Status.LoadBalancer.Ingress) < 1 {
-			waitForObjects = append(waitForObjects, service)
-		}
-	}
-
-	ready = len(waitForObjects) == 0
-	return
+	return utils.IsNamespaceReady(ctx, cluster, a.namespace)
 }
 
 // -----------------------------------------------------------------------------
