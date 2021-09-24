@@ -11,6 +11,7 @@ import (
 	"github.com/google/uuid"
 	containerpb "google.golang.org/genproto/googleapis/container/v1"
 
+	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 
@@ -84,20 +85,20 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 
 	// configure the cluster creation request
 	parent := fmt.Sprintf("projects/%s/locations/%s", b.project, b.location)
-	cluster := containerpb.Cluster{
+	pbcluster := containerpb.Cluster{
 		Name:             b.Name,
 		InitialNodeCount: 1,
 		AddonsConfig:     &containerpb.AddonsConfig{}, // empty config to indicate that no addons are desired
 		ResourceLabels:   map[string]string{GKECreateLabel: createdByID},
 	}
-	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &cluster}
+	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
 
 	// use any provided custom cluster version
 	if b.clusterVersion != nil && b.majorMinor != "" {
 		return nil, fmt.Errorf("options for full cluster version and partial are mutually exclusive")
 	}
 	if b.clusterVersion != nil {
-		cluster.InitialClusterVersion = b.clusterVersion.String()
+		pbcluster.InitialClusterVersion = b.clusterVersion.String()
 	}
 	if b.majorMinor != "" {
 		latestPatches, err := listLatestClusterPatchVersions(ctx, mgrc, b.project, b.location)
@@ -108,7 +109,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		if !ok {
 			return nil, fmt.Errorf("no available kubernetes version for %s", b.majorMinor)
 		}
-		cluster.InitialClusterVersion = v.String()
+		pbcluster.InitialClusterVersion = v.String()
 	}
 
 	// create the GKE cluster asynchronously
@@ -152,7 +153,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
-	return &gkeCluster{
+	cluster := &gkeCluster{
 		name:      b.Name,
 		project:   b.project,
 		location:  b.location,
@@ -161,5 +162,14 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		cfg:       restCFG,
 		addons:    make(clusters.Addons),
 		l:         &sync.RWMutex{},
-	}, nil
+	}
+
+	if err := utils.ClusterInitHooks(ctx, cluster); err != nil {
+		if cleanupErr := cluster.Cleanup(ctx); cleanupErr != nil {
+			return nil, fmt.Errorf("multiple errors occurred BUILD_ERROR=(%s) CLEANUP_ERROR=(%s)", err, cleanupErr)
+		}
+		return nil, err
+	}
+
+	return cluster, nil
 }
