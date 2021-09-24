@@ -8,6 +8,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
 
+	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 
@@ -57,12 +58,21 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
-	return &kindCluster{
+	cluster := &kindCluster{
 		name:       b.Name,
 		client:     kc,
 		cfg:        cfg,
 		addons:     make(clusters.Addons),
 		deployArgs: deployArgs,
 		l:          &sync.RWMutex{},
-	}, nil
+	}
+
+	if err := utils.ClusterInitHooks(ctx, cluster); err != nil {
+		if cleanupErr := cluster.Cleanup(ctx); cleanupErr != nil {
+			return nil, fmt.Errorf("multiple errors occurred BUILD_ERROR=(%s) CLEANUP_ERROR=(%s)", err, cleanupErr)
+		}
+		return nil, err
+	}
+
+	return cluster, err
 }
