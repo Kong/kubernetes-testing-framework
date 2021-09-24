@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"os/exec"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
 
+	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
@@ -49,23 +50,28 @@ func (a *addon) Name() clusters.AddonName {
 }
 
 func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
-	// TODO: derive kubeconfig from cluster object
 	if cluster.Type() != kind.KindClusterType {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
 
-	return deployMetallbForKindCluster(cluster.Client(), cluster.Name(), kind.DefaultKindDockerNetwork)
+	return deployMetallbForKindCluster(cluster, kind.DefaultKindDockerNetwork)
 }
 
 func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
-	// TODO: derive kubeconfig from cluster object
 	if cluster.Type() != kind.KindClusterType {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
 
+	// generate a temporary kubeconfig since we're going to be using kubectl
+	kubeconfig, err := utils.TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+
 	args := []string{
+		"--kubeconfig", kubeconfig.Name(),
 		"--namespace", DefaultNamespace,
-		"--context", fmt.Sprintf("kind-%s", cluster.Name()),
 		"delete", "configmap", metalConfig,
 	}
 
@@ -78,7 +84,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
-	return metallbDeleteHack(cluster.Name())
+	return metallbDeleteHack(kubeconfig)
 }
 
 func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
@@ -112,17 +118,17 @@ var (
 // -----------------------------------------------------------------------------
 
 // deployMetallbForKindCluster deploys Metallb to the given Kind cluster using the Docker network provided for LoadBalancer IPs.
-func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dockerNetwork string) error {
+func deployMetallbForKindCluster(cluster clusters.Cluster, dockerNetwork string) error {
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: DefaultNamespace}}
-	if _, err := kc.CoreV1().Namespaces().Create(context.Background(), &ns, metav1.CreateOptions{}); err != nil {
+	if _, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), &ns, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
 		}
 	}
 
 	// get an IP range for the docker container network to use for MetalLB
-	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(kindClusterName), dockerNetwork)
+	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
 	if err != nil {
 		return err
 	}
@@ -138,7 +144,7 @@ func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dock
 			"config": getMetallbYAMLCfg(ipStart, ipEnd),
 		},
 	}
-	if _, err := kc.CoreV1().ConfigMaps(ns.Name).Create(context.Background(), cfgMap, metav1.CreateOptions{}); err != nil {
+	if _, err := cluster.Client().CoreV1().ConfigMaps(ns.Name).Create(context.Background(), cfgMap, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
 		}
@@ -158,14 +164,14 @@ func deployMetallbForKindCluster(kc *kubernetes.Clientset, kindClusterName, dock
 			"secretkey": base64.StdEncoding.EncodeToString(secretKey),
 		},
 	}
-	if _, err := kc.CoreV1().Secrets(ns.Name).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
+	if _, err := cluster.Client().CoreV1().Secrets(ns.Name).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
 		}
 	}
 
 	// create the metallb deployment and related resources
-	return metallbDeployHack(kindClusterName)
+	return metallbDeployHack(cluster)
 }
 
 // getIPRangeForMetallb provides a range of IP addresses to use for MetalLB given an IPv4 Network
@@ -190,9 +196,16 @@ address-pools:
 
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.
 //       See: https://github.com/Kong/kubernetes-testing-framework/issues/25
-func metallbDeployHack(clusterName string) error {
+func metallbDeployHack(cluster clusters.Cluster) error {
+	// generate a temporary kubeconfig since we're going to be using kubectl
+	kubeconfig, err := utils.TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+
 	deployArgs := []string{
-		"--context", fmt.Sprintf("kind-%s", clusterName),
+		"--kubeconfig", kubeconfig.Name(),
 		"apply", "-f", metalManifest,
 	}
 
@@ -208,9 +221,9 @@ func metallbDeployHack(clusterName string) error {
 	return nil
 }
 
-func metallbDeleteHack(clusterName string) error {
+func metallbDeleteHack(kubeconfig *os.File) error {
 	deployArgs := []string{
-		"--context", fmt.Sprintf("kind-%s", clusterName),
+		"--kubeconfig", kubeconfig.Name(),
 		"delete", "-f", metalManifest,
 	}
 
@@ -224,7 +237,7 @@ func metallbDeleteHack(clusterName string) error {
 	}
 
 	stderr = new(bytes.Buffer)
-	cmd = exec.Command("kubectl", "delete", "namespace", DefaultNamespace)
+	cmd = exec.Command("kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "namespace", DefaultNamespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 
