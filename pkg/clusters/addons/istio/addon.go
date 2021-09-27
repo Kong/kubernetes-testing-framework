@@ -46,6 +46,9 @@ type Addon struct {
 	istioDeployJob    *batchv1.Job
 
 	prometheusEnabled bool
+	grafanaEnabled    bool
+	jaegerEnabled     bool
+	kialiEnabled      bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -244,27 +247,55 @@ func (a *Addon) useLatestIstioVersion() error {
 }
 
 const (
-	// istioPrometheusTemplate provides a URL to the demonstration prometheus
-	// server that Istio provides for testing purposes, and template-wise takes
-	// the major and minor Istio release versions as arguments to render a
-	// manifest URL where the component for that version of Istio can be found.
-	istioPrometheusTemplate = "https://raw.githubusercontent.com/istio/istio/release-%d.%d/samples/addons/prometheus.yaml"
+	// istioAddonTemplate provides a URL template to the manifests for Istio extension components.
+	istioAddonTemplate = "https://raw.githubusercontent.com/istio/istio/release-%d.%d/samples/addons/%s.yaml"
 )
 
 // deployExtras deploys any additional Prometheus addons or extra components
 // requested: for instance Prometheus or other supportive functionality that
 // isn't part of the critical Istio deployment path.
 func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) error {
-	if a.prometheusEnabled {
-		// generate a temporary kubeconfig since we're going to be using kubectl
-		kubeconfig, err := generators.TempKubeconfig(cluster)
-		if err != nil {
-			return err
-		}
-		defer os.Remove(kubeconfig.Name())
+	// generate a temporary kubeconfig since we're going to be using kubectl
+	kubeconfig, err := generators.TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
 
+	if a.kialiEnabled {
+		// kiali needs at least prometheus, grafana and jaeger are optional
+		a.prometheusEnabled = true
+
+		// render the URL for Istio Kiali manifests for the current Istio version
+		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "kiali")
+
+		// deploy the Kiali manifests (these will deploy to the istio-system namespace)
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to deploy Istio's Kiali addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
+	}
+
+	if a.jaegerEnabled {
+		// render the URL for Istio Jaeger manifests for the current Istio version
+		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "jaeger")
+
+		// deploy the Jaeger manifests (these will deploy to the istio-system namespace)
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to deploy Istio's Jaeger addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
+	}
+
+	if a.prometheusEnabled {
 		// render the URL for Istio Prometheus manifests for the current Istio version
-		manifestsURL := fmt.Sprintf(istioPrometheusTemplate, a.istioVersion.Major, a.istioVersion.Minor)
+		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "prometheus")
 
 		// deploy the Prometheus manifests (these will deploy to the istio-system namespace)
 		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
@@ -272,7 +303,21 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to deploy Istio's Prometheus STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+			return fmt.Errorf("failed to deploy Istio's Prometheus addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
+	}
+
+	if a.grafanaEnabled {
+		// render the URL for Istio Grafana manifests for the current Istio version
+		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "grafana")
+
+		// deploy the Grafana manifests (these will deploy to the istio-system namespace)
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to deploy Istio's Grafana addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
 		}
 	}
 

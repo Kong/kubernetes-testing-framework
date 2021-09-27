@@ -21,7 +21,13 @@ func TestIstioAddonDeployment(t *testing.T) {
 	t.Parallel()
 
 	t.Log("deploying the test cluster and environment")
-	istioAddon, metallbAddon := istio.NewBuilder().Build(), metallb.New()
+	metallbAddon := metallb.New()
+	istioAddon := istio.NewBuilder().
+		WithPrometheus().
+		WithGrafana().
+		WithJaeger().
+		WithKiali().
+		Build()
 	env, err := environments.NewBuilder().WithAddons(metallbAddon, istioAddon).Build(ctx)
 	require.NoError(t, err)
 
