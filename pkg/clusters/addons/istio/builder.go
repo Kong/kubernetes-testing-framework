@@ -10,8 +10,9 @@ import (
 
 // Builder is a configuration tool to generate Istio cluster addons.
 type Builder struct {
-	name         string
-	istioVersion semver.Version
+	name              string
+	istioVersion      semver.Version
+	prometheusEnabled bool
 }
 
 // NewBuilder provides a new Builder object for configuring Istio cluster addons.
@@ -27,11 +28,21 @@ func (b *Builder) WithVersion(version semver.Version) *Builder {
 	return b
 }
 
+// WithPrometheus triggers a deployment of Prometheus configured specifically with
+// Istio in mind.
+//
+// See: https://istio.io/latest/docs/ops/integrations/prometheus/
+func (b *Builder) WithPrometheus() *Builder {
+	b.prometheusEnabled = true
+	return b
+}
+
 // Build generates a new kong cluster.Addon which can be loaded and deployed
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
 	return &Addon{
-		name:         b.name,
-		istioVersion: b.istioVersion,
+		name:              b.name,
+		istioVersion:      b.istioVersion,
+		prometheusEnabled: b.prometheusEnabled,
 	}
 }
