@@ -19,6 +19,7 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 // -----------------------------------------------------------------------------
@@ -144,7 +145,7 @@ func (a *Addon) Name() clusters.AddonName {
 
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using the helm CLI
-	kubeconfig, err := utils.TempKubeconfig(cluster)
+	kubeconfig, err := generators.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
@@ -263,7 +264,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using the helm CLI
-	kubeconfig, err := utils.TempKubeconfig(cluster)
+	kubeconfig, err := generators.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}

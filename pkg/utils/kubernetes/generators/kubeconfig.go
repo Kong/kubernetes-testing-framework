@@ -1,9 +1,15 @@
 package generators
 
 import (
+	"fmt"
+	"io/ioutil"
+	"os"
+
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	clientcmdapi "k8s.io/client-go/tools/clientcmd/api"
+
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 
 // NewKubeConfigForRestConfig provides the bytes for a kubeconfig file for use
@@ -43,4 +49,33 @@ func NewClientConfigForRestConfig(name string, restcfg *rest.Config) *clientcmda
 	cfg.CurrentContext = name
 
 	return cfg
+}
+
+// TempKubeconfig produces a kubeconfig tempfile given a cluster.
+// the caller is responsible for cleaning up the file if they want it removed.
+func TempKubeconfig(cluster clusters.Cluster) (*os.File, error) {
+	// generate a kubeconfig from the cluster rest.Config
+	kubeconfigBytes, err := NewKubeConfigForRestConfig(cluster.Name(), cluster.Config())
+	if err != nil {
+		return nil, err
+	}
+
+	// create a tempfile to store the kubeconfig contents
+	kubeconfig, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("-kubeconfig-%s", cluster.Name()))
+	if err != nil {
+		return nil, err
+	}
+
+	// write the contents
+	c, err := kubeconfig.Write(kubeconfigBytes)
+	if err != nil {
+		return nil, err
+	}
+
+	// validate the file integrity
+	if c != len(kubeconfigBytes) {
+		return nil, fmt.Errorf("failed to write kubeconfig to %s (only %d/%d written)", kubeconfig.Name(), c, len(kubeconfigBytes))
+	}
+
+	return kubeconfig, nil
 }
