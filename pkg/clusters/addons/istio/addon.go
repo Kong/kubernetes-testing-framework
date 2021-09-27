@@ -257,7 +257,7 @@ const (
 func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) error {
 	if a.prometheusEnabled {
 		// generate a temporary kubeconfig since we're going to be using kubectl
-		kubeconfig, err := utils.TempKubeconfig(cluster)
+		kubeconfig, err := generators.TempKubeconfig(cluster)
 		if err != nil {
 			return err
 		}
