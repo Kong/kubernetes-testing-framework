@@ -1,11 +1,14 @@
 package istio
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"os"
+	"os/exec"
 	"time"
 
 	"github.com/blang/semver/v4"
@@ -41,6 +44,8 @@ type Addon struct {
 	istioVersion      semver.Version
 	istioDeployScript *corev1.ConfigMap
 	istioDeployJob    *batchv1.Job
+
+	prometheusEnabled bool
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -139,7 +144,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
-	return nil
+	// deploy any additional addons or extra components if the caller configured for them
+	return a.deployExtras(ctx, cluster)
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
@@ -233,6 +239,42 @@ func (a *Addon) useLatestIstioVersion() error {
 		return fmt.Errorf("bad release tag returned from api when fetching latest istio release tag: %w", err)
 	}
 	a.istioVersion = latestVersion
+
+	return nil
+}
+
+const (
+	// istioPrometheusTemplate provides a URL to the demonstration prometheus
+	// server that Istio provides for testing purposes, and template-wise takes
+	// the major and minor Istio release versions as arguments to render a
+	// manifest URL where the component for that version of Istio can be found.
+	istioPrometheusTemplate = "https://raw.githubusercontent.com/istio/istio/release-%d.%d/samples/addons/prometheus.yaml"
+)
+
+// deployExtras deploys any additional Prometheus addons or extra components
+// requested: for instance Prometheus or other supportive functionality that
+// isn't part of the critical Istio deployment path.
+func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) error {
+	if a.prometheusEnabled {
+		// generate a temporary kubeconfig since we're going to be using kubectl
+		kubeconfig, err := utils.TempKubeconfig(cluster)
+		if err != nil {
+			return err
+		}
+		defer os.Remove(kubeconfig.Name())
+
+		// render the URL for Istio Prometheus manifests for the current Istio version
+		manifestsURL := fmt.Sprintf(istioPrometheusTemplate, a.istioVersion.Major, a.istioVersion.Minor)
+
+		// deploy the Prometheus manifests (these will deploy to the istio-system namespace)
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("failed to deploy Istio's Prometheus STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
+	}
 
 	return nil
 }
