@@ -2,6 +2,11 @@
 
 ## v0.7.0
 
+### Improvements
+
+* Added Istio as an available cluster addon.
+  ([#122](https://github.com/Kong/kubernetes-testing-framework/pull/122))
+
 ### Breaking Changes
 
 * Several public builder methods for the Kong cluster addon had name
