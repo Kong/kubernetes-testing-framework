@@ -34,10 +34,10 @@ func TestIstioAddonDeployment(t *testing.T) {
 	t.Log("waiting for the environment to be ready")
 	require.NoError(t, <-env.WaitForReady(ctx))
 
-	t.Log("verifying that istiod was deployed")
-	_, err = env.Cluster().Client().CoreV1().Namespaces().Get(ctx, istio.Namespace, metav1.GetOptions{})
+	t.Logf("istio version %s was deployed, verifying that istiod is up and running", istioAddon.Version().String())
+	_, err = env.Cluster().Client().CoreV1().Namespaces().Get(ctx, istioAddon.Namespace(), metav1.GetOptions{})
 	require.NoError(t, err)
-	deployment, err := env.Cluster().Client().AppsV1().Deployments(istio.Namespace).Get(ctx, "istiod", metav1.GetOptions{})
+	deployment, err := env.Cluster().Client().AppsV1().Deployments(istioAddon.Namespace()).Get(ctx, "istiod", metav1.GetOptions{})
 	require.NoError(t, err)
 	require.GreaterOrEqual(t, int32(1), deployment.Status.ReadyReplicas)
 
@@ -91,7 +91,7 @@ func TestIstioAddonDeployment(t *testing.T) {
 
 	t.Log("deleting istio addon")
 	require.NoError(t, istioAddon.Delete(ctx, env.Cluster()))
-	_, err = env.Cluster().Client().CoreV1().Namespaces().Get(ctx, istio.Namespace, metav1.GetOptions{})
+	_, err = env.Cluster().Client().CoreV1().Namespaces().Get(ctx, istioAddon.Namespace(), metav1.GetOptions{})
 	require.Error(t, err)
 	require.True(t, errors.IsNotFound(err))
 }
