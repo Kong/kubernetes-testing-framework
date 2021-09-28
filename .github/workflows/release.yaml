@@ -35,8 +35,13 @@ jobs:
     # Tests
     # --------------------------------------------------------------------------
 
-    - name: run unit & integration tests
-      run: make test.all
+    - name: run unit tests
+      run: make test.unit
+
+    - name: run integration tests
+      run: make test.integration
+      env:
+        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
 
     - name: run e2e tests
       run: make test.e2e
