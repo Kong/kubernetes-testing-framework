@@ -58,6 +58,17 @@ func New() *Addon {
 	return NewBuilder().Build()
 }
 
+// Namespace indicates the namespace where the Istio addon components are to be
+// deployed and managed.
+func (a *Addon) Namespace() string {
+	return Namespace
+}
+
+// Version indicates the Istio version for this addon.
+func (a *Addon) Version() semver.Version {
+	return a.istioVersion
+}
+
 // -----------------------------------------------------------------------------
 // Istio Addon - Public Methods
 // -----------------------------------------------------------------------------

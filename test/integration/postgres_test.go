@@ -15,8 +15,6 @@ import (
 )
 
 func TestKongWithPostgresDBMode(t *testing.T) {
-	t.Parallel()
-
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
 	kong := kongaddon.NewBuilder().WithPostgreSQL().Build()
