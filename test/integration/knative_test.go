@@ -16,8 +16,6 @@ import (
 )
 
 func TestEnvironmentWithKnative(t *testing.T) {
-	t.Parallel()
-
 	t.Log("configuring the testing environment")
 	knativeAddon := knative.New()
 	builder := environments.NewBuilder().WithAddons(knativeAddon)

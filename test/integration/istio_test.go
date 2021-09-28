@@ -18,8 +18,6 @@ import (
 )
 
 func TestIstioAddonDeployment(t *testing.T) {
-	t.Parallel()
-
 	t.Log("deploying the test cluster and environment")
 	metallbAddon := metallb.New()
 	istioAddon := istio.NewBuilder().
