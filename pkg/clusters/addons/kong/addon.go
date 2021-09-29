@@ -306,11 +306,11 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 //
 // See: https://pkg.go.dev/github.com/sethvargo/go-password/password
 const (
-	secretMinLength     = 32
-	secretMinNumeric    = 8
-	secretMinAlphabetic = 8
-	secretNoUpper       = false
-	secretAllowRepeat   = false
+	secretMinLength   = 32
+	secretMinNumeric  = 8
+	secretMinSymbols  = 0
+	secretNoUpper     = false
+	secretAllowRepeat = false
 )
 
 // -----------------------------------------------------------------------------
@@ -441,7 +441,7 @@ func deployKongEnterpriseLicenseSecret(ctx context.Context, cluster clusters.Clu
 func deployEnterpriseSuperAdminPasswordSecret(ctx context.Context, cluster clusters.Cluster, namespace, password string) (string, error) {
 	var err error
 	if password == "" {
-		password, err = pwgen.Generate(secretMinLength, secretMinNumeric, secretMinAlphabetic, secretNoUpper, secretAllowRepeat)
+		password, err = pwgen.Generate(secretMinLength, secretMinNumeric, secretMinSymbols, secretNoUpper, secretAllowRepeat)
 		if err != nil {
 			return "", fmt.Errorf("no admin password was provided so an attempt was made to generate one, but it failed: %w", err)
 		}
@@ -469,7 +469,7 @@ func deployEnterpriseSuperAdminPasswordSecret(ctx context.Context, cluster clust
 // deployKongEnterpriseAdminGUISessionConf generates a session configuration for enterprise mode admin GUI and deploys that
 // as a secret to the cluster to be picked up by the enterprise enabled proxy.
 func deployKongEnterpriseAdminGUISessionConf(ctx context.Context, cluster clusters.Cluster, namespace string) error {
-	sessionSecret, err := pwgen.Generate(secretMinLength, secretMinNumeric, secretMinAlphabetic, secretNoUpper, secretAllowRepeat)
+	sessionSecret, err := pwgen.Generate(secretMinLength, secretMinNumeric, secretMinSymbols, secretNoUpper, secretAllowRepeat)
 	if err != nil {
 		return fmt.Errorf("failed to generate a secure secret for the admin gui session config: %w", err)
 	}
