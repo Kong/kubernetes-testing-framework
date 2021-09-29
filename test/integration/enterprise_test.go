@@ -26,6 +26,8 @@ import (
 )
 
 func TestKongEnterprisePostgres(t *testing.T) {
+	t.Parallel()
+
 	t.Log("preparing kong enterprise secrets")
 	licenseJSON := os.Getenv(enterpriseLicenseEnvVar)
 	require.NotEmpty(t, licenseJSON)

@@ -16,6 +16,8 @@ import (
 )
 
 func TestGenerators(t *testing.T) {
+	t.Parallel()
+
 	t.Log("creating a test environment to test generators")
 	env, err := environments.NewBuilder().Build(ctx)
 	require.NoError(t, err)

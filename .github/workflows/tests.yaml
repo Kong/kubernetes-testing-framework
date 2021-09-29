@@ -40,6 +40,8 @@ jobs:
       run: make test.integration
       env:
         KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
+        NCPU: 2 # it was found that github actions (specifically) did not seem to perform well when spawning
+                # multiple kind clusters within a single job so this is hardcoded to 2 to ensure a limit of 2 clusters at any one point.
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v2.1.0
