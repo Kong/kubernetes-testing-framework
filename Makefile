@@ -34,6 +34,7 @@ test.e2e:
 .PHONY: test.integration
 test.integration:
 	@GOFLAGS="-tags=integration_tests" go test \
+		-parallel $(NCPU) \
 		-timeout 45m \
 		-race \
 		-v \

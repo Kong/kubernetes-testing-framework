@@ -21,6 +21,8 @@ import (
 )
 
 func TestEnvWithKindCluster(t *testing.T) {
+	t.Parallel()
+
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()
 
@@ -119,6 +121,8 @@ func TestEnvWithKindCluster(t *testing.T) {
 }
 
 func TestEnvWithKindClusterKongProxyOnlyMode(t *testing.T) {
+	t.Parallel()
+
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()
 

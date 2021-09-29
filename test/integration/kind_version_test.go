@@ -14,6 +14,8 @@ import (
 )
 
 func TestKindClusterOlderVersion(t *testing.T) {
+	t.Parallel()
+
 	clusterVersion := semver.MustParse("1.20.7")
 	t.Logf("deploying a kind cluster with kubernetes version %s", clusterVersion)
 	builder := kind.NewBuilder().WithClusterVersion(clusterVersion)
@@ -39,6 +41,8 @@ func TestKindClusterOlderVersion(t *testing.T) {
 }
 
 func TestKindClusterNewerVersion(t *testing.T) {
+	t.Parallel()
+
 	clusterVersion := semver.MustParse("1.21.1")
 	t.Logf("deploying a kind cluster with kubernetes version %s", clusterVersion)
 	builder := kind.NewBuilder().WithClusterVersion(clusterVersion)

@@ -18,6 +18,8 @@ import (
 )
 
 func TestEnvironmentWithMetallb(t *testing.T) {
+	t.Parallel()
+
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
 	kong := kongaddon.New()
