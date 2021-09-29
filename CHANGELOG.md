@@ -1,5 +1,25 @@
 # Changelog
 
+## v0.7.2
+
+### Bug Fixes
+
+* Fixed a bug with generation of secrets for enterprise enabled Kong addons
+  which would occasionally cause the addon to fail to deploy.
+  ([#125](https://github.com/Kong/kubernetes-testing-framework/pull/125))
+
+### Under The Hood
+
+* Integration test parallelization was re-tuned according to some problems
+  that were found with running multiple kind clusters in Github Actions.
+  ([#125](https://github.com/Kong/kubernetes-testing-framework/pull/125))
+
+## v0.7.1
+
+### Under The Hood
+
+* This release was entirely CI related and has no end-user effect.
+
 ## v0.7.0
 
 ### Improvements
