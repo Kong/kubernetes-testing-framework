@@ -15,14 +15,11 @@ import (
 
 	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 func TestKongEnterprisePostgres(t *testing.T) {
@@ -114,31 +111,16 @@ func TestKongEnterprisePostgres(t *testing.T) {
 		return resp.StatusCode == http.StatusCreated
 	}, time.Minute, time.Second)
 
-	t.Log("deploying an HTTP service to test the ingress controller and proxy")
-	container := generators.NewContainer("httpbin", httpBinImage, 80)
-	deployment := generators.NewDeploymentForContainer(container)
-	deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Create(ctx, deployment, metav1.CreateOptions{})
-	require.NoError(t, err)
+	t.Log("deploying httpbin and waiting for readiness")
+	httpbinAddon := httpbin.New()
+	require.NoError(t, env.Cluster().DeployAddon(ctx, httpbinAddon))
+	require.NoError(t, <-env.WaitForReady(ctx))
 
-	t.Logf("exposing deployment %s via service", deployment.Name)
-	service := generators.NewServiceForDeployment(deployment, corev1.ServiceTypeLoadBalancer)
-	_, err = env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Create(ctx, service, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	t.Logf("creating an ingress for service %s with ingress.class %s", service.Name, ingressClass)
-	kubernetesVersion, err := env.Cluster().Version()
-	require.NoError(t, err)
-	ingress := generators.NewIngressForServiceWithClusterVersion(kubernetesVersion, "/httpbin", map[string]string{
-		ingressClassKey:         ingressClass,
-		"konghq.com/strip-path": "true",
-	}, service)
-	require.NoError(t, clusters.DeployIngress(ctx, env.Cluster(), corev1.NamespaceDefault, ingress))
-
-	t.Log("waiting for routes from Ingress to be operational")
-	httpc = http.Client{Timeout: time.Second * 10}
+	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
 	require.Eventually(t, func() bool {
-		resp, err := httpc.Get(fmt.Sprintf("%s/httpbin", proxyURL.String()))
+		resp, err := httpc.Get(fmt.Sprintf("%s/%s", proxyURL, httpbinAddon.Path()))
 		if err != nil {
+			t.Logf("WARNING: error while waiting for %s: %v", proxyURL, err)
 			return false
 		}
 		defer resp.Body.Close()

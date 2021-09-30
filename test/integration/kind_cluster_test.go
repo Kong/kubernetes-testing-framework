@@ -11,13 +11,12 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 func TestEnvWithKindCluster(t *testing.T) {
@@ -63,47 +62,15 @@ func TestEnvWithKindCluster(t *testing.T) {
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Name, "ingress-controller")
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Name, "proxy")
 
-	t.Log("deploying a test deployment to ensure the environment's cluster is working")
-	container := generators.NewContainer("httpbin", "docker.io/kennethreitz/httpbin", 80)
-	deployment := generators.NewDeploymentForContainer(container)
-	deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Create(ctx, deployment, metav1.CreateOptions{})
-	require.NoError(t, err)
+	t.Log("deploying httpbin addon to test http traffic")
+	httpbinAddon := httpbin.New()
+	require.NoError(t, env.Cluster().DeployAddon(ctx, httpbinAddon))
+	require.NoError(t, <-env.WaitForReady(ctx))
 
-	t.Log("verifying the underlying pods deploy successfully")
-	require.Eventually(t, func() bool {
-		deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Get(ctx, deployment.Name, metav1.GetOptions{})
-		if err != nil {
-			return false
-		}
-		return deployment.Status.ReadyReplicas == *deployment.Spec.Replicas
-	}, time.Minute*1, time.Second*1)
-
-	t.Logf("exposing deployment %s via service", deployment.Name)
-	service := generators.NewServiceForDeployment(deployment, corev1.ServiceTypeLoadBalancer)
-	service, err = env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Create(ctx, service, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	t.Logf("creating an ingress for service %s with ingress.class kong", service.Name)
-	ingress := generators.NewIngressForService("/httpbin", map[string]string{
-		"kubernetes.io/ingress.class": "kong",
-		"konghq.com/strip-path":       "true",
-	}, service)
-	ingress, err = env.Cluster().Client().NetworkingV1().Ingresses(corev1.NamespaceDefault).Create(ctx, ingress, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	t.Logf("waiting for ingress status update to validate that the kong controller is functioning")
-	require.Eventually(t, func() bool {
-		ingress, err = env.Cluster().Client().NetworkingV1().Ingresses(corev1.NamespaceDefault).Get(ctx, ingress.Name, metav1.GetOptions{})
-		if err != nil {
-			return false
-		}
-		return len(ingress.Status.LoadBalancer.Ingress) > 0
-	}, time.Minute*1, time.Second*1)
-
-	t.Logf("accessing the deployment via ingress %s to validate that the kong proxy is functioning", ingress.Name)
+	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
 	httpc := http.Client{Timeout: time.Second * 3}
 	require.Eventually(t, func() bool {
-		resp, err := httpc.Get(fmt.Sprintf("%s/httpbin", proxyURL))
+		resp, err := httpc.Get(fmt.Sprintf("%s/%s", proxyURL, httpbinAddon.Path()))
 		if err != nil {
 			t.Logf("WARNING: error while waiting for %s: %v", proxyURL, err)
 			return false
@@ -117,7 +84,7 @@ func TestEnvWithKindCluster(t *testing.T) {
 			return strings.Contains(b.String(), "<title>httpbin.org</title>")
 		}
 		return false
-	}, time.Minute*1, time.Second*1)
+	}, time.Minute*3, time.Second*1)
 }
 
 func TestEnvWithKindClusterKongProxyOnlyMode(t *testing.T) {

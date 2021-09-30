@@ -11,6 +11,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/environments"
@@ -47,7 +48,7 @@ func TestIstioAddonDeployment(t *testing.T) {
 	require.NoError(t, istioAddon.EnableMeshForNamespace(ctx, env.Cluster(), "with-istio"))
 
 	t.Log("adding a test deployment into each namespace")
-	container := generators.NewContainer("httpbin", httpBinImage, 80)
+	container := generators.NewContainer("httpbin", httpbin.Image, 80)
 	deployment = generators.NewDeploymentForContainer(container)
 	for _, namespace := range []string{"without-istio", "with-istio"} {
 		deployment.Namespace = namespace
