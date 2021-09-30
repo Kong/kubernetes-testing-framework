@@ -2,6 +2,7 @@ package generators
 
 import (
 	"github.com/blang/semver/v4"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	netv1 "k8s.io/api/networking/v1"
 	netv1beta1 "k8s.io/api/networking/v1beta1"
@@ -87,4 +88,22 @@ func NewLegacyIngressForService(path string, annotations map[string]string, s *c
 			},
 		},
 	}
+}
+
+// NewIngressForContainerWithDeploymentAndService generates a Deployment, Service, and Ingress given a container.
+// The idea is that if you have a container that provides an HTTP endpoint, this function can be used to generate
+// everything you need to deploy to the cluster to start accessing that HTTP server from outside the cluster via Ingress.
+// This effectively just compiles together multiple generators for convenience, look at the individual generators
+// used here if you're looking for something more granular.
+func NewIngressForContainerWithDeploymentAndService(
+	kubernetesVersion semver.Version,
+	c corev1.Container,
+	serviceType corev1.ServiceType,
+	annotations map[string]string,
+	path string,
+) (*appsv1.Deployment, *corev1.Service, runtime.Object) {
+	deployment := NewDeploymentForContainer(c)
+	service := NewServiceForDeployment(deployment, serviceType)
+	ingress := NewIngressForServiceWithClusterVersion(kubernetesVersion, path, annotations, service)
+	return deployment, service, ingress
 }
