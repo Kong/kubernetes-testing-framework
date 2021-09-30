@@ -23,7 +23,7 @@ const (
 	// AddonName is the unique name of the HttpBin cluster.Addon
 	AddonName clusters.AddonName = "httpbin"
 
-	// Namespace is the namespace that the Addon components will be deployed
+	// DefaultNamespace is the namespace that the Addon components will be deployed
 	DefaultNamespace = "httpbin"
 
 	// Image is the container image that will be used by default.
@@ -81,7 +81,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	namespace := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: a.namespace}}
 
 	// ensure the namespace for this addon is available
-	namespace, err := cluster.Client().CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
+	_, err := cluster.Client().CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
