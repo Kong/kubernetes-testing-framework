@@ -1,5 +1,24 @@
 # Changelog
 
+## v0.8.0
+
+### Improvements
+
+* [HttpBin][httpbin] is now an available addon (also available via the CLI).
+  ([#127](https://github.com/Kong/kubernetes-testing-framework/pull/127))
+* The [Istio][istio] addon is now available via the CLI.
+  ([#127](https://github.com/Kong/kubernetes-testing-framework/pull/127))
+* Networking testing utils now include HTTP testing functions.
+  ([#127](https://github.com/Kong/kubernetes-testing-framework/pull/127))
+
+[httpbin]:https://github.com/postmanlabs/httpbin
+[istio]:https://istio.io
+
+### Under The Hood
+
+* General stability improvements to Addon readiness functionality.
+  ([#127](https://github.com/Kong/kubernetes-testing-framework/pull/127))
+
 ## v0.7.2
 
 ### Bug Fixes
