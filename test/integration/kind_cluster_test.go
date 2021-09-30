@@ -3,10 +3,8 @@
 package integration
 
 import (
-	"bytes"
 	"fmt"
 	"net/http"
-	"strings"
 	"testing"
 	"time"
 
@@ -17,9 +15,10 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
-func TestEnvWithKindCluster(t *testing.T) {
+func TestKindClusterBasics(t *testing.T) {
 	t.Parallel()
 
 	t.Log("configuring the testing environment")
@@ -55,6 +54,17 @@ func TestEnvWithKindCluster(t *testing.T) {
 	proxyURL, err := kongAddonRaw.ProxyURL(ctx, env.Cluster())
 	require.NoError(t, err)
 
+	t.Log("verifying the kong proxy is returning its default 404 response")
+	httpc := http.Client{Timeout: time.Second * 10}
+	require.Eventually(t, func() bool {
+		resp, err := httpc.Get(proxyURL.String())
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+		return resp.StatusCode == http.StatusNotFound
+	}, time.Minute*3, time.Second)
+
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongDeployment, err := env.Cluster().Client().AppsV1().Deployments(kongAddonRaw.Namespace()).Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
 	require.NoError(t, err)
@@ -65,29 +75,16 @@ func TestEnvWithKindCluster(t *testing.T) {
 	t.Log("deploying httpbin addon to test http traffic")
 	httpbinAddon := httpbin.New()
 	require.NoError(t, env.Cluster().DeployAddon(ctx, httpbinAddon))
+
+	t.Log("waiting for addon to be ready")
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
-	httpc := http.Client{Timeout: time.Second * 3}
-	require.Eventually(t, func() bool {
-		resp, err := httpc.Get(fmt.Sprintf("%s/%s", proxyURL, httpbinAddon.Path()))
-		if err != nil {
-			t.Logf("WARNING: error while waiting for %s: %v", proxyURL, err)
-			return false
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			b := new(bytes.Buffer)
-			n, err := b.ReadFrom(resp.Body)
-			require.NoError(t, err)
-			require.True(t, n > 0)
-			return strings.Contains(b.String(), "<title>httpbin.org</title>")
-		}
-		return false
-	}, time.Minute*3, time.Second*1)
+	httpbinURL := fmt.Sprintf("%s/%s/status/418", proxyURL.String(), httpbinAddon.Path())
+	require.NoError(t, <-networking.WaitForHTTP(ctx, httpbinURL, 418))
 }
 
-func TestEnvWithKindClusterKongProxyOnlyMode(t *testing.T) {
+func TestKindClusterProxyOnly(t *testing.T) {
 	t.Parallel()
 
 	t.Log("configuring the testing environment")
