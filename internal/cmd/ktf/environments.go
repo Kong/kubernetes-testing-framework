@@ -8,6 +8,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
@@ -110,6 +111,14 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 			builder = builder.WithAddons(metallb.New())
 		case "kong":
 			builder = configureKongAddon(cmd, builder)
+		case "istio":
+			istioAddon := istio.NewBuilder().
+				WithGrafana().
+				WithJaeger().
+				WithKiali().
+				WithPrometheus().
+				Build()
+			builder = builder.WithAddons(istioAddon)
 		default:
 			invalid = append(invalid, addon)
 		}
