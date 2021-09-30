@@ -15,7 +15,7 @@ import (
 func WaitForHTTP(ctx context.Context, getURL string, statusCode int) chan error {
 	errs := make(chan error)
 	go func() {
-		httpc := http.Client{Timeout: time.Second * 10}
+		httpc := http.Client{Timeout: time.Second * 10} //nolint:gomnd
 		for {
 			select {
 			case <-ctx.Done():
