@@ -127,7 +127,7 @@ func TestGKECluster(t *testing.T) {
 		if err != nil {
 			return false
 		}
-		return deployment.Status.ReadyReplicas == *deployment.Spec.Replicas
+		return deployment.Status.AvailableReplicas == *deployment.Spec.Replicas
 	}, time.Minute*1, time.Second*1)
 
 	t.Logf("exposing deployment %s via service", deployment.Name)

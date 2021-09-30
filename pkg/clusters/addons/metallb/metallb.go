@@ -94,7 +94,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 		return nil, false, err
 	}
 
-	if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
+	if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
 		return []runtime.Object{deployment}, false, nil
 	}
 

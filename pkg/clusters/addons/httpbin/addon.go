@@ -148,5 +148,5 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 }
 
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObjects []runtime.Object, ready bool, err error) {
-	return utils.IsNamespaceReady(ctx, cluster, a.namespace)
+	return utils.IsNamespaceAvailable(ctx, cluster, a.namespace)
 }

@@ -11,15 +11,14 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 
-// IsNamespaceReady checks for all Daemonsets, Deployment and Services
-// in a given namespace to see if they are ready. It reports on readiness
-// but also will provide a list of runtime objects that are being waited
-// on still if the namespace is not ready yet.
+// IsNamespaceAvailable checks for all Daemonsets, Deployment and Services
+// in a given namespace to see if they are available (ready for minimum number
+// of seconds).
 //
-// Keep in mind that this specifically checks on readiness, not availability
-// (uptime) for speed reasons during tests.
-func IsNamespaceReady(ctx context.Context, cluster clusters.Cluster, namespace string) (waitForObjects []runtime.Object, ready bool, err error) {
-	// check daemonsets for readiness
+// If the namespace is not yet available a list of the components being waited
+// on will be provided.
+func IsNamespaceAvailable(ctx context.Context, cluster clusters.Cluster, namespace string) (waitForObjects []runtime.Object, available bool, err error) {
+	// check daemonsets for availability
 	var daemonsets *appsv1.DaemonSetList
 	daemonsets, err = cluster.Client().AppsV1().DaemonSets(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -28,12 +27,12 @@ func IsNamespaceReady(ctx context.Context, cluster clusters.Cluster, namespace s
 
 	for i := 0; i < len(daemonsets.Items); i++ {
 		daemonset := &(daemonsets.Items[i])
-		if daemonset.Status.NumberReady < 1 {
+		if daemonset.Status.NumberAvailable < 1 {
 			waitForObjects = append(waitForObjects, daemonset)
 		}
 	}
 
-	// check deployments for readiness
+	// check deployments for availability
 	var deployments *appsv1.DeploymentList
 	deployments, err = cluster.Client().AppsV1().Deployments(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -42,12 +41,12 @@ func IsNamespaceReady(ctx context.Context, cluster clusters.Cluster, namespace s
 
 	for i := 0; i < len(deployments.Items); i++ {
 		deployment := &(deployments.Items[i])
-		if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
+		if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
 			waitForObjects = append(waitForObjects, deployment)
 		}
 	}
 
-	// check services for readiness
+	// check services for availability
 	var services *corev1.ServiceList
 	services, err = cluster.Client().CoreV1().Services(namespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
@@ -61,6 +60,6 @@ func IsNamespaceReady(ctx context.Context, cluster clusters.Cluster, namespace s
 		}
 	}
 
-	ready = len(waitForObjects) == 0
+	available = len(waitForObjects) == 0
 	return
 }

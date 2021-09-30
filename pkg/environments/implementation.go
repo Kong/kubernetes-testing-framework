@@ -52,7 +52,7 @@ func (env *environment) Ready(ctx context.Context) (waitForObjects []runtime.Obj
 
 	for i := 0; i < len(deployments.Items); i++ {
 		deployment := &(deployments.Items[i])
-		if deployment.Status.ReadyReplicas != *deployment.Spec.Replicas {
+		if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
 			waitForObjects = append(waitForObjects, deployment)
 		}
 	}
