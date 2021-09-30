@@ -4,6 +4,7 @@ package integration
 
 import (
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
@@ -65,7 +66,7 @@ func TestGenerators(t *testing.T) {
 				deployment, err := env.Cluster().Client().AppsV1().Deployments(namespace.Name).Get(ctx, "httpbin", metav1.GetOptions{})
 				require.NoError(t, err)
 				return deployment.Status.ReadyReplicas == *deployment.Spec.Replicas
-			}, httpbinWait, waitTick)
+			}, time.Minute*3, time.Second)
 		}
 	}
 

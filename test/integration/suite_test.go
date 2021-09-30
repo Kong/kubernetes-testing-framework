@@ -4,7 +4,6 @@ package integration
 
 import (
 	"context"
-	"time"
 )
 
 // -----------------------------------------------------------------------------
@@ -13,14 +12,6 @@ import (
 
 const (
 	enterpriseLicenseEnvVar = "KONG_ENTERPRISE_LICENSE"
-
-	httpBinImage = "kennethreitz/httpbin"
-	httpbinWait  = time.Minute * 2
-
-	ingressClassKey = "kubernetes.io/ingress.class"
-	ingressClass    = "kong"
-
-	waitTick = time.Second
 )
 
 var (
