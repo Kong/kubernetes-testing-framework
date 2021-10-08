@@ -281,12 +281,8 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "kiali")
 
 		// deploy the Kiali manifests (these will deploy to the istio-system namespace)
-		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to deploy Istio's Kiali addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+			return err
 		}
 	}
 
@@ -295,12 +291,8 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "jaeger")
 
 		// deploy the Jaeger manifests (these will deploy to the istio-system namespace)
-		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to deploy Istio's Jaeger addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+			return err
 		}
 	}
 
@@ -309,12 +301,8 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "prometheus")
 
 		// deploy the Prometheus manifests (these will deploy to the istio-system namespace)
-		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to deploy Istio's Prometheus addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+			return err
 		}
 	}
 
@@ -323,14 +311,39 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "grafana")
 
 		// deploy the Grafana manifests (these will deploy to the istio-system namespace)
-		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL) //nolint:gosec
-		cmd.Stdout = stdout
-		cmd.Stderr = stderr
-		if err := cmd.Run(); err != nil {
-			return fmt.Errorf("failed to deploy Istio's Grafana addon: STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+			return err
 		}
 	}
 
 	return nil
+}
+
+const (
+	defaultRetries          = 3
+	defaultRetryWaitSeconds = 3
+)
+
+// retry retries a command multiple times with a limit, and is particularly
+// useful for kubectl commands with older Istio releases where manifests include
+// CRDs that have small timing issues that can crop up.
+func retry(ctx context.Context, args ...string) (err error) {
+	count := defaultRetries
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	for count > 0 {
+		cmd := exec.CommandContext(ctx, "kubectl", args...)
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err = cmd.Run(); err == nil {
+			break
+		}
+		time.Sleep(time.Second * defaultRetryWaitSeconds)
+		count--
+	}
+
+	if err != nil {
+		err = fmt.Errorf("kubectl failed: ARGS=(kubectl %v) STDOUT=(%s) STDERR=(%s): %w", args, stdout.String(), stderr.String(), err)
+	}
+
+	return
 }
