@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.8.1
+
+### Bug Fixes
+
+- The Istio addon now retries deployment of components such as Kiali to deal
+  with order of operations issues found in some older Istio releases. This
+  fixes compatibility with `v1.9` and `v1.10`.
+  ([#130](https://github.com/Kong/kubernetes-testing-framework/pull/130))
+
+### Under The Hood
+
+- containerd Go dependency updated to `v1.4.11`
+- docker Go dependency updated to `v20.10.9`
+
 ## v0.8.0
 
 ### Improvements
