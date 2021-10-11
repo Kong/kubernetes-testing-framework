@@ -281,7 +281,7 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "kiali")
 
 		// deploy the Kiali manifests (these will deploy to the istio-system namespace)
-		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+		if err := retryKubectlApply(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
 			return err
 		}
 	}
@@ -291,7 +291,7 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "jaeger")
 
 		// deploy the Jaeger manifests (these will deploy to the istio-system namespace)
-		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+		if err := retryKubectlApply(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
 			return err
 		}
 	}
@@ -301,7 +301,7 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "prometheus")
 
 		// deploy the Prometheus manifests (these will deploy to the istio-system namespace)
-		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+		if err := retryKubectlApply(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
 			return err
 		}
 	}
@@ -311,7 +311,7 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 		manifestsURL := fmt.Sprintf(istioAddonTemplate, a.istioVersion.Major, a.istioVersion.Minor, "grafana")
 
 		// deploy the Grafana manifests (these will deploy to the istio-system namespace)
-		if err := retry(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
+		if err := retryKubectlApply(ctx, "--kubeconfig", kubeconfig.Name(), "apply", "-f", manifestsURL); err != nil {
 			return err
 		}
 	}
@@ -324,10 +324,10 @@ const (
 	defaultRetryWaitSeconds = 3
 )
 
-// retry retries a command multiple times with a limit, and is particularly
+// retryKubectlApply retries a command multiple times with a limit, and is particularly
 // useful for kubectl commands with older Istio releases where manifests include
 // CRDs that have small timing issues that can crop up.
-func retry(ctx context.Context, args ...string) (err error) {
+func retryKubectlApply(ctx context.Context, args ...string) (err error) {
 	count := defaultRetries
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	for count > 0 {
