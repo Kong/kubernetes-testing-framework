@@ -8,8 +8,12 @@ on:
       - "v*"
 
 jobs:
+
+  # --------------------------------------------------------------------------
+  # Release Job
+  # --------------------------------------------------------------------------
+
   release:
-    environment: gcloud
     runs-on: ubuntu-latest
     steps:
 
@@ -20,7 +24,8 @@ jobs:
     - name: setup golang
       uses: actions/setup-go@v2
       with:
-        go-version: '^1.16'
+        go-version: '^1.17'
+
     - name: cache go modules
       uses: actions/cache@v2.1.6
       with:
@@ -28,30 +33,11 @@ jobs:
         key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
         restore-keys: |
           ${{ runner.os }}-go
+
     - name: checkout repository
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
-
-    # --------------------------------------------------------------------------
-    # Tests
-    # --------------------------------------------------------------------------
-
-    - name: run unit tests
-      run: make test.unit
-
-    - name: run integration tests
-      run: make test.integration
-      env:
-        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
-
-    - name: run e2e tests
-      run: make test.e2e
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_LOCATION: ${{ secrets.GOOGLE_LOCATION }}
-        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
 
     # --------------------------------------------------------------------------
     # Github Release
