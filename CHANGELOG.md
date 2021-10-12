@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.2
+
+### Under The Hood
+
+- CI improvements for releasing pipelining were the only changes made, so this
+  release is simply an exercise of those changes.
+
 ## v0.8.1
 
 ### Bug Fixes
