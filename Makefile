@@ -11,7 +11,7 @@ clean:
 .PHONY: build
 build:
 	mkdir -p build/
-	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o build/ktf.$(GOOS).$(GOARCH) internal/cmd/main.go
+	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o build/ktf.$(GOOS).$(GOARCH) cmd/ktf/main.go
 
 .PHONY: lint
 lint:
