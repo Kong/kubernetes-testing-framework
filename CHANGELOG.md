@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.8.3
+
+### Bug Fixes
+
+- Fixed the CLI `main.go` location to fix `go install`
+  ([#133](https://github.com/Kong/kubernetes-testing-framework/pull/133))
+
 ## v0.8.2
 
 ### Under The Hood
