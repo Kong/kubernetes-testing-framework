@@ -30,12 +30,12 @@ $ git commit -m 'docs: update CHANGELOG.md for release vX.X.X' CHANGELOG.md
 
 Where `vX.X.X` is the release tag you'll be making.
 
-### TAG The Release
+### Using a tag to trigger a release
 
 Given the tag determined previously, tag the `HEAD` of `main` (which should be the commit that was just made to update the changelog) with the determined release tag:
 
 ```shell
-$ git tag vX.X.X
+$ git tag do-release-vX.X.X
 ```
 
 Where `vX.X.X` is the release tag previously determined.
@@ -47,16 +47,32 @@ $ git push
 $ git push --tags
 ```
 
+This will result in a `release-testing` workflow which upon success will push a `vX.X.X` tag for the release which will trigger the `release` workflow.
+
+The `release` workflow will create a Github release and upload artifacts to that release, but will leave it in a `draft state` and it will need to be enabled manually.
+
+#### Resolving Workflow Errors
+
+Sometimes the `release-testing` workflow may fail for one reason or another, which is why we trigger releases with a `do-release-*` tag.
+
+If something does go wrong however and you need to trigger a new release for the same `vX.X.X` version, you can push any number of additional tags with the following format:
+
+- `do-release-attempt-<NUMBER>-vX.X.X`
+
+The `<NUMBER>` part is purely arbitrary but by convention you can just make this an incrementing counter until the `release-testing` workflow completes successfully.
+
+Note that all `do-release-*` tags that are pushed will be automatically cleaned up by CI, you can forget about them once they're pushed.
+
 ### Enable The Release
 
-A `release` workflow will be started when the tag is pushed, and will run unit, integration and e2e tests to validate the tagged release. You can watch the progress from the `Actions` tab:
-
-  - https://github.com/Kong/kubernetes-testing-framework/actions/workflows/release.yaml
-
-Once this completes, navigate to the release page:
+Navigate to the release page:
 
   - https://github.com/Kong/kubernetes-testing-framework/releases
 
 You will see a `draft` release that the release workflow made for the tag, which includes ta link to the changelog, and the release assets (binaries and checksums).
 
 When you're ready to officially release the version, simply edit the draft and uncheck `pre-release` as needed and save the edit to publish it.
+
+## Notes
+
+- Under the hood the `release-testing` workflow includes a script to re-tag and push the release from `do-release-v*` tags. If you would like to see the documentation for this script run `go doc internal/ci/release/tagging/main.go`
