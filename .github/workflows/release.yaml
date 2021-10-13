@@ -46,8 +46,8 @@ jobs:
       id: create_release
       uses: actions/create-release@v1
       with:
-        draft: true
-        prerelease: true
+        draft: false
+        prerelease: false
         release_name: ${{ github.ref }}
         tag_name: ${{ github.ref }}
         body: |
