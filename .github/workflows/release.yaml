@@ -3,9 +3,8 @@ name: release
 on:
   push:
     tags:
-      # NOTE: these tags are pushed after success of the `release-testing.yaml` workflow.
-      #       see the RELEASE.md documentation for more details.
       - "v*"
+  workflow_dispatch: {}
 
 jobs:
 
