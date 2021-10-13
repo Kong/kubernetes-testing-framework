@@ -1,11 +1,11 @@
 name: release-testing
 
 on:
-  push:
-    tags:
-      # NOTE: for help on how this tagging works see the RELEASE.md documentation.
-      #       also see the `release.yaml` workflow which this workflow triggers upon success.
-      - "do-release-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'a git tag that needs to be created'
+        required: true
 
 jobs:
 
@@ -41,50 +41,38 @@ jobs:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
 
+          #    # --------------------------------------------------------------------------
+          #    # Run Tests
+          #    # --------------------------------------------------------------------------
+          #
+          #    - name: run unit tests
+          #      run: make test.unit
+          #
+          #    - name: run integration tests
+          #      run: make test.integration
+          #      env:
+          #        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
+          #
+          #    - name: run e2e tests
+          #      run: make test.e2e
+          #      env:
+          #        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          #        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
+          #        GOOGLE_LOCATION: ${{ secrets.GOOGLE_LOCATION }}
+          #        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
+
     # --------------------------------------------------------------------------
-    # Verification
+    # Release
     # --------------------------------------------------------------------------
 
-    - name: release tag verification
-      run: go run internal/ci/release/tagging/main.go verify
+    - name: tagging the release
+      run: |
+        git tag ${{ github.event.inputs.tag }}
+        git push --tags
+
+    - name: triggering the release
+      run: go run internal/ci/workflows/main.go release.yaml ${{ github.event.inputs.tag }}
       env:
-        GIT_REF: ${{ github.ref }}
-
-    # --------------------------------------------------------------------------
-    # Run Tests
-    # --------------------------------------------------------------------------
-
-    - name: run unit tests
-      run: make test.unit
-
-    - name: run integration tests
-      run: make test.integration
-      env:
-        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
-
-    - name: run e2e tests
-      run: make test.e2e
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
-        GOOGLE_PROJECT: ${{ secrets.GOOGLE_PROJECT }}
-        GOOGLE_LOCATION: ${{ secrets.GOOGLE_LOCATION }}
-        KONG_ENTERPRISE_LICENSE: ${{ secrets.KONG_ENTERPRISE_LICENSE }}
-
-    # --------------------------------------------------------------------------
-    # Release Tagging
-    # --------------------------------------------------------------------------
-
-    - name: tag and push the release
-      run: go run internal/ci/release/tagging/main.go retag
-      env:
-        GIT_REF: ${{ github.ref }}
-
-    # --------------------------------------------------------------------------
-    # Cleanup
-    # --------------------------------------------------------------------------
-
-    - name: cleanup release trigger tags
-      run: go run internal/ci/release/tagging/main.go cleanup
-      env:
-        GIT_REF: ${{ github.ref }}
-
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        GITHUB_ORG: "shaneutt"
+        GITHUB_REPO: "kubernetes-testing-framework"
