@@ -25,7 +25,7 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go
+          ${{ runner.os }}-build-codegen-
 
     - name: checkout repository
       uses: actions/checkout@v2

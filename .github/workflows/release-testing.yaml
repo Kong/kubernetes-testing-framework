@@ -1,11 +1,11 @@
 name: release-testing
 
 on:
-  push:
-    tags:
-      # NOTE: for help on how this tagging works see the RELEASE.md documentation.
-      #       also see the `release.yaml` workflow which this workflow triggers upon success.
-      - "do-release-*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'a release tag that will be created upon success'
+        required: true
 
 jobs:
 
@@ -33,22 +33,13 @@ jobs:
         path: ~/go/pkg/mod
         key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
         restore-keys: |
-          ${{ runner.os }}-go
+          ${{ runner.os }}-build-codegen-
 
     - name: checkout repository
       uses: actions/checkout@v2
       with:
         fetch-depth: 0
         token: ${{ secrets.GITHUB_TOKEN }}
-
-    # --------------------------------------------------------------------------
-    # Verification
-    # --------------------------------------------------------------------------
-
-    - name: release tag verification
-      run: go run internal/ci/release/tagging/main.go verify
-      env:
-        GIT_REF: ${{ github.ref }}
 
     # --------------------------------------------------------------------------
     # Run Tests
@@ -74,17 +65,7 @@ jobs:
     # Release Tagging
     # --------------------------------------------------------------------------
 
-    - name: tag and push the release
-      run: go run internal/ci/release/tagging/main.go retag
-      env:
-        GIT_REF: ${{ github.ref }}
-
-    # --------------------------------------------------------------------------
-    # Cleanup
-    # --------------------------------------------------------------------------
-
-    - name: cleanup release trigger tags
-      run: go run internal/ci/release/tagging/main.go cleanup
-      env:
-        GIT_REF: ${{ github.ref }}
-
+    - name: tag the release
+      run: |
+        git tag ${{ github.event.inputs.tag }}
+        git push origin refs/tags/${{ github.event.inputs.tag }}
