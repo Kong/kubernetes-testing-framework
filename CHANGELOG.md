@@ -7,6 +7,11 @@
 - Fixed the CLI `main.go` location to fix `go install`
   ([#133](https://github.com/Kong/kubernetes-testing-framework/pull/133))
 
+### Under The Hood
+
+- Added release tooling for pipelining releases in Github Actions CI
+  ([#134](https://github.com/Kong/kubernetes-testing-framework/pull/134))
+
 ## v0.8.2
 
 ### Under The Hood
