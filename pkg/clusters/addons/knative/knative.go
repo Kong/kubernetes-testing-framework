@@ -15,7 +15,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 // -----------------------------------------------------------------------------
@@ -85,7 +84,7 @@ const (
 
 func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we use kubectl to deploy this addon
-	kubeconfig, err := generators.TempKubeconfig(cluster)
+	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
@@ -171,7 +170,7 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 
 func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we use kubectl to cleanup this addon
-	kubeconfig, err := generators.TempKubeconfig(cluster)
+	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}

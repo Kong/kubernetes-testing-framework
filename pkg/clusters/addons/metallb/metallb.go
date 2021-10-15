@@ -19,7 +19,6 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
@@ -63,7 +62,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// generate a temporary kubeconfig since we're going to be using kubectl
-	kubeconfig, err := generators.TempKubeconfig(cluster)
+	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
@@ -198,7 +197,7 @@ address-pools:
 //       See: https://github.com/Kong/kubernetes-testing-framework/issues/25
 func metallbDeployHack(cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using kubectl
-	kubeconfig, err := generators.TempKubeconfig(cluster)
+	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}

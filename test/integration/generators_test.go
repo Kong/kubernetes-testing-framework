@@ -1,4 +1,5 @@
-//+build integration_tests
+//go:build integration_tests
+// +build integration_tests
 
 package integration
 
@@ -12,11 +13,12 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/environments"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
-func TestGenerators(t *testing.T) {
+func TestClusterGenerators(t *testing.T) {
 	t.Parallel()
 
 	t.Log("creating a test environment to test generators")
@@ -34,21 +36,21 @@ func TestGenerators(t *testing.T) {
 
 	t.Logf("creating %d namespaces for creator ID 1", creator1NamespaceCount)
 	for i := 1; i < creator1NamespaceCount; i++ {
-		testingNamespace, err := generators.GenerateNamespace(ctx, env.Cluster(), creator1)
+		testingNamespace, err := clusters.GenerateNamespace(ctx, env.Cluster(), creator1)
 		require.NoError(t, err)
 		testingNamespaces[creator1] = append(testingNamespaces[creator1], testingNamespace)
 	}
 
 	t.Logf("creating %d namespaces for creator ID 2", creator2NamespaceCount)
 	for i := 1; i < creator2NamespaceCount; i++ {
-		testingNamespace, err := generators.GenerateNamespace(ctx, env.Cluster(), creator2)
+		testingNamespace, err := clusters.GenerateNamespace(ctx, env.Cluster(), creator2)
 		require.NoError(t, err)
 		testingNamespaces[creator2] = append(testingNamespaces[creator2], testingNamespace)
 	}
 
 	t.Logf("creating %d namespaces for creator ID 3", creator3NamespaceCount)
 	for i := 1; i < creator3NamespaceCount; i++ {
-		testingNamespace, err := generators.GenerateNamespace(ctx, env.Cluster(), creator3)
+		testingNamespace, err := clusters.GenerateNamespace(ctx, env.Cluster(), creator3)
 		require.NoError(t, err)
 		testingNamespaces[creator3] = append(testingNamespaces[creator3], testingNamespace)
 	}
@@ -71,7 +73,7 @@ func TestGenerators(t *testing.T) {
 	}
 
 	t.Log("performing generated resource cleanup for creator ID 3")
-	require.NoError(t, generators.CleanupGeneratedResources(ctx, env.Cluster(), creator3))
+	require.NoError(t, clusters.CleanupGeneratedResources(ctx, env.Cluster(), creator3))
 
 	t.Log("verifying that creator ID 3's namespaces were all removed from the cluster")
 	for _, namespace := range testingNamespaces[creator3] {
@@ -88,7 +90,7 @@ func TestGenerators(t *testing.T) {
 	}
 
 	t.Log("performing generated resource cleanup for creator ID 1")
-	require.NoError(t, generators.CleanupGeneratedResources(ctx, env.Cluster(), creator1))
+	require.NoError(t, clusters.CleanupGeneratedResources(ctx, env.Cluster(), creator1))
 
 	t.Log("verifying that creator ID 1's namespaces were all removed from the cluster")
 	for _, namespace := range testingNamespaces[creator1] {
@@ -105,7 +107,7 @@ func TestGenerators(t *testing.T) {
 	}
 
 	t.Log("performing generated resource cleanup for creator ID 2")
-	require.NoError(t, generators.CleanupGeneratedResources(ctx, env.Cluster(), creator2))
+	require.NoError(t, clusters.CleanupGeneratedResources(ctx, env.Cluster(), creator2))
 
 	t.Log("verifying that creator ID 2's namespaces were all removed from the cluster")
 	for _, namespace := range testingNamespaces[creator2] {

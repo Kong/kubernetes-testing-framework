@@ -267,7 +267,7 @@ const (
 // isn't part of the critical Istio deployment path.
 func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using kubectl
-	kubeconfig, err := generators.TempKubeconfig(cluster)
+	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
