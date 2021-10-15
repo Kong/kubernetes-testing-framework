@@ -1,10 +1,13 @@
 package clusters
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
+	"os/exec"
 
 	"github.com/google/uuid"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
@@ -201,4 +204,78 @@ func CleanupGeneratedResources(ctx context.Context, cluster Cluster, creatorID s
 	}
 
 	return nil
+}
+
+// KustomizeDeployForCluster applies a given kustomizeURL to the provided cluster
+func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeURL string) error {
+	// generate the kustomize YAML
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kubectl", "kustomize", kustomizeURL)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to deploy kong CRDs STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+	}
+
+	// apply the kustomize YAML to the cluster
+	return ApplyYAML(ctx, cluster, stdout.String())
+}
+
+// ApplyYAML applies a given YAML manifest to the cluster provided
+func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
+	// generate a kubeconfig tempfile since we'll be using kubectl
+	kubeconfig, err := TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+
+	// configure the command to apply CRD YAML from STDIN
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", "-")
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+
+	// pipe the YAML to stdin
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	// write the YAML to the stdin pipe
+	stdinIOErr := make(chan error)
+	go func() {
+		// write the whole YAML to stdin.
+		//
+		// NOTE: this will block if the YAML lenth is greater than the OS pipesize (e.g. on linux, F_GETPIPE_SZ),
+		// thus why we're running this in a goroutine for an easy cross-platform solution.
+		// This will stop blocking when cmd.Run() returns.
+		written, err := io.WriteString(stdin, yaml)
+		if err != nil {
+			stdinIOErr <- err
+			return
+		}
+
+		// verify fs didn't have a silent write failure
+		if written != len(yaml) {
+			stdinIOErr <- fmt.Errorf("only %d of %d bytes written", written, len(yaml))
+			return
+		}
+
+		// write complete
+		stdinIOErr <- stdin.Close()
+		return
+	}()
+
+	// run the kubectl apply
+	if err := cmd.Run(); err != nil {
+		// if an error occurs, make sure we wrap all information about the failure into verbose error output
+		fullErr := fmt.Errorf("failed to deploy YAML STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		if err := <-stdinIOErr; err != nil {
+			fullErr = fmt.Errorf("%s (and additional errors occurred writing to STDIN: %w)", fullErr, err)
+		}
+		return fullErr
+	}
+
+	return <-stdinIOErr
 }

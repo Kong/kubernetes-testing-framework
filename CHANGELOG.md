@@ -2,6 +2,12 @@
 
 ## v0.9.0
 
+### Improvements
+
+- Cluster utilities were added to apply raw YAML or Kustomize configurations
+  to a cluster object for convenience.
+  ([](TODO))
+
 ### Breaking Changes
 
 - Several helper functions in the kubernetes `generators` package which were
