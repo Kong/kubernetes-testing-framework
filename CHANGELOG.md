@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.9.0
+
+### Breaking Changes
+
+- Several helper functions in the kubernetes `generators` package which were
+  centered around cluster related functionality have been moved to the
+  `clusters` package (e.g. `TempKubeconfig()`, `GenerateNamespace()`,
+  `CleanupGeneratedResources()`, and `TestGenerators()`)
+  ([](TODO))
+
 ## v0.8.3
 
 ### Bug Fixes
