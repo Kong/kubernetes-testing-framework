@@ -4,12 +4,14 @@
 package integration
 
 import (
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
+	apiextclient "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -18,7 +20,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
-func TestClusterGenerators(t *testing.T) {
+func TestClusterUtils(t *testing.T) {
 	t.Parallel()
 
 	t.Log("creating a test environment to test generators")
@@ -115,4 +117,36 @@ func TestClusterGenerators(t *testing.T) {
 		require.Error(t, err)
 		require.True(t, errors.IsNotFound(err))
 	}
+
+	t.Log("verifying that trying to apply broken Kustomize to the cluster fails")
+	err = clusters.KustomizeDeployForCluster(ctx, env.Cluster(), "./")
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "unable to find"))
+
+	t.Log("verifying that KIC CRDs can be deployed to the cluster via Kustomize")
+	apiext, err := apiextclient.NewForConfig(env.Cluster().Config())
+	require.NoError(t, err)
+	_, err = apiext.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "udpingresses.configuration.konghq.com", metav1.GetOptions{})
+	require.Error(t, err)
+	require.True(t, strings.Contains(err.Error(), "not found"))
+	require.NoError(t, clusters.KustomizeDeployForCluster(ctx, env.Cluster(), "https://github.com/kong/kubernetes-ingress-controller/config/crd"))
+	crd, err := apiext.ApiextensionsV1().CustomResourceDefinitions().Get(ctx, "udpingresses.configuration.konghq.com", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, "configuration.konghq.com", crd.Spec.Group)
+
+	t.Log("verifying that applying raw YAML to the cluster works")
+	cfgmapYAML := `---
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: test-cluster-apply
+  namespace: default
+data:
+  message: "batman"
+`
+	require.NoError(t, clusters.ApplyYAML(ctx, env.Cluster(), cfgmapYAML))
+	cfgmap, err := env.Cluster().Client().CoreV1().ConfigMaps(corev1.NamespaceDefault).Get(ctx, "test-cluster-apply", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Equal(t, "batman", cfgmap.Data["message"])
 }
