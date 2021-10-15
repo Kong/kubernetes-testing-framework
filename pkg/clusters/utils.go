@@ -232,7 +232,7 @@ func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
 
 	// configure the command to apply CRD YAML from STDIN
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", "-")
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", "-") //nolint:gosec
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -264,7 +264,6 @@ func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
 
 		// write complete
 		stdinIOErr <- stdin.Close()
-		return
 	}()
 
 	// run the kubectl apply
