@@ -6,7 +6,7 @@
 
 - Cluster utilities were added to apply raw YAML or Kustomize configurations
   to a cluster object for convenience.
-  ([](TODO))
+  ([#135](https://github.com/Kong/kubernetes-testing-framework/pull/135))
 
 ### Breaking Changes
 
@@ -14,7 +14,7 @@
   centered around cluster related functionality have been moved to the
   `clusters` package (e.g. `TempKubeconfig()`, `GenerateNamespace()`,
   `CleanupGeneratedResources()`, and `TestGenerators()`)
-  ([](TODO))
+  ([#135](https://github.com/Kong/kubernetes-testing-framework/pull/135))
 
 ## v0.8.3
 
