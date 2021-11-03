@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -18,6 +17,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
@@ -27,8 +27,8 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	t.Parallel()
 
 	t.Log("preparing kong enterprise secrets")
-	licenseJSON := os.Getenv(enterpriseLicenseEnvVar)
-	require.NotEmpty(t, licenseJSON)
+	licenseJSON, err := kong.GetLicenseJSONFromEnv()
+	require.NoError(t, err)
 	adminPassword, err := password.Generate(10, 5, 0, false, false)
 	require.NoError(t, err)
 
