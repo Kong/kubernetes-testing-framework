@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.9.1
+
+### Improvements
+
+- Enterprise license utilities were added for the Kong cluster addon.
+  ([#144](https://github.com/Kong/kubernetes-testing-framework/pull/144))
+
 ## v0.9.0
 
 ### Improvements
