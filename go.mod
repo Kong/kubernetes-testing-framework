@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
 	github.com/gorilla/mux v1.8.0 // indirect
-	github.com/kong/go-kong v0.23.0
+	github.com/kong/go-kong v0.24.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/sethvargo/go-password v0.2.0
@@ -31,6 +31,7 @@ require (
 	k8s.io/apiextensions-apiserver v0.22.3
 	k8s.io/apimachinery v0.22.3
 	k8s.io/client-go v0.22.3
+	sigs.k8s.io/yaml v1.2.0
 )
 
 require (
@@ -85,5 +86,4 @@ require (
 	k8s.io/klog/v2 v2.9.0 // indirect
 	k8s.io/utils v0.0.0-20210819203725-bdf08cb9a70a // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.1.2 // indirect
-	sigs.k8s.io/yaml v1.2.0 // indirect
 )
