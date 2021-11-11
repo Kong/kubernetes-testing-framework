@@ -223,6 +223,19 @@ func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeUR
 
 // ApplyYAML applies a given YAML manifest to the cluster provided
 func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "apply", yaml)
+}
+
+// DeleteYAML deletes a given YAML manifest on the cluster provided
+func DeleteYAML(ctx context.Context, cluster Cluster, yaml string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "delete", yaml)
+}
+
+// -----------------------------------------------------------------------------
+// Private Functions
+// -----------------------------------------------------------------------------
+
+func kubectlSubcommandWithYAML(ctx context.Context, cluster Cluster, subcommand, yaml string) error {
 	// generate a kubeconfig tempfile since we'll be using kubectl
 	kubeconfig, err := TempKubeconfig(cluster)
 	if err != nil {
@@ -230,9 +243,9 @@ func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
-	// configure the command to apply CRD YAML from STDIN
+	// configure the command to read YAML from STDIN
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", "-") //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), subcommand, "-f", "-") //nolint:gosec
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 
@@ -266,7 +279,7 @@ func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
 		stdinIOErr <- stdin.Close()
 	}()
 
-	// run the kubectl apply
+	// run the kubectl subcommand
 	if err := cmd.Run(); err != nil {
 		// if an error occurs, make sure we wrap all information about the failure into verbose error output
 		fullErr := fmt.Errorf("failed to deploy YAML STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
