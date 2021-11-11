@@ -1,9 +1,12 @@
 package kind
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os"
+	"os/exec"
 	"strings"
 	"sync"
 
@@ -139,6 +142,26 @@ func (c *kindCluster) DeleteAddon(ctx context.Context, addon clusters.Addon) err
 	}
 
 	delete(c.addons, addon.Name())
+
+	return nil
+}
+
+// LoadImage takes a cluster name and image name and uses the KIND CLI to load that image into the cluster
+func LoadImage(clusterName, image string) error {
+	deployArgs := []string{
+		"load", "docker-image",
+		image,
+		"--name", clusterName,
+	}
+
+	stderr := new(bytes.Buffer)
+	cmd := exec.Command("kind", deployArgs...)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = stderr
+
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s: %w", stderr.String(), err)
+	}
 
 	return nil
 }
