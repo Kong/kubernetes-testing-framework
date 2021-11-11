@@ -92,6 +92,8 @@ func (a *Addon) Namespace() string {
 // Kong Addon - Proxy Endpoint Methods
 // -----------------------------------------------------------------------------
 
+const defaultHTTPPort = 80
+
 // ProxyURL provides a routable *url.URL for accessing the Kong proxy.
 func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
 	waitForObjects, ready, err := a.Ready(ctx, cluster)
@@ -103,7 +105,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, 80)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, defaultHTTPPort)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
