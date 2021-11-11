@@ -46,4 +46,7 @@ type Cluster interface {
 
 	// DeleteAddon removes an existing cluster Addon.
 	DeleteAddon(ctx context.Context, addon Addon) error
+
+	// GetNodeAddresses returns a list of cluster worker node addresses
+	GetNodeAddresses(ctx context.Context) ([]string, error)
 }

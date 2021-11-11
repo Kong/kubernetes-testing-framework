@@ -7,6 +7,8 @@ import (
 	"strings"
 	"sync"
 
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -78,6 +80,23 @@ func (c *kindCluster) Cleanup(ctx context.Context) error {
 
 func (c *kindCluster) Client() *kubernetes.Clientset {
 	return c.client
+}
+
+func (c *kindCluster) GetNodeAddresses(ctx context.Context) ([]string, error) {
+	var addrs []string
+	nodes, err := c.Client().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return []string{}, err
+	}
+	for _, node := range nodes.Items {
+		for _, addr := range node.Status.Addresses {
+			// for KIND, these are the actual local routeable IPs. there is no NodeExternalIP
+			if addr.Type == corev1.NodeInternalIP {
+				addrs = append(addrs, addr.Address)
+			}
+		}
+	}
+	return addrs, nil
 }
 
 func (c *kindCluster) Config() *rest.Config {

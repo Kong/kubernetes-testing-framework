@@ -10,6 +10,8 @@ import (
 	container "cloud.google.com/go/container/apiv1"
 	"github.com/blang/semver/v4"
 	"google.golang.org/api/option"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
@@ -120,6 +122,22 @@ func (c *gkeCluster) Cleanup(ctx context.Context) error {
 
 func (c *gkeCluster) Client() *kubernetes.Clientset {
 	return c.client
+}
+
+func (c *gkeCluster) GetNodeAddresses(ctx context.Context) ([]string, error) {
+	var addrs []string
+	nodes, err := c.Client().CoreV1().Nodes().List(ctx, metav1.ListOptions{})
+	if err != nil {
+		return []string{}, err
+	}
+	for _, node := range nodes.Items {
+		for _, addr := range node.Status.Addresses {
+			if addr.Type == corev1.NodeExternalIP {
+				addrs = append(addrs, addr.Address)
+			}
+		}
+	}
+	return addrs, nil
 }
 
 func (c *gkeCluster) Config() *rest.Config {
