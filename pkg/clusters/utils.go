@@ -231,6 +231,36 @@ func DeleteYAML(ctx context.Context, cluster Cluster, yaml string) error {
 	return kubectlSubcommandWithYAML(ctx, cluster, "delete", yaml)
 }
 
+// WaitForCondition waits for a condition to be true for an object on the
+// cluster given that objects namespace, type and name.
+func WaitForCondition(ctx context.Context, cluster Cluster, namespace, objectType, object, condition string, seconds int) error {
+	kubeconfig, err := TempKubeconfig(cluster)
+	if err != nil {
+		return err
+	}
+	defer os.Remove(kubeconfig.Name())
+
+	args := []string{
+		"--kubeconfig", kubeconfig.Name(),
+		"--namespace", namespace,
+		"wait", "--timeout", fmt.Sprintf("%ds", seconds),
+		fmt.Sprintf("--for=condition=%s", condition),
+		objectType, object,
+	}
+
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kubectl", args...)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+
+	if err := cmd.Run(); err != nil {
+		fullErr := fmt.Errorf("failed to wait for condition %s YAML STDOUT=(%s) STDERR=(%s): %w", condition, stdout.String(), stderr.String(), err)
+		return fullErr
+	}
+
+	return nil
+}
+
 // -----------------------------------------------------------------------------
 // Private Functions
 // -----------------------------------------------------------------------------
