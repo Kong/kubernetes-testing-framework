@@ -8,6 +8,7 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/certmanager"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -122,6 +123,8 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 			builder = builder.WithAddons(istioAddon)
 		case "httpbin":
 			builder = builder.WithAddons(httpbin.New())
+		case "cert-manager":
+			builder = builder.WithAddons(certmanager.New())
 		default:
 			invalid = append(invalid, addon)
 		}
