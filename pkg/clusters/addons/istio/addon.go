@@ -3,10 +3,7 @@ package istio
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"fmt"
-	"io/ioutil"
-	"net/http"
 	"os"
 	"os/exec"
 	"time"
@@ -21,6 +18,7 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/github"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
@@ -215,10 +213,6 @@ const (
 	//
 	// See: https://hub.docker.com/r/istio/istioctl
 	istioCTLImage = "istio/istioctl"
-
-	// istioReleaseURL is the URL at which the lates release will be
-	// searched for if a specific version is not supplied for deployment.
-	istioReleaseURL = "https://api.github.com/repos/istio/istio/releases/latest"
 )
 
 // -----------------------------------------------------------------------------
@@ -228,32 +222,11 @@ const (
 // useLatestIstioVersion locates and sets the istio version to deploy to the latest
 // non-prelease tag found.
 func (a *Addon) useLatestIstioVersion() error {
-	resp, err := http.Get(istioReleaseURL)
-	if err != nil {
-		return fmt.Errorf("couldn't determine latest istio release: %w", err)
-	}
-	defer resp.Body.Close()
-
-	body, err := ioutil.ReadAll(resp.Body)
+	latestVersion, err := github.FindLatestReleaseForRepo("istio", "istio")
 	if err != nil {
 		return err
 	}
-
-	type latestReleaseData struct {
-		TagName string `json:"tag_name"`
-	}
-
-	data := latestReleaseData{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		return fmt.Errorf("bad data from api when fetching latest istio release tag: %w", err)
-	}
-
-	latestVersion, err := semver.Parse(data.TagName)
-	if err != nil {
-		return fmt.Errorf("bad release tag returned from api when fetching latest istio release tag: %w", err)
-	}
-	a.istioVersion = latestVersion
-
+	a.istioVersion = *latestVersion
 	return nil
 }
 
