@@ -70,7 +70,7 @@ func TestClusterUtils(t *testing.T) {
 				deployment, err := env.Cluster().Client().AppsV1().Deployments(namespace.Name).Get(ctx, "httpbin", metav1.GetOptions{})
 				require.NoError(t, err)
 				return deployment.Status.AvailableReplicas == *deployment.Spec.Replicas
-			}, time.Minute*3, time.Second)
+			}, time.Minute*5, time.Second)
 		}
 	}
 
