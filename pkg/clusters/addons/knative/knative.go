@@ -100,12 +100,20 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// apply the core deployments, but don't wait because we're going to patch them
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", knativeCore) //nolint:gosec
-	stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+	retry := 3 // allow some retries as races can occur with CRDs
+	for retry > 0 {
+		cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", knativeCore) //nolint:gosec
+		stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			if retry > 0 {
+				time.Sleep(time.Second)
+				retry--
+				continue
+			}
+			return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
 	}
 
 	// the deployment manifests for knative include some CPU and Memory limits which
