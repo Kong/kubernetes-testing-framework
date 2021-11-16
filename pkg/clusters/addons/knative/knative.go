@@ -78,8 +78,8 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 
 const (
 	// TODO: later handle targeting specific versions of Knative
-	knativeCRDs = "https://github.com/knative/serving/releases/download/v0.18.0/serving-crds.yaml"
-	knativeCore = "https://github.com/knative/serving/releases/download/v0.18.0/serving-core.yaml"
+	knativeCRDs = "https://github.com/knative/serving/releases/download/knative-v1.0.1/serving-crds.yaml"
+	knativeCore = "https://github.com/knative/serving/releases/download/knative-v1.0.1/serving-core.yaml"
 )
 
 func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
@@ -187,6 +187,27 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
+	// wait for the namespace to tear down
+	namespaceRemoved := false
+	for !namespaceRemoved {
+		select {
+		case <-ctx.Done():
+			if err := ctx.Err(); err != nil {
+				return fmt.Errorf("context completed with error while waiting for knative namespace %s to cleanup: %w", DefaultNamespace, err)
+			}
+			return fmt.Errorf("context completed while waiting for knative namespace %s to cleanup", DefaultNamespace)
+		default:
+			if err := cluster.Client().CoreV1().Namespaces().Delete(ctx, DefaultNamespace, metav1.DeleteOptions{}); err != nil {
+				if errors.IsNotFound(err) {
+					namespaceRemoved = true
+					continue
+				}
+				return err
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
 	// cleanup the CRDs, wait for them to be removed
 	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "--wait", "-f", knativeCRDs) //nolint:gosec
 	stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
@@ -198,22 +219,5 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
-	// wait for the namespace to tear down
-	for {
-		select {
-		case <-ctx.Done():
-			if err := ctx.Err(); err != nil {
-				return fmt.Errorf("context completed with error while waiting for knative namespace %s to cleanup: %w", DefaultNamespace, err)
-			}
-			return fmt.Errorf("context completed while waiting for knative namespace %s to cleanup", DefaultNamespace)
-		default:
-			if err := cluster.Client().CoreV1().Namespaces().Delete(ctx, DefaultNamespace, metav1.DeleteOptions{}); err != nil {
-				if errors.IsNotFound(err) {
-					return nil
-				}
-				return err
-			}
-			time.Sleep(time.Second)
-		}
-	}
+	return nil
 }
