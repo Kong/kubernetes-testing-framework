@@ -55,8 +55,16 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
-	// per https://github.com/kubernetes-sigs/kind/issues/658 this is basically impossible
-	return fmt.Errorf("cannot remove loaded images from a cluster")
+	switch ctype := cluster.Type(); ctype {
+	case kind.KindClusterType:
+		// per https://github.com/kubernetes-sigs/kind/issues/658 this is basically impossible
+		// we lie here, because we want to mask this error. not deleting an image from KIND is benign:
+		// you either don't use it after (in which case you shouldn't care that it's still present) or
+		// load another image with the same name (in which case the name will point to the new image)
+		return nil
+	default:
+		return fmt.Errorf("loadimage addon is not supported by cluster type '%v'", cluster.Type())
+	}
 }
 
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
