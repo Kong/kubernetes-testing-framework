@@ -48,6 +48,10 @@ func (a *addon) Name() clusters.AddonName {
 	return AddonName
 }
 
+func (a *addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
+	return nil
+}
+
 func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if cluster.Type() != kind.KindClusterType {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)

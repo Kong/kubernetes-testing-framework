@@ -73,6 +73,10 @@ func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
+func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
+	return nil
+}
+
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a namespace name if the caller optioned for that
 	if a.generateNamespace {

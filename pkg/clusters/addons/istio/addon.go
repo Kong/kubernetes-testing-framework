@@ -107,6 +107,10 @@ func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
+func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
+	return nil
+}
+
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// if an specific version was not provided we'll fetch and use the latest release tag
 	if a.istioVersion.String() == "0.0.0" {

@@ -30,8 +30,8 @@ const (
 	DefaultKindDockerNetwork = "kind"
 )
 
-// kindCluster is a clusters.Cluster implementation backed by Kubernetes In Docker (KIND)
-type kindCluster struct {
+// Cluster is a clusters.Cluster implementation backed by Kubernetes In Docker (KIND)
+type Cluster struct {
 	name       string
 	client     *kubernetes.Clientset
 	cfg        *rest.Config
@@ -41,7 +41,7 @@ type kindCluster struct {
 }
 
 // New provides a new clusters.Cluster backed by a Kind based Kubernetes Cluster.
-func New(ctx context.Context) (clusters.Cluster, error) {
+func New(ctx context.Context) (*Cluster, error) {
 	return NewBuilder().Build(ctx)
 }
 
@@ -49,15 +49,15 @@ func New(ctx context.Context) (clusters.Cluster, error) {
 // Kind Cluster - Cluster Implementation
 // -----------------------------------------------------------------------------
 
-func (c *kindCluster) Name() string {
+func (c *Cluster) Name() string {
 	return c.name
 }
 
-func (c *kindCluster) Type() clusters.Type {
+func (c *Cluster) Type() clusters.Type {
 	return KindClusterType
 }
 
-func (c *kindCluster) Version() (semver.Version, error) {
+func (c *Cluster) Version() (semver.Version, error) {
 	versionInfo, err := c.Client().ServerVersion()
 	if err != nil {
 		return semver.Version{}, err
@@ -65,7 +65,7 @@ func (c *kindCluster) Version() (semver.Version, error) {
 	return semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
 }
 
-func (c *kindCluster) Cleanup(ctx context.Context) error {
+func (c *Cluster) Cleanup(ctx context.Context) error {
 	c.l.Lock()
 	defer c.l.Unlock()
 
@@ -76,15 +76,15 @@ func (c *kindCluster) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-func (c *kindCluster) Client() *kubernetes.Clientset {
+func (c *Cluster) Client() *kubernetes.Clientset {
 	return c.client
 }
 
-func (c *kindCluster) Config() *rest.Config {
+func (c *Cluster) Config() *rest.Config {
 	return c.cfg
 }
 
-func (c *kindCluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) {
+func (c *Cluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) {
 	c.l.RLock()
 	defer c.l.RUnlock()
 
@@ -97,7 +97,7 @@ func (c *kindCluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) 
 	return nil, fmt.Errorf("addon %s not found", name)
 }
 
-func (c *kindCluster) ListAddons() []clusters.Addon {
+func (c *Cluster) ListAddons() []clusters.Addon {
 	c.l.RLock()
 	defer c.l.RUnlock()
 
@@ -109,24 +109,19 @@ func (c *kindCluster) ListAddons() []clusters.Addon {
 	return addonList
 }
 
-func (c *kindCluster) DeployAddon(ctx context.Context, addon clusters.Addon) error {
+func (c *Cluster) DeployAddon(ctx context.Context, addon clusters.Addon) error {
 	c.l.Lock()
-	defer c.l.Unlock()
-
 	if _, ok := c.addons[addon.Name()]; ok {
+		c.l.Unlock()
 		return fmt.Errorf("addon component %s is already loaded into cluster %s", addon.Name(), c.Name())
 	}
-
-	if err := addon.Deploy(ctx, c); err != nil {
-		return err
-	}
-
 	c.addons[addon.Name()] = addon
+	c.l.Unlock()
 
-	return nil
+	return addon.Deploy(ctx, c)
 }
 
-func (c *kindCluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
+func (c *Cluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
 	c.l.Lock()
 	defer c.l.Unlock()
 

@@ -19,6 +19,8 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 )
 
 // -----------------------------------------------------------------------------
@@ -144,7 +146,23 @@ func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
+func (a *Addon) Dependencies(ctx context.Context, cluster clusters.Cluster) []clusters.AddonName {
+	if _, ok := cluster.(*kind.Cluster); ok {
+		if a.proxyAdminServiceTypeLoadBalancer {
+			return []clusters.AddonName{
+				metallb.AddonName,
+			}
+		}
+	}
+	return nil
+}
+
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
+	// wait for dependency addons to be ready first
+	if err := clusters.WaitForAddonDependencies(ctx, cluster, a); err != nil {
+		return fmt.Errorf("failure waiting for addon dependencies: %w", err)
+	}
+
 	// generate a temporary kubeconfig since we're going to be using the helm CLI
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {

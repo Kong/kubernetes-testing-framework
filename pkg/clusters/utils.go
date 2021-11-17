@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
@@ -320,4 +321,31 @@ func kubectlSubcommandWithYAML(ctx context.Context, cluster Cluster, subcommand,
 	}
 
 	return <-stdinIOErr
+}
+
+// WaitForAddonDependencies is a convenience method to wait for all dependencies
+// of a given addon to be ready on the cluster according to a given context.
+func WaitForAddonDependencies(ctx context.Context, cluster Cluster, addon Addon) error {
+	for _, dependency := range addon.Dependencies(ctx, cluster) {
+		dependencyReady := false
+		for !dependencyReady {
+			select {
+			case <-ctx.Done():
+				return fmt.Errorf("context completed while waiting for addon dependency (%s): %w", dependency, ctx.Err())
+			default:
+				addon, err := cluster.GetAddon(dependency)
+				if err != nil {
+					if strings.Contains(err.Error(), "not found") {
+						continue // the addon may not be present yet
+					}
+					return fmt.Errorf("could not retrieve dependency addon %s from the cluster: %w", dependency, err)
+				}
+				_, dependencyReady, err = addon.Ready(ctx, cluster)
+				if err != nil {
+					return fmt.Errorf("failure to check dependency addon %s's readiness: %w", dependency, err)
+				}
+			}
+		}
+	}
+	return nil
 }

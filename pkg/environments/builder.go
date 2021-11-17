@@ -3,6 +3,7 @@ package environments
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
@@ -67,6 +68,7 @@ func (b *Builder) WithKubernetesVersion(version semver.Version) *Builder {
 func (b *Builder) Build(ctx context.Context) (Environment, error) {
 	var cluster clusters.Cluster
 
+	// determine if an existing cluster has been configured for deployment
 	if b.existingCluster == nil {
 		var err error
 		builder := kind.NewBuilder().WithName(b.Name)
@@ -84,14 +86,69 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		cluster = b.existingCluster
 	}
 
+	// determine the addon dependencies of the cluster before building
+	requiredAddons := make(map[string][]string)
 	for _, addon := range b.addons {
-		if err := cluster.DeployAddon(ctx, addon); err != nil {
-			return nil, err
+		for _, dependency := range addon.Dependencies(ctx, cluster) {
+			requiredAddons[string(dependency)] = append(requiredAddons[string(dependency)], string(addon.Name()))
 		}
 	}
 
-	return &environment{
-		name:    b.Name,
-		cluster: cluster,
-	}, nil
+	// verify addon dependency requirements have been met
+	requiredAddonsThatAreMissing := make([]string, 0)
+	for requiredAddon, neededBy := range requiredAddons {
+		found := false
+		for _, addon := range b.addons {
+			if requiredAddon == string(addon.Name()) {
+				found = true
+				break
+			}
+		}
+		if !found {
+			requiredAddonsThatAreMissing = append(requiredAddonsThatAreMissing, fmt.Sprintf("%s (needed by %s)", requiredAddon, strings.Join(neededBy, ", ")))
+		}
+	}
+	if len(requiredAddonsThatAreMissing) != 0 {
+		return nil, fmt.Errorf("addon dependencies were not met, missing: %s", strings.Join(requiredAddonsThatAreMissing, ", "))
+	}
+
+	// run each addon deployment asynchronously and collect any errors that occur
+	addonDeploymentErrorQueue := make(chan error, len(b.addons))
+	for _, addon := range b.addons {
+		addonCopy := addon
+		go func() {
+			if err := cluster.DeployAddon(ctx, addonCopy); err != nil {
+				addonDeploymentErrorQueue <- fmt.Errorf("failed to deploy addon %s: %w", addonCopy.Name(), err)
+			}
+			addonDeploymentErrorQueue <- nil
+		}()
+	}
+
+	// wait for all deployments to report, and gather up any errors
+	collectedDeploymentErrorsCount := 0
+	addonDeploymentErrors := make([]error, 0)
+	for !(collectedDeploymentErrorsCount == len(b.addons)) {
+		if err := <-addonDeploymentErrorQueue; err != nil {
+			addonDeploymentErrors = append(addonDeploymentErrors, err)
+		}
+		collectedDeploymentErrorsCount++
+	}
+
+	// if any errors occurred during deployment, report them
+	totalFailures := len(addonDeploymentErrors)
+	switch totalFailures {
+	case 0:
+		return &environment{
+			name:    b.Name,
+			cluster: cluster,
+		}, nil
+	case 1:
+		return nil, addonDeploymentErrors[0]
+	default:
+		errMsgs := make([]string, 0, totalFailures)
+		for _, err := range addonDeploymentErrors {
+			errMsgs = append(errMsgs, err.Error())
+		}
+		return nil, fmt.Errorf("%d addon deployments failed: %s", totalFailures, strings.Join(errMsgs, ", "))
+	}
 }

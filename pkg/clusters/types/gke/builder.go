@@ -153,7 +153,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
-	cluster := &gkeCluster{
+	cluster := &Cluster{
 		name:      b.Name,
 		project:   b.project,
 		location:  b.location,
