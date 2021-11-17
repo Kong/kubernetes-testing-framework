@@ -5,6 +5,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
@@ -18,6 +19,16 @@ import (
 // If the namespace is not yet available a list of the components being waited
 // on will be provided.
 func IsNamespaceAvailable(ctx context.Context, cluster clusters.Cluster, namespace string) (waitForObjects []runtime.Object, available bool, err error) {
+	// if the namespace itself isn't available yet, not ready
+	_, err = cluster.Client().CoreV1().Namespaces().Get(ctx, namespace, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) {
+			waitForObjects = append(waitForObjects, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}})
+			err = nil
+		}
+		return
+	}
+
 	// check daemonsets for availability
 	var daemonsets *appsv1.DaemonSetList
 	daemonsets, err = cluster.Client().AppsV1().DaemonSets(namespace).List(ctx, metav1.ListOptions{})
