@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/github"
 )
@@ -157,16 +158,10 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 }
 
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
-	for _, deploymentName := range []string{"cert-manager", "cert-manager-cainjector", "cert-manager-webhook"} {
-		deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
-			Get(context.TODO(), deploymentName, metav1.GetOptions{})
-		if err != nil {
-			return nil, false, err
-		}
-
-		if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
-			return []runtime.Object{deployment}, false, nil
-		}
+	// wait for all the deployments, daemonsets in the namespace
+	waitForObjects, ready, err := utils.IsNamespaceAvailable(ctx, cluster, DefaultNamespace)
+	if !ready || err != nil {
+		return waitForObjects, ready, err
 	}
 
 	// in addition to deployments we wait for our webhook wait job to complete
