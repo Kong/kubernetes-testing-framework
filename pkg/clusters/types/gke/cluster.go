@@ -20,8 +20,8 @@ import (
 // GKE Cluster
 // -----------------------------------------------------------------------------
 
-// gkeCluster is a clusters.Cluster implementation backed by Google Kubernetes Engine (GKE)
-type gkeCluster struct {
+// Cluster is a clusters.Cluster implementation backed by Google Kubernetes Engine (GKE)
+type Cluster struct {
 	name      string
 	project   string
 	location  string
@@ -34,7 +34,7 @@ type gkeCluster struct {
 
 // NewFromExistingWithEnv provides a new clusters.Cluster backed by an existing GKE cluster,
 // but allows some of the configuration to be filled in from the ENV instead of arguments.
-func NewFromExistingWithEnv(ctx context.Context, name string) (clusters.Cluster, error) {
+func NewFromExistingWithEnv(ctx context.Context, name string) (*Cluster, error) {
 	// gather all the required env vars
 	jsonCreds := os.Getenv(GKECredsVar)
 	if jsonCreds == "" {
@@ -53,7 +53,7 @@ func NewFromExistingWithEnv(ctx context.Context, name string) (clusters.Cluster,
 }
 
 // NewFromExisting provides a new clusters.Cluster backed by an existing GKE cluster.
-func NewFromExisting(ctx context.Context, name, project, location string, jsonCreds []byte) (clusters.Cluster, error) {
+func NewFromExisting(ctx context.Context, name, project, location string, jsonCreds []byte) (*Cluster, error) {
 	// generate an auth token and management client
 	mgrc, authToken, err := clientAuthFromCreds(ctx, jsonCreds)
 	if err != nil {
@@ -67,7 +67,7 @@ func NewFromExisting(ctx context.Context, name, project, location string, jsonCr
 		return nil, err
 	}
 
-	return &gkeCluster{
+	return &Cluster{
 		name:      name,
 		project:   project,
 		location:  location,
@@ -83,15 +83,15 @@ func NewFromExisting(ctx context.Context, name, project, location string, jsonCr
 // GKE Cluster - Cluster Implementation
 // -----------------------------------------------------------------------------
 
-func (c *gkeCluster) Name() string {
+func (c *Cluster) Name() string {
 	return c.name
 }
 
-func (c *gkeCluster) Type() clusters.Type {
+func (c *Cluster) Type() clusters.Type {
 	return GKEClusterType
 }
 
-func (c *gkeCluster) Version() (semver.Version, error) {
+func (c *Cluster) Version() (semver.Version, error) {
 	versionInfo, err := c.Client().ServerVersion()
 	if err != nil {
 		return semver.Version{}, err
@@ -99,7 +99,7 @@ func (c *gkeCluster) Version() (semver.Version, error) {
 	return semver.Parse(strings.TrimPrefix(versionInfo.String(), "v"))
 }
 
-func (c *gkeCluster) Cleanup(ctx context.Context) error {
+func (c *Cluster) Cleanup(ctx context.Context) error {
 	c.l.Lock()
 	defer c.l.Unlock()
 
@@ -118,15 +118,15 @@ func (c *gkeCluster) Cleanup(ctx context.Context) error {
 	return nil
 }
 
-func (c *gkeCluster) Client() *kubernetes.Clientset {
+func (c *Cluster) Client() *kubernetes.Clientset {
 	return c.client
 }
 
-func (c *gkeCluster) Config() *rest.Config {
+func (c *Cluster) Config() *rest.Config {
 	return c.cfg
 }
 
-func (c *gkeCluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) {
+func (c *Cluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) {
 	c.l.RLock()
 	defer c.l.RUnlock()
 
@@ -139,7 +139,7 @@ func (c *gkeCluster) GetAddon(name clusters.AddonName) (clusters.Addon, error) {
 	return nil, fmt.Errorf("addon %s not found", name)
 }
 
-func (c *gkeCluster) ListAddons() []clusters.Addon {
+func (c *Cluster) ListAddons() []clusters.Addon {
 	c.l.RLock()
 	defer c.l.RUnlock()
 
@@ -151,24 +151,19 @@ func (c *gkeCluster) ListAddons() []clusters.Addon {
 	return addonList
 }
 
-func (c *gkeCluster) DeployAddon(ctx context.Context, addon clusters.Addon) error {
+func (c *Cluster) DeployAddon(ctx context.Context, addon clusters.Addon) error {
 	c.l.Lock()
-	defer c.l.Unlock()
-
 	if _, ok := c.addons[addon.Name()]; ok {
+		c.l.Unlock()
 		return fmt.Errorf("addon component %s is already loaded into cluster %s", addon.Name(), c.Name())
 	}
-
-	if err := addon.Deploy(ctx, c); err != nil {
-		return err
-	}
-
 	c.addons[addon.Name()] = addon
+	c.l.Unlock()
 
-	return nil
+	return addon.Deploy(ctx, c)
 }
 
-func (c *gkeCluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
+func (c *Cluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
 	c.l.Lock()
 	defer c.l.Unlock()
 

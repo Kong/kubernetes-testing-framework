@@ -43,7 +43,7 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 }
 
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
-func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
+func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 	deployArgs := make([]string, 0)
 	if b.clusterVersion != nil {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
@@ -58,7 +58,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
-	cluster := &kindCluster{
+	cluster := &Cluster{
 		name:       b.Name,
 		client:     kc,
 		cfg:        cfg,

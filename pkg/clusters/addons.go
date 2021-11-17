@@ -21,7 +21,13 @@ type Addon interface {
 	// Name indicates the unique name of the Addon
 	Name() AddonName
 
+	// Dependencies indicates any addons this addon is dependent on in order
+	// for operations to succeed.
+	Dependencies(ctx context.Context, cluster Cluster) []AddonName
+
 	// Deploy deploys the addon component to a provided cluster.
+	// Addon implementations are responsible for waiting for their
+	// own dependencies to deploy as needed.
 	Deploy(ctx context.Context, cluster Cluster) error
 
 	// Delete removes the addon component from the given cluster.

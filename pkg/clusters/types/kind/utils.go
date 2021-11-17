@@ -26,7 +26,7 @@ func NewFromExisting(name string) (clusters.Cluster, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &kindCluster{
+	return &Cluster{
 		name:   name,
 		client: kc,
 		cfg:    cfg,
