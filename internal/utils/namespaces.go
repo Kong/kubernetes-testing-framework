@@ -71,6 +71,12 @@ func IsNamespaceAvailable(ctx context.Context, cluster clusters.Cluster, namespa
 		}
 	}
 
+	// if there are no daemonsets or deployments present we can't consider this ready yet
+	// the expectation is that at least one (of any type) exists.
+	if (len(daemonsets.Items) + len(deployments.Items)) == 0 {
+		return
+	}
+
 	available = len(waitForObjects) == 0
 	return
 }
