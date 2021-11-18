@@ -1,5 +1,9 @@
 package loadimage
 
+import (
+	"errors"
+)
+
 // -----------------------------------------------------------------------------
 // CertManager Addon - Builder
 // -----------------------------------------------------------------------------
@@ -12,9 +16,12 @@ func NewBuilder() *Builder {
 	return &Builder{}
 }
 
-func (b *Builder) WithImage(image string) *Builder {
+func (b *Builder) WithImage(image string) (*Builder, error) {
+	if len(image) == 0 {
+		return nil, errors.New("no image provided")
+	}
 	b.image = image
-	return b
+	return b, nil
 }
 
 func (b *Builder) Build() *Addon {
