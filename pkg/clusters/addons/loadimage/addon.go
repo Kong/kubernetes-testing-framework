@@ -37,11 +37,6 @@ func (a *Addon) Name() clusters.AddonName {
 }
 
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
-	if a.image == "" {
-		a.loaded = true
-		return nil
-	}
-
 	switch ctype := cluster.Type(); ctype {
 	case kind.KindClusterType:
 		if err := a.loadIntoKind(cluster); err != nil {
