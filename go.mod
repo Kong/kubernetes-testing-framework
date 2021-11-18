@@ -6,8 +6,8 @@ require (
 	cloud.google.com/go/container v0.1.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/blang/semver/v4 v4.0.0
-	github.com/containerd/containerd v1.5.7 // indirect
-	github.com/docker/docker v20.10.10+incompatible
+	github.com/containerd/containerd v1.5.8 // indirect
+	github.com/docker/docker v20.10.11+incompatible
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
@@ -28,7 +28,7 @@ require (
 	google.golang.org/genproto v0.0.0-20211021150943-2b146023228c
 	google.golang.org/grpc v1.41.0 // indirect
 	k8s.io/api v0.22.4
-	k8s.io/apiextensions-apiserver v0.22.3
+	k8s.io/apiextensions-apiserver v0.22.4
 	k8s.io/apimachinery v0.22.4
 	k8s.io/client-go v0.22.4
 	sigs.k8s.io/yaml v1.3.0
@@ -64,7 +64,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.1 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
-	github.com/opencontainers/image-spec v1.0.1 // indirect
+	github.com/opencontainers/image-spec v1.0.2 // indirect
 	github.com/pelletier/go-toml v1.9.4 // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
