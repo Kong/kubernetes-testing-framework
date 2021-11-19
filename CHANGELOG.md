@@ -1,5 +1,19 @@
 # Changelog
 
+## v0.10.0
+
+### Improvements
+
+- Added a [CertManager](https://cert-manager.io/) addon.
+  ([#148](https://github.com/Kong/kubernetes-testing-framework/pull/148))
+- Added a utility function to invoke `kubectl wait --for-condition=CONDITION`.
+  ([#148](https://github.com/Kong/kubernetes-testing-framework/pull/148))
+- Added a utility function to delete a YAML manifest from the cluster.
+  ([#148](https://github.com/Kong/kubernetes-testing-framework/pull/148))
+- Added an addon to load images into the test cluster from a local Docker
+  environment.
+  ([#151](https://github.com/Kong/kubernetes-testing-framework/pull/151))
+
 ## v0.9.1
 
 ### Improvements
