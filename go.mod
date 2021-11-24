@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.17
 
 require (
-	cloud.google.com/go/container v0.1.0
+	cloud.google.com/go/container v1.0.0
 	github.com/Microsoft/go-winio v0.5.0 // indirect
 	github.com/blang/semver/v4 v4.0.0
 	github.com/containerd/containerd v1.5.8 // indirect
