@@ -2,6 +2,12 @@
 
 ## v0.10.0
 
+### Bug Fixes
+
+- Fixed a readiness timing issue with cert-manager wherein the webhook
+  could be unready when the addon reports as ready.
+  ([#159](https://github.com/Kong/kubernetes-testing-framework/issues/159))
+
 ### Improvements
 
 - Added a [CertManager](https://cert-manager.io/) addon.
