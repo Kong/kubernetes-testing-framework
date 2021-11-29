@@ -94,6 +94,9 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
 		Get(context.TODO(), "controller", metav1.GetOptions{})
 	if err != nil {
+		if errors.IsNotFound(err) {
+			return nil, false, nil
+		}
 		return nil, false, err
 	}
 
