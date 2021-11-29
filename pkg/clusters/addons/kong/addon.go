@@ -414,8 +414,7 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 		return nil, err
 	}
 
-	//nolint:exhaustive
-	switch service.Spec.Type {
+	switch service.Spec.Type { //nolint:exhaustive
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
 			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
