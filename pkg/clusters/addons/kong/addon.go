@@ -376,10 +376,10 @@ func exposePortsDefault() []string {
 		"--set", "proxy.stream[1].servicePort=9999",
 		"--set", "proxy.stream[1].parameters[0]=udp",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
-		"--set", "proxy.stream[1].containerPort=8899",
-		"--set", "proxy.stream[1].servicePort=8899",
-		"--set", "proxy.stream[1].parameters[0]=ssl",
-		"--set", "proxy.stream[1].parameters[1]=reuseport",
+		"--set", "proxy.stream[2].containerPort=8899",
+		"--set", "proxy.stream[2].servicePort=8899",
+		"--set", "proxy.stream[2].parameters[0]=ssl",
+		"--set", "proxy.stream[2].parameters[1]=reuseport",
 	}
 }
 
