@@ -13,7 +13,7 @@ const (
 
 	// EnvironmentCreateTimeout indicates the amount of time maximum that should
 	// be allowed to wait for a test environment to finish creating.
-	EnvironmentCreateTimeout = time.Minute * 5
+	EnvironmentCreateTimeout = time.Minute * 10
 
 	// EnvironmentDeleteTimeout indicates the amount of time maximum that should
 	// be allowed to wait for a test environment to delete successfully.
