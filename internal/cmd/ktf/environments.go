@@ -13,6 +13,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/registry"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/environments"
 )
@@ -86,7 +87,7 @@ var environmentsCreateCmd = &cobra.Command{
 		}
 
 		// configure any addons that need to be deployed with the environment's cluster
-		configureAddons(cmd, builder, deployAddons)
+		callbacks := configureAddons(cmd, builder, deployAddons)
 
 		fmt.Printf("building new environment %s\n", builder.Name)
 		env, err := builder.Build(ctx)
@@ -101,11 +102,19 @@ var environmentsCreateCmd = &cobra.Command{
 		cobra.CheckErr(<-env.WaitForReady(ctx))
 
 		fmt.Printf("environment %s was created successfully!\n", env.Name())
+		for _, callback := range callbacks {
+			callback()
+		}
 	},
 }
 
-func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons []string) {
+func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons []string) []func() {
 	invalid, dedup := make([]string, 0), make(map[string]bool)
+	// sometimes some addons which are configured for need to do something AFTER
+	// the addon itself has successfully deployed, usually something like helpful
+	// logging messages.
+	callbacks := make([]func(), 0)
+
 	for _, addon := range addons {
 		// load any valid addons, and check for invalid addons
 		switch addon {
@@ -125,6 +134,46 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 			builder = builder.WithAddons(httpbin.New())
 		case "cert-manager":
 			builder = builder.WithAddons(certmanager.New())
+		case "registry":
+			registryAddon := registry.NewBuilder().
+				WithServiceTypeLoadBalancer().
+				Build()
+			builder = builder.WithAddons(registryAddon)
+			registryInfoCallback := func() {
+				fmt.Printf(`
+Registry Addon HELP:
+
+You have installed the registry addon deployed with an SSL certificate provided
+by cert-manager. The default certificate used is a self-signed certificate.
+As such if you try to push images to this registry with the standard:
+
+  $ docker push ${REGISTRY_IP}/image
+
+Without first adding its certificate to your local docker (or other client) chain
+of trust it will fail. The following provides an example of how to add the certificate
+using a standard docker installation on a Linux system where "/etc/docker" is the
+configuration directory for docker:
+
+  $ REGISTRY_IP="$(kubectl -n %s get svc registry -o=go-template='{{(index .status.loadBalancer.ingress 0).ip}}')"
+  $ sudo mkdir -p /etc/docker/certs.d/${REGISTRY_IP}/
+  $ kubectl -n %s get secrets registry-cert-secret -o=go-template='{{index .data "ca.crt"}}' | base64 -d | sudo tee /etc/docker/certs.d/${REGISTRY_IP}/ca.crt
+
+Note that this generally is not going to work verbatim on all systems and the
+above instructions should be considered just an example. Adjust for your own
+system and docker installation. You may also need to change ".ip" for ".host"
+if your service is provided a DNS name instead of an IP for its LB address.
+
+Afterwards you should be able to push images to the registry, e.g.:
+
+  $ docker pull kennethreitz/httpbin
+  $ docker tag kennethreitz/httpbin ${REGISTRY_IP}/httpbin
+  $ docker push ${REGISTRY_IP}/httpbin
+
+Images pushed this way should be immediately usable in pod configurations
+on the cluster as the certificate is automatically configured on the nodes.
+`, registryAddon.Namespace(), registryAddon.Namespace())
+			}
+			callbacks = append(callbacks, registryInfoCallback)
 		default:
 			invalid = append(invalid, addon)
 		}
@@ -139,6 +188,8 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 	if len(invalid) > 0 {
 		cobra.CheckErr(fmt.Errorf("%d addons were invalid: %s", len(invalid), invalid))
 	}
+
+	return callbacks
 }
 
 func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *environments.Builder {
