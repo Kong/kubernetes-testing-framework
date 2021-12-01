@@ -53,6 +53,10 @@ const (
 
 	// DefaultNamespace indicates the default namespace this addon will be deployed to.
 	DefaultNamespace = "cert-manager"
+
+	// DefaultIssuerName is the name of the default issuer that is provided
+	// with the certmanager addon installation.
+	DefaultIssuerName = "selfsigned"
 )
 
 type Addon struct {
@@ -188,21 +192,24 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 const (
 	manifestFormatter        = "https://github.com/jetstack/cert-manager/releases/download/v%s/cert-manager.yaml"
 	defaultIssuerWaitSeconds = 60
-	defaultIssuer            = `---
+)
+
+var (
+	defaultIssuer = fmt.Sprintf(`---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
-  name: selfsigned
+  name: %s
 spec:
   selfSigned: {}
-`
+`, DefaultIssuerName)
 )
 
 func (a *Addon) deployDefaultIssuer(ctx context.Context, cluster clusters.Cluster) error {
 	if err := clusters.ApplyYAML(ctx, cluster, defaultIssuer); err != nil {
 		return err
 	}
-	return clusters.WaitForCondition(ctx, cluster, DefaultNamespace, "clusterissuers.cert-manager.io", "selfsigned", "Ready", defaultIssuerWaitSeconds)
+	return clusters.WaitForCondition(ctx, cluster, DefaultNamespace, "clusterissuers.cert-manager.io", DefaultIssuerName, "Ready", defaultIssuerWaitSeconds)
 }
 
 func (a *Addon) cleanupDefaultIssuer(ctx context.Context, cluster clusters.Cluster) error {
