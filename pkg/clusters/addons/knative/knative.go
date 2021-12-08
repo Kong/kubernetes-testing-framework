@@ -64,7 +64,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	var waitingForObjects []runtime.Object
 	for i := 0; i < len(deploymentList.Items); i++ {
 		deployment := &(deploymentList.Items[i])
-		if deployment.Status.AvailableReplicas != *deployment.Spec.Replicas {
+		if deployment.Status.AvailableReplicas < *deployment.Spec.Replicas {
 			waitingForObjects = append(waitingForObjects, deployment)
 		}
 	}
