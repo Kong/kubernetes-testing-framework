@@ -1,5 +1,26 @@
 # Changelog
 
+## v0.11.0
+
+### Bug Fixes
+
+- Replicas exceeding the desired replica count (e.g. while a Deployment update
+  spawns replacement replicas) no longer blocks Knative readiness.
+  ([#177](https://github.com/Kong/kubernetes-testing-framework/pull/177))
+
+### Improvements
+
+- Namespace readiness checks confirm the presence of the namespace itself and
+  the presence of Deployments within it.
+  ([#166](https://github.com/Kong/kubernetes-testing-framework/pull/166))
+- Addons can now indicate dependencies on other addons.
+  ([#166](https://github.com/Kong/kubernetes-testing-framework/pull/166))
+- Kong addon instances now listen on TCP port 8899 for TLS connections.
+  ([#167](https://github.com/Kong/kubernetes-testing-framework/pull/167))
+- Added registry addon to provide a local Docker registry within the test
+  cluster.
+  ([#170](https://github.com/Kong/kubernetes-testing-framework/pull/170))
+
 ## v0.10.0
 
 ### Bug Fixes
