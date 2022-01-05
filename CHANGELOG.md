@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.11.1
+
+### Improvements
+
+- The default Kong Enterprise tag is now `2.7.0.0-alpine`.
+
 ## v0.11.0
 
 ### Bug Fixes
