@@ -15,6 +15,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/github"
 )
 
 // -----------------------------------------------------------------------------
@@ -29,7 +30,7 @@ const (
 	DefaultNamespace = "knative-serving"
 
 	// DefaultVersion is the Knative version deployed when the user requests no specific version
-	DefaultVersion = "knative-v1.1.1"
+	DefaultVersion = "0.0.0"
 )
 
 type addon struct {
@@ -53,6 +54,11 @@ func (a *addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 }
 
 func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
+	if a.version == "0.0.0" {
+		if err := a.useLatestKnativeVersion(); err != nil {
+			return err
+		}
+	}
 	return deployKnative(ctx, cluster, a.version)
 }
 
@@ -224,4 +230,15 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 			time.Sleep(time.Second)
 		}
 	}
+}
+
+// useLatestKnativeVersion locates and sets the istio version to deploy to the latest
+// non-prelease tag found.
+func (a *addon) useLatestKnativeVersion() error {
+	latestVersion, err := github.FindLatestReleaseForRepo("knative", "serving")
+	if err != nil {
+		return err
+	}
+	a.version = latestVersion.String()
+	return nil
 }
