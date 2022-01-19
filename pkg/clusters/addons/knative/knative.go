@@ -27,12 +27,17 @@ const (
 
 	// DefaultNamespace indicates the default namespace this addon will be deployed to.
 	DefaultNamespace = "knative-serving"
+
+	// DefaultVersion is the Knative version deployed when the user requests no specific version
+	DefaultVersion = "knative-v1.1.1"
 )
 
-type addon struct{}
+type addon struct {
+	version string
+}
 
 func New() clusters.Addon {
-	return &addon{}
+	return &addon{version: DefaultVersion}
 }
 
 // -----------------------------------------------------------------------------
@@ -48,11 +53,11 @@ func (a *addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 }
 
 func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
-	return deployKnative(ctx, cluster)
+	return deployKnative(ctx, cluster, a.version)
 }
 
 func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
-	return deleteKnative(ctx, cluster)
+	return deleteKnative(ctx, cluster, a.version)
 }
 
 func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
@@ -81,12 +86,11 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 // -----------------------------------------------------------------------------
 
 const (
-	// TODO: later handle targeting specific versions of Knative
-	knativeCRDs = "https://github.com/knative/serving/releases/download/v0.18.0/serving-crds.yaml"
-	knativeCore = "https://github.com/knative/serving/releases/download/v0.18.0/serving-core.yaml"
+	knativeCRDs = "https://github.com/knative/serving/releases/download/%s/serving-crds.yaml"
+	knativeCore = "https://github.com/knative/serving/releases/download/%s/serving-core.yaml"
 )
 
-func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
+func deployKnative(ctx context.Context, cluster clusters.Cluster, version string) error {
 	// generate a temporary kubeconfig since we use kubectl to deploy this addon
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
@@ -95,7 +99,7 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 	defer os.Remove(kubeconfig.Name())
 
 	// apply the CRDs: we wait here as this avoids any subsecond timing issues
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "--wait", "-f", knativeCRDs) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "--wait", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -104,7 +108,7 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// apply the core deployments, but don't wait because we're going to patch them
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", knativeCore) //nolint:gosec
+	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
 	stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -172,7 +176,7 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster) error {
 	}
 }
 
-func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
+func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string) error {
 	// generate a temporary kubeconfig since we use kubectl to cleanup this addon
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
@@ -181,7 +185,7 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
 	defer os.Remove(kubeconfig.Name())
 
 	// cleanup the core deployments, waiting for all components to tear down
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "--wait", "-f", knativeCore) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "--wait", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -192,7 +196,7 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// cleanup the CRDs, wait for them to be removed
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "--wait", "-f", knativeCRDs) //nolint:gosec
+	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "--wait", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
 	stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
