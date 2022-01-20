@@ -235,10 +235,10 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 // useLatestKnativeVersion locates and sets the knative version to deploy to the latest
 // non-prelease tag found.
 func (a *addon) useLatestKnativeVersion() error {
-	latestVersion, err := github.FindLatestReleaseForRepo("knative", "serving")
+	latestVersion, err := github.FindRawLatestReleaseForRepo("knative", "serving")
 	if err != nil {
 		return err
 	}
-	a.version = latestVersion.String()
+	a.version = latestVersion
 	return nil
 }
