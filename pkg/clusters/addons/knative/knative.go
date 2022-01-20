@@ -232,7 +232,7 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 	}
 }
 
-// useLatestKnativeVersion locates and sets the istio version to deploy to the latest
+// useLatestKnativeVersion locates and sets the knative version to deploy to the latest
 // non-prelease tag found.
 func (a *addon) useLatestKnativeVersion() error {
 	latestVersion, err := github.FindLatestReleaseForRepo("knative", "serving")
