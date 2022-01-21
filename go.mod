@@ -21,7 +21,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.65.0
 	google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368
-	k8s.io/api v0.22.4
+	k8s.io/api v0.23.2
 	k8s.io/apiextensions-apiserver v0.22.4
 	k8s.io/apimachinery v0.23.2
 	k8s.io/client-go v0.22.4
@@ -72,7 +72,7 @@ require (
 	go.opencensus.io v0.23.0 // indirect
 	golang.org/x/crypto v0.0.0-20210921155107-089bfa567519 // indirect
 	golang.org/x/sys v0.0.0-20211216021012-1d35b9e2eb4e // indirect
-	golang.org/x/term v0.0.0-20210220032956-6a3ed077a48d // indirect
+	golang.org/x/term v0.0.0-20210615171337-6886f2dfbf5b // indirect
 	golang.org/x/time v0.0.0-20210723032227-1f47c861a9ac // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.43.0 // indirect
