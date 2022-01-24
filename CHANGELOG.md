@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.12.0
+
+### Improvements
+
+- KNative defaults to the latest available version, and supports
+  user-supplied versions.
+  ([#196](https://github.com/Kong/kubernetes-testing-framework/pull/196))
+
 ## v0.11.1
 
 ### Improvements
