@@ -4,7 +4,7 @@
 
 ### Improvements
 
-- KNative defaults to the latest available version, and supports
+- Knative defaults to the latest available version, and supports
   user-supplied versions.
   ([#196](https://github.com/Kong/kubernetes-testing-framework/pull/196))
 
