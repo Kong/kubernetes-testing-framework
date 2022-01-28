@@ -94,6 +94,8 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 const (
 	knativeCRDs = "https://github.com/knative/serving/releases/download/%s/serving-crds.yaml"
 	knativeCore = "https://github.com/knative/serving/releases/download/%s/serving-core.yaml"
+	retryCount  = 5
+	retryWait   = 10
 )
 
 func deployKnative(ctx context.Context, cluster clusters.Cluster, version string) error {
@@ -105,7 +107,7 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster, version string
 	defer os.Remove(kubeconfig.Name())
 
 	// apply the CRDs: we wait here as this avoids any subsecond timing issues
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "--wait", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
@@ -114,12 +116,20 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster, version string
 	}
 
 	// apply the core deployments, but don't wait because we're going to patch them
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
-	stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+	// the CRDs applied earlier may not become available immediately, so retry this several times if it fails
+	for i := 0; i < retryCount; i++ {
+		cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
+		stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			if i == retryCount {
+				return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+			}
+			time.Sleep(time.Second * retryWait)
+		} else {
+			break
+		}
 	}
 
 	// the deployment manifests for knative include some CPU and Memory limits which
