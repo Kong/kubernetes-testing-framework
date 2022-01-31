@@ -21,10 +21,10 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.65.0
 	google.golang.org/genproto v0.0.0-20220107163113-42d7afdf6368
-	k8s.io/api v0.23.2
-	k8s.io/apiextensions-apiserver v0.23.2
+	k8s.io/api v0.23.3
+	k8s.io/apiextensions-apiserver v0.23.3
 	k8s.io/apimachinery v0.23.3
-	k8s.io/client-go v0.23.2
+	k8s.io/client-go v0.23.3
 	sigs.k8s.io/yaml v1.3.0
 )
 
