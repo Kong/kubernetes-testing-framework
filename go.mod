@@ -20,7 +20,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.66.0
-	google.golang.org/genproto v0.0.0-20220114231437-d2e6a121cae0
+	google.golang.org/genproto v0.0.0-20220118154757-00ab72f36ad5
 	k8s.io/api v0.23.3
 	k8s.io/apiextensions-apiserver v0.23.3
 	k8s.io/apimachinery v0.23.3
@@ -29,7 +29,7 @@ require (
 )
 
 require (
-	github.com/jetstack/cert-manager v1.6.1
+	github.com/jetstack/cert-manager v1.7.0
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 )
 
