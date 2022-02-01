@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.12.1
+
+### Bug Fixes
+
+- Retry Knative install in the event that CRDs are not yet available.
+  ([#209](https://github.com/Kong/kubernetes-testing-framework/pull/209))
+
 ## v0.12.0
 
 ### Improvements
