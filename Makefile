@@ -25,11 +25,12 @@ test.all: test.unit test.integration
 
 .PHONY: test.unit
 test.unit:
-	go test -race -v ./pkg/...
-
-.PHONY: test.e2e
-test.e2e:
-	@GOFLAGS="-tags=e2e_tests" go test -timeout 45m -race -v ./test/e2e/...
+	go test \
+		-race \
+		-v \
+		-covermode=atomic \
+		-coverprofile=unit.coverage.out \
+		./pkg/...
 
 .PHONY: test.integration
 test.integration:
@@ -39,5 +40,9 @@ test.integration:
 		-race \
 		-v \
 		-covermode=atomic \
-		-coverprofile=coverage.out \
+		-coverprofile=integration.coverage.out \
 		./test/integration/...
+
+.PHONY: test.e2e
+test.e2e:
+	@GOFLAGS="-tags=e2e_tests" go test -timeout 45m -race -v ./test/e2e/...
