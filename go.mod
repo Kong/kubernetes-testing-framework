@@ -29,7 +29,7 @@ require (
 )
 
 require (
-	github.com/jetstack/cert-manager v1.7.0
+	github.com/jetstack/cert-manager v1.7.1
 	github.com/opencontainers/image-spec v1.0.2 // indirect
 )
 
