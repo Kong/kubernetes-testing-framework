@@ -19,6 +19,7 @@ type Builder struct {
 
 	addons         clusters.Addons
 	clusterVersion *semver.Version
+	configPath     *string
 }
 
 // NewBuilder provides a new *Builder object.
@@ -42,11 +43,21 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 	return b
 }
 
+// WithConfig sets a filename containing a KIND config
+func (b *Builder) WithConfig(filename string) *Builder {
+	b.configPath = &filename
+	return b
+}
+
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 	deployArgs := make([]string, 0)
 	if b.clusterVersion != nil {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
+	}
+
+	if b.configPath != nil {
+		deployArgs = append(deployArgs, "--config", *b.configPath)
 	}
 
 	if err := createCluster(ctx, b.Name, deployArgs...); err != nil {
