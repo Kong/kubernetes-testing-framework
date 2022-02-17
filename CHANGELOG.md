@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.13.0
+
+### Improvements
+
+- Added `WithConfig()` to KIND cluster builder, which allows you to specify
+  a custom KIND configuration.
+  ([#222](https://github.com/Kong/kubernetes-testing-framework/pull/222))
+
 ## v0.12.1
 
 ### Bug Fixes
