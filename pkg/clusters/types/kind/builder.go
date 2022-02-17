@@ -44,6 +44,7 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 }
 
 // WithConfig sets a filename containing a KIND config
+// See: https://kind.sigs.k8s.io/docs/user/configuration/
 func (b *Builder) WithConfig(filename string) *Builder {
 	b.configPath = &filename
 	return b
