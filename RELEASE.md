@@ -36,7 +36,7 @@ Where `vX.X.X` is the release tag you'll be making.
 Given the `vX.X.X` tag from above (which should not yet have been made) you can trigger release testing and creation of the tag with the following:
 
 ```console
-$ GITHUB_TOKEN=<YOUR_TOKEN> GITHUB_ORG=kong GITHUB_REPO=kubernetes-testing-framework go run internal/ci/workflows/main.go release-testing.yaml main tag=vX.X.X
+$ GITHUB_TOKEN=<YOUR_TOKEN> GITHUB_ORG=kong GITHUB_REPO=kubernetes-testing-framework go run internal/ci/workflows/main.go release-testing.yaml main vX.X.X
 ```
 
 The above will start a workflow that runs the release tests, when they succeed the workflow will create the `vX.X.X` tag and then you can complete the release.
