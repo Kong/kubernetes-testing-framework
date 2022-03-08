@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.13.1
+
+### Bug Fixes
+
+- Updates dependencies for relevant Docker and Containerd GHSA reports.
+  [GHSA-qq97-vm5h-rrhg](https://github.com/advisories/GHSA-qq97-vm5h-rrhg)
+  [GHSA-crp2-qrr5-8pq7](https://github.com/advisories/GHSA-crp2-qrr5-8pq7)
+
 ## v0.13.0
 
 ### Improvements
