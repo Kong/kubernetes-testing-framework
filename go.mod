@@ -17,9 +17,9 @@ require (
 	github.com/spf13/viper v1.10.0
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/net v0.0.0-20220225172249-27dd8689420f // indirect
-	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
+	golang.org/x/oauth2 v0.0.0-20220223155221-ee480838109b
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/api v0.70.0
+	google.golang.org/api v0.71.0
 	google.golang.org/genproto v0.0.0-20220307174427-659dce7fcb03
 	k8s.io/api v0.23.4
 	k8s.io/apiextensions-apiserver v0.23.4
@@ -36,7 +36,7 @@ require (
 require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
-	cloud.google.com/go/compute v1.3.0 // indirect
+	cloud.google.com/go/compute v1.5.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.0+incompatible // indirect
