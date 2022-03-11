@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/container v1.2.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/containerd/containerd v1.6.1 // indirect
-	github.com/docker/docker v20.10.12+incompatible
+	github.com/docker/docker v20.10.13+incompatible
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
 	github.com/kong/go-kong v0.28.1
