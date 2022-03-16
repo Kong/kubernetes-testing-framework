@@ -8,14 +8,22 @@
 
 # Kong Kubernetes Testing Framework (KTF)
 
-Testing framework used by the [Kong Kubernetes Team][team] for the [Kong Kubernetes Ingress Controller (KIC)][kic].
+Testing framework used by the [Kong Kubernetes Team][team].
+
+Originally this testing framework was developed for the [Kong Kubernetes Ingress Controller (KIC)][kic] but is now used across multiple Kubernetes projects.
+
+This testing framework supports the following use cases:
+
+- **provide Kubernetes testing environments pre-deployed with addons for manual and automated testing via CLI or Golang**
+- **provide unit testing utilities for Golang tests which focus on Kubernetes**
+- **provide integration testing utilities for Golang tests which test Kubernetes controllers and other applications**
 
 [team]:https://github.com/orgs/Kong/teams/team-k8s
 [kic]:https://github.com/kong/kubernetes-ingress-controller
 
 # Requirements
 
-* [Go][go] `v1.16.x+`
+* [Go][go] `v1.18.x+`
 
 [go]:https://go.dev
 
@@ -23,11 +31,9 @@ Testing framework used by the [Kong Kubernetes Team][team] for the [Kong Kuberne
 
 The following are some of the available features of the KTF:
 
-- integration testing libraries for Kong on Kubernetes (Golang)
-- unit testing libraries for the Kong Proxy (Golang)
-- command line tool for testing environments and other testing features
-
-For the integration testing libraries you have the option to deploy the Kong Proxy _only_ to the Kubernetes cluster or to deploy the entire stack depending on your testing needs.
+- Command line tool for provisioning Kubernetes testing environments
+- Golang Kubernetes test environment provisioning with addons
+- Golang testing utilities for Kubernetes
 
 ## Command Line Tool
 
@@ -47,7 +53,11 @@ Otherwise you can use the shell script to install the latest release for your op
 $ curl --proto '=https' -sSf https://kong.github.io/kubernetes-testing-framework/install.sh | sh
 ```
 
-### Testing Environments
+If neither of these options suits you then you can install manually by navigating to the [RELEASES][releases] page and downloading the binary for your platform directly.
+
+[releases]:https://github.com/Kong/kubernetes-testing-framework/releases
+
+### Provisioning Kubernetes Testing Environments
 
 You can deploy a testing environment with the following command:
 
