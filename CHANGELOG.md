@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.13.2
+
+### Improvements
+
+- Added `--kong-admin-service-loadbalancer` to the `ktf envs create`
+  subcommand to make it easy to deploy the Kong Admin API as a
+  `LoadBalancer` type `Service` when deploying with the Kong addon.
+  [#245](https://github.com/Kong/kubernetes-testing-framework/pull/245)
+
 ## v0.13.1
 
 ### Bug Fixes
