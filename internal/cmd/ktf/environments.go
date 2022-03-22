@@ -49,6 +49,7 @@ func init() { //nolint:gochecknoinits
 	// addon configurations
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
 	environmentsCreateCmd.PersistentFlags().Bool("kong-disable-controller", false, "indicate whether the kong addon should have the controller disabled (proxy only)")
+	environmentsCreateCmd.PersistentFlags().Bool("kong-admin-service-loadbalancer", false, "indicate whether the kong addon should deploy the proxy admin service as a LoadBalancer type")
 	environmentsCreateCmd.PersistentFlags().String("kong-dbmode", "off", "indicate the backend dbmode to use for kong (default: \"off\" (DBLESS mode))")
 }
 
@@ -198,6 +199,17 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 	disableController, err := cmd.PersistentFlags().GetBool("kong-disable-controller")
 	cobra.CheckErr(err)
 
+	if disableController {
+		builder.WithControllerDisabled()
+	}
+
+	enableAdminSvcLB, err := cmd.PersistentFlags().GetBool("kong-admin-service-loadbalancer")
+	cobra.CheckErr(err)
+
+	if enableAdminSvcLB {
+		builder.WithProxyAdminServiceTypeLoadBalancer()
+	}
+
 	dbmode, err := cmd.PersistentFlags().GetString("kong-dbmode")
 	cobra.CheckErr(err)
 
@@ -208,10 +220,6 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 		builder.WithPostgreSQL()
 	default:
 		cobra.CheckErr(fmt.Errorf("%s is not a valid dbmode for kong, supported modes are \"off\" (DBLESS) or \"postgres\"", dbmode))
-	}
-
-	if disableController {
-		builder.WithControllerDisabled()
 	}
 
 	return envBuilder.WithAddons(builder.Build())
