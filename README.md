@@ -70,7 +70,7 @@ $ ktf environments delete --name <NAME>
 
 #### Examples
 
-Commonly this tool is used to deploy a Kubernetes enviroment with addons such as the [Kong Gateway](https://github.com/kong/kong).
+Commonly this tool is used to deploy a Kubernetes environment with addons such as the [Kong Gateway](https://github.com/kong/kong).
 
 You can deploy a cluster with the Kong Gateway already deployed and accessible via `LoadBalancer` services by running the following:
 
