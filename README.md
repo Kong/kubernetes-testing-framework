@@ -24,6 +24,7 @@ This testing framework supports the following use cases:
 # Requirements
 
 * [Go][go] `v1.18.x+`
+* Linux (Mac/Windows not currently supported)
 
 [go]:https://go.dev
 
