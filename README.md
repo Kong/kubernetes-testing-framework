@@ -30,15 +30,11 @@ This testing framework supports the following use cases:
 
 # Usage
 
-The following are some of the available features of the KTF:
-
-- Command line tool for provisioning Kubernetes testing environments
-- Golang Kubernetes test environment provisioning with addons
-- Golang testing utilities for Kubernetes
+This framework can be used via command-line interface or as a Golang library.
 
 ## Command Line Tool
 
-This project provides a command line tool `ktf` which can be used for reason such as building and maintaining a testing environment for Kong on Kubernetes.
+This project provides a command-line tool named `ktf` which can be used to build Kubernetes testing environments.
 
 ### Install
 
@@ -66,7 +62,7 @@ You can deploy a testing environment with the following command:
 $ ktf environments create --generate-name
 ```
 
-And it can be torn down with this command:
+Testing environments can be deleted with this command:
 
 ```shell
 $ ktf environments delete --name <NAME>
@@ -74,21 +70,21 @@ $ ktf environments delete --name <NAME>
 
 #### Examples
 
-The most common use cases will require some addon applications to be deployed to the cluster, particular actually deploying the [Kong Proxy](https://github.com/kong/kong) itself.
+Commonly this tool is used to deploy a Kubernetes enviroment with addons such as the [Kong Gateway](https://github.com/kong/kong).
 
-You can deploy a cluster with the Kong proxy already deployed and accessible via `LoadBalancer` services by running the following:
+You can deploy a cluster with the Kong Gateway already deployed and accessible via `LoadBalancer` services by running the following:
 
 ```shell
-$ ktf environments create --name kong-proxy-testing --addon metallb --addon kong
+$ ktf environments create --name kong-gateway-testing --addon metallb --addon kong
 ```
 
 Once the cluster is up configure your `kubectl` to use it:
 
 ```shell
-$ kubectl cluster-info --context kind-kong-proxy-testing
+$ kubectl cluster-info --context kind-kong-gateway-testing
 ```
 
-You can see the IP addresses where you can reach the proxy and the Admin API with:
+You can see the IP addresses where you can reach the Gateway and the Admin API with:
 
 ```shell
 $ kubectl -n kong-system get services
