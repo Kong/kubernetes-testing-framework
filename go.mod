@@ -9,7 +9,7 @@ require (
 	github.com/docker/docker v20.10.14+incompatible
 	github.com/google/go-github/v39 v39.2.0
 	github.com/google/uuid v1.3.0
-	github.com/kong/go-kong v0.28.1
+	github.com/kong/go-kong v0.29.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/sirupsen/logrus v1.8.1
