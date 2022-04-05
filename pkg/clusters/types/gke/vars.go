@@ -20,7 +20,7 @@ const (
 	GKEClusterType clusters.Type = "gke"
 
 	// GKECredsVar indicates the environment variable used to provide auth credentials for GKE
-	GKECredsVar = "GOOGLE_APPLICATION_CREDENTIALS"
+	GKECredsVar = "GOOGLE_APPLICATION_CREDENTIALS" //nolint:gosec
 
 	// GKEProjectVar indicates the environment variable used to provide a default gcloud project
 	GKEProjectVar = "GOOGLE_PROJECT"

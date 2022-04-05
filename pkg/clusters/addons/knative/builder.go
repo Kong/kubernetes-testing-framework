@@ -24,8 +24,8 @@ func (b *Builder) WithVersion(version string) (*Builder, error) {
 }
 
 // Build creates a knative addon using the builder parameters
-func (b *Builder) Build() *addon {
-	return &addon{
+func (b *Builder) Build() *Addon {
+	return &Addon{
 		version: b.version,
 	}
 }

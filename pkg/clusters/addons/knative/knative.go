@@ -33,27 +33,27 @@ const (
 	DefaultVersion = "0.0.0"
 )
 
-type addon struct {
+type Addon struct {
 	version string
 }
 
 func New() clusters.Addon {
-	return &addon{version: DefaultVersion}
+	return &Addon{version: DefaultVersion}
 }
 
 // -----------------------------------------------------------------------------
 // Knative Addon - Addon Implementation
 // -----------------------------------------------------------------------------
 
-func (a *addon) Name() clusters.AddonName {
+func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
-func (a *addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
+func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
 	return nil
 }
 
-func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if a.version == "0.0.0" {
 		if err := a.useLatestKnativeVersion(); err != nil {
 			return err
@@ -62,11 +62,11 @@ func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	return deployKnative(ctx, cluster, a.version)
 }
 
-func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	return deleteKnative(ctx, cluster, a.version)
 }
 
-func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
+func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
 	deploymentList, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).List(ctx, metav1.ListOptions{})
 	if err != nil {
 		return nil, false, err
@@ -244,7 +244,7 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 
 // useLatestKnativeVersion locates and sets the knative version to deploy to the latest
 // non-prelease tag found.
-func (a *addon) useLatestKnativeVersion() error {
+func (a *Addon) useLatestKnativeVersion() error {
 	latestVersion, err := github.FindRawLatestReleaseForRepo("knative", "serving")
 	if err != nil {
 		return err
