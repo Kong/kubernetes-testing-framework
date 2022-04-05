@@ -15,12 +15,17 @@ jobs:
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
+    - name: setup golang
+      uses: actions/setup-go@v2
+      with:
+        go-version: '^1.18'
+
     - name: checkout repository
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
     - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v2.5.2
+      uses: golangci/golangci-lint-action@v3.1.0
       with:
-        version: v1.42.1
+        version: v1.45.2
