@@ -16,7 +16,7 @@ import (
 // InspectDockerContainer is a helper function that uses the local docker environment
 // provides the full container spec for a container present in that environment by name.
 func InspectDockerContainer(containerID string) (*types.ContainerJSON, error) {
-	cli, err := client.NewEnvClient() //nolint:staticcheck
+	cli, err := client.NewEnvClient() //nolint:staticcheck,nolintlint
 	if err != nil {
 		return nil, err
 	}
