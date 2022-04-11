@@ -45,7 +45,7 @@ const (
 
 	// DefaultTCPServicePort indicates the default open port that will be used for TCP traffic.
 	DefaultTCPServicePort = 8888
-	
+
 	// DefaultTLSServicePort indicates the default open port that will be used for TLS traffic.
 	DefaultTLSServicePort = 8899
 )
