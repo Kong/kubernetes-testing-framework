@@ -42,4 +42,7 @@ const (
 
 	// DefaultUDPServicePort indicates the default open port to be found on the Kong proxy's UDP service.
 	DefaultUDPServicePort = 9999
+
+	// DefaultUDPServicePort indicates the default open port that will be used for TCP traffic.
+	DefaultTCPServicePort = 8888
 )
