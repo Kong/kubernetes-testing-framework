@@ -370,10 +370,10 @@ func enterpriseDefaults() []string {
 // test cases to use these how they see fit AND clean up after themselves.
 func exposePortsDefault() []string {
 	return []string{
-		"--set", "proxy.stream[0].containerPort=8888",
-		"--set", "proxy.stream[0].servicePort=8888",
-		"--set", "proxy.stream[1].containerPort=9999",
-		"--set", "proxy.stream[1].servicePort=9999",
+		"--set", fmt.Sprintf("proxy.stream[0].containerPort=%d", DefaultTCPServicePort),
+		"--set", fmt.Sprintf("proxy.stream[0].servicePort=%d", DefaultTCPServicePort),
+		"--set", fmt.Sprintf("proxy.stream[1].containerPort=%d", DefaultUDPServicePort),
+		"--set", fmt.Sprintf("proxy.stream[1].servicePort=%d", DefaultUDPServicePort),
 		"--set", "proxy.stream[1].parameters[0]=udp",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
 		"--set", "proxy.stream[2].containerPort=8899",
