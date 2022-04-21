@@ -19,8 +19,8 @@ require (
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/api v0.74.0
-	google.golang.org/genproto v0.0.0-20220407144326-9054f6ed7bac
+	google.golang.org/api v0.75.0
+	google.golang.org/genproto v0.0.0-20220414192740-2d67ff6cf2b4
 	k8s.io/api v0.23.5
 	k8s.io/apiextensions-apiserver v0.23.4
 	k8s.io/apimachinery v0.23.5
@@ -36,7 +36,7 @@ require (
 require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
-	cloud.google.com/go/compute v1.5.0 // indirect
+	cloud.google.com/go/compute v1.6.0 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/docker/distribution v2.8.0+incompatible // indirect
