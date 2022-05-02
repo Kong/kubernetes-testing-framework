@@ -19,7 +19,7 @@ require (
 	golang.org/x/net v0.0.0-20220412020605-290c469a71a5 // indirect
 	golang.org/x/oauth2 v0.0.0-20220411215720-9780585627b5
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/api v0.76.0
+	google.golang.org/api v0.77.0
 	google.golang.org/genproto v0.0.0-20220414192740-2d67ff6cf2b4
 	k8s.io/api v0.23.6
 	k8s.io/apiextensions-apiserver v0.23.4
