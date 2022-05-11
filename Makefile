@@ -13,6 +13,10 @@ build:
 	mkdir -p build/
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o build/ktf.$(GOOS).$(GOARCH) cmd/ktf/main.go
 
+.PHONY: install
+install:
+	go install ./cmd/ktf
+
 .PHONY: lint
 lint:
 	@golangci-lint run ./...
