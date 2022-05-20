@@ -212,7 +212,7 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 		if len(imageParts) == 1 {
 			imageParts[1] = "latest"
 		}
-		if len(imageParts) != 2 {
+		if len(imageParts) != 2 { //nolint:gomnd
 			cobra.CheckErr(fmt.Errorf("malformed --kong-gateway-image: %s", customGatewayImage))
 		}
 		builder.WithProxyImage(imageParts[0], imageParts[1])
