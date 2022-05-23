@@ -55,25 +55,6 @@ func ClusterInitHooks(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
-	// ensure the secret token for the default sa is available
-	var defaultSATokenReady bool
-	for !defaultSATokenReady {
-		select {
-		case <-ctx.Done():
-			return fmt.Errorf("context completed before cluster init hooks could finish: %w", ctx.Err())
-		default:
-			defaultSA, err = cluster.Client().CoreV1().ServiceAccounts(namespace.Name).Get(ctx, defaultSA.Name, metav1.GetOptions{})
-			if err != nil {
-				return err
-			}
-			if len(defaultSA.Secrets) > 0 {
-				defaultSATokenReady = true
-			} else {
-				time.Sleep(time.Second)
-			}
-		}
-	}
-
 	// give the default SA in this namespace cluster admin
 	crb := rbacv1.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
