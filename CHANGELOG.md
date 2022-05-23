@@ -1,5 +1,33 @@
 # Changelog
 
+## v0.14.0
+
+### Bug Fixes
+
+- Kubernetes `v1.24.0` became the default recently for `kind` based clusters,
+  which [had a backwards incompatible change][1.24.0-changelog] that caused new
+  KTF builds to fail due to a [significant change in how ServiceAccounts worked
+  which stopped their Secrets from being automatically generated][1.24.0-sas].
+  A patch was issued to stop waiting for the default `ServiceAccount` to have a
+  `Secret` to consider the cluster initialized.
+  [#273](https://github.com/Kong/kubernetes-testing-framework/pull/273)
+
+[1.24.0-changelog]:https://github.com/kubernetes/kubernetes/blob/master/CHANGELOG/CHANGELOG-1.24.md#no-really-you-must-read-this-before-you-upgrade
+[1.24.0-sas]:https://github.com/kubernetes/enhancements/tree/master/keps/sig-auth/2799-reduction-of-secret-based-service-account-token
+
+## v0.13.4
+
+### Added
+
+- The `--kong-gateway-image` flag can now be used with the CLI to signal which
+  Kong Gateway container image to use in environments.
+
+## v0.13.3
+
+### Improvements
+
+- various dependency updates
+
 ## v0.13.2
 
 ### Improvements
