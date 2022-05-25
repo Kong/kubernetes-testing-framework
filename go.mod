@@ -34,6 +34,8 @@ require (
 
 require github.com/docker/go-connections v0.4.0 // indirect
 
+require sigs.k8s.io/controller-runtime v0.11.0
+
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect
 	github.com/Microsoft/go-winio v0.5.2 // indirect
@@ -43,6 +45,7 @@ require (
 	github.com/docker/distribution v2.8.0+incompatible // indirect
 	github.com/docker/go-units v0.4.0 // indirect
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
+	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.1 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
