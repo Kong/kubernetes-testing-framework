@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.14.1
+
+### Added
+
+- A new `clusters.Cleaner` object was added to help dynamically clean up test
+  resources in Kubernetes integration tests.
+
 ## v0.14.0
 
 ### Bug Fixes
