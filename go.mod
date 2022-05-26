@@ -34,7 +34,7 @@ require (
 
 require github.com/docker/go-connections v0.4.0 // indirect
 
-require sigs.k8s.io/controller-runtime v0.11.0
+require sigs.k8s.io/controller-runtime v0.12.1
 
 require (
 	cloud.google.com/go/compute v1.6.1 // indirect
