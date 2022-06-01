@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.14.2
+
+### Added
+
+- Added `clusters.KustomizeDeleteForCluster` utility to clean up kustomize
+  deployed manifests that were deployed previously to a cluster.
+
 ## v0.14.1
 
 ### Added
