@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.14.1
+
+### Added
+
+- Added a `clusters.Cleaner` type which can be used to generically clean up
+  cluster resources.
+
 ## v0.14.0
 
 ### Bug Fixes
