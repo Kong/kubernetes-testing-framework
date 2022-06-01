@@ -222,6 +222,21 @@ func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeUR
 	return ApplyYAML(ctx, cluster, stdout.String())
 }
 
+// KustomizeDeleteForCluster deletes the provided kustomize manafests from the cluster
+func KustomizeDeleteForCluster(ctx context.Context, cluster Cluster, kustomizeURL string) error {
+	// generate the kustomize YAML
+	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kubectl", "kustomize", kustomizeURL)
+	cmd.Stdout = stdout
+	cmd.Stderr = stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("failed to deploy kong CRDs STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+	}
+
+	// apply the kustomize YAML to the cluster
+	return DeleteYAML(ctx, cluster, stdout.String())
+}
+
 // ApplyYAML applies a given YAML manifest to the cluster provided
 func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
 	return kubectlSubcommandWithYAML(ctx, cluster, "apply", yaml)
