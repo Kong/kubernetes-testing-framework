@@ -15,11 +15,11 @@ require (
 	github.com/spf13/cobra v1.4.0
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.7.2
-	golang.org/x/net v0.0.0-20220526153639-5463443f8c37 // indirect
+	golang.org/x/net v0.0.0-20220607020251-c690dde0001d // indirect
 	golang.org/x/oauth2 v0.0.0-20220524215830-622c5d57e401
 	golang.org/x/text v0.3.7 // indirect
-	google.golang.org/api v0.82.0
-	google.golang.org/genproto v0.0.0-20220527130721-00d5c0f3be58
+	google.golang.org/api v0.83.0
+	google.golang.org/genproto v0.0.0-20220602131408-e326c6e8e9c8
 	k8s.io/api v0.24.1
 	k8s.io/apiextensions-apiserver v0.24.1
 	k8s.io/apimachinery v0.24.1
@@ -90,7 +90,7 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.46.2 // indirect
+	google.golang.org/grpc v1.47.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
