@@ -50,6 +50,7 @@ func init() { //nolint:gochecknoinits
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
 	environmentsCreateCmd.PersistentFlags().Bool("kong-disable-controller", false, "indicate whether the kong addon should have the controller disabled (proxy only)")
 	environmentsCreateCmd.PersistentFlags().Bool("kong-admin-service-loadbalancer", false, "indicate whether the kong addon should deploy the proxy admin service as a LoadBalancer type")
+	environmentsCreateCmd.PersistentFlags().String("kong-ingress-controller-image", "", "use a specific ingress controller container image for the Gateway (proxy)")
 	environmentsCreateCmd.PersistentFlags().String("kong-gateway-image", "", "use a specific container image for the Gateway (proxy)")
 	environmentsCreateCmd.PersistentFlags().String("kong-dbmode", "off", "indicate the backend dbmode to use for kong (default: \"off\" (DBLESS mode))")
 }
@@ -210,12 +211,26 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 	if customGatewayImage != "" {
 		imageParts := strings.Split(customGatewayImage, ":")
 		if len(imageParts) == 1 {
-			imageParts[1] = "latest"
+			imageParts = append(imageParts, "latest")
 		}
 		if len(imageParts) != 2 { //nolint:gomnd
 			cobra.CheckErr(fmt.Errorf("malformed --kong-gateway-image: %s", customGatewayImage))
 		}
 		builder.WithProxyImage(imageParts[0], imageParts[1])
+	}
+
+	customControllerImage, err := cmd.PersistentFlags().GetString("kong-ingress-controller-image")
+	cobra.CheckErr(err)
+
+	if customControllerImage != "" {
+		imageParts := strings.Split(customControllerImage, ":")
+		if len(imageParts) == 1 {
+			imageParts = append(imageParts, "latest")
+		}
+		if len(imageParts) != 2 { //nolint:gomnd
+			cobra.CheckErr(fmt.Errorf("malformed --kong-ingress-controller-image: %s", customControllerImage))
+		}
+		builder.WithControllerImage(imageParts[0], imageParts[1])
 	}
 
 	enableAdminSvcLB, err := cmd.PersistentFlags().GetBool("kong-admin-service-loadbalancer")

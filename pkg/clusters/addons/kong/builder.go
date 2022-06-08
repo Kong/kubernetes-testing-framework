@@ -21,6 +21,8 @@ type Builder struct {
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
+	ingressControllerImage    string
+	ingressControllerImageTag string
 
 	// proxy server general configuration options
 	proxyAdminServiceTypeLoadBalancer bool
@@ -68,6 +70,8 @@ func (b *Builder) Build() *Addon {
 		deployArgs: b.deployArgs,
 
 		ingressControllerDisabled: b.ingressControllerDisabled,
+		ingressControllerImage:    b.ingressControllerImage,
+		ingressControllerImageTag: b.ingressControllerImageTag,
 
 		proxyAdminServiceTypeLoadBalancer: b.proxyAdminServiceTypeLoadBalancer,
 		proxyDBMode:                       b.proxyDBMode,
@@ -110,6 +114,14 @@ func (b *Builder) WithPostgreSQL() *Builder {
 func (b *Builder) WithProxyImage(repo, tag string) *Builder {
 	b.proxyImage = repo
 	b.proxyImageTag = tag
+	return b
+}
+
+// WithControllerImage configures the ingress controller
+// container image name and tag for the Kong proxy.
+func (b *Builder) WithControllerImage(repo, tag string) *Builder {
+	b.ingressControllerImage = repo
+	b.ingressControllerImageTag = tag
 	return b
 }
 
