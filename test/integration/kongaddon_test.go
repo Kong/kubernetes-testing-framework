@@ -33,7 +33,7 @@ func (tc customImageTest) name() string {
 	return fmt.Sprintf("KongAddonImages:[%s,%s]", tc.controllerImage(), tc.proxyImage())
 }
 
-func TestKongAddontWithCustomImage(t *testing.T) {
+func TestKongAddonWithCustomImage(t *testing.T) {
 	tests := []customImageTest{
 		{
 			controllerImageRepo: "kong/kubernetes-ingress-controller",
