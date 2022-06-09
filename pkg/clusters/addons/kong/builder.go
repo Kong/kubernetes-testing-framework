@@ -117,8 +117,7 @@ func (b *Builder) WithProxyImage(repo, tag string) *Builder {
 	return b
 }
 
-// WithControllerImage configures the ingress controller
-// container image name and tag for the Kong proxy.
+// WithControllerImage configures the ingress controller container image name and tag.
 func (b *Builder) WithControllerImage(repo, tag string) *Builder {
 	b.ingressControllerImage = repo
 	b.ingressControllerImageTag = tag
