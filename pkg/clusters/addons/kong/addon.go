@@ -64,6 +64,8 @@ type Addon struct {
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
+	ingressControllerImage    string
+	ingressControllerImageTag string
 
 	// proxy server general configuration options
 	proxyAdminServiceTypeLoadBalancer bool
@@ -207,6 +209,14 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "ingressController.installCRDs=false",
 			"--skip-crds",
 		}...)
+	}
+
+	// set the ingress controller container image values if provided by the caller
+	if a.ingressControllerImage != "" {
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.image.repository=%s", a.ingressControllerImage)}...)
+	}
+	if a.ingressControllerImageTag != "" {
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.image.tag=%s", a.ingressControllerImageTag)}...)
 	}
 
 	// set the container image values if provided by the caller
