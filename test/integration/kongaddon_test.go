@@ -35,8 +35,18 @@ func (tc customImageTest) name() string {
 
 func TestKongAddontWithCustomImage(t *testing.T) {
 	tests := []customImageTest{
-		{"kong/kubernetes-ingress-controller", "2.3.0", "kong", "2.7"},
-		{"kong/kubernetes-ingress-controller", "2.3.1", "kong", "2.8"},
+		{
+			controllerImageRepo: "kong/kubernetes-ingress-controller",
+			controllerImageTag:  "2.3.0",
+			proxyImageRepo:      "kong",
+			proxyImageTag:       "2.7",
+		},
+		{
+			controllerImageRepo: "kong/kubernetes-ingress-controller",
+			controllerImageTag:  "2.3.1",
+			proxyImageRepo:      "kong",
+			proxyImageTag:       "2.8",
+		},
 	}
 
 	for _, tc := range tests {
@@ -77,6 +87,6 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 	require.Len(t, kongDeployment.Spec.Template.Spec.Containers, 2)
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Name, "ingress-controller")
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Name, "proxy")
-	require.Contains(t, kongDeployment.Spec.Template.Spec.Containers[0].Image, tc.controllerImage())
-	require.Contains(t, kongDeployment.Spec.Template.Spec.Containers[1].Image, tc.proxyImage())
+	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Image, tc.controllerImage())
+	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Image, tc.proxyImage())
 }
