@@ -88,8 +88,11 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	pbcluster := containerpb.Cluster{
 		Name:             b.Name,
 		InitialNodeCount: 1,
-		AddonsConfig:     &containerpb.AddonsConfig{}, // empty config to indicate that no addons are desired
-		ResourceLabels:   map[string]string{GKECreateLabel: createdByID},
+		// disable the GKE ingress controller, which will otherwise interact with classless Ingresses
+		AddonsConfig: &containerpb.AddonsConfig{
+			HttpLoadBalancing: &containerpb.HttpLoadBalancing{Disabled: true},
+		},
+		ResourceLabels: map[string]string{GKECreateLabel: createdByID},
 	}
 	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
 
