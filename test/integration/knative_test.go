@@ -4,8 +4,8 @@
 package integration
 
 import (
-	"fmt"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -52,22 +52,28 @@ func TestEnvironmentWithKnative(t *testing.T) {
 	require.True(t, ready)
 
 	t.Log("verifying that knative deployments are up and running")
-	deploymentList, err := env.Cluster().Client().AppsV1().Deployments(knative.DefaultNamespace).List(ctx, metav1.ListOptions{})
-	require.NoError(t, err)
-	foundDeployments := map[string]bool{
-		"activator":  false,
-		"autoscaler": false,
-		"controller": false,
-		"webhook":    false,
-	}
-	for _, deployment := range deploymentList.Items {
-		t.Logf("found knative deployment %s", deployment.Name)
-		require.Equal(t, *deployment.Spec.Replicas, deployment.Status.ReadyReplicas)
-		foundDeployments[deployment.Name] = true
-	}
-	for deploymentName, found := range foundDeployments {
-		require.True(t, found, fmt.Sprintf("found deployment %s", deploymentName))
-	}
+	require.Eventually(t, func() bool {
+		foundDeployments := map[string]bool{
+			"activator":  false,
+			"autoscaler": false,
+			"controller": false,
+			"webhook":    false,
+		}
+		deploymentList, err := env.Cluster().Client().AppsV1().Deployments(knative.DefaultNamespace).List(ctx, metav1.ListOptions{})
+		if err == nil {
+			for _, deployment := range deploymentList.Items {
+				if *deployment.Spec.Replicas == deployment.Status.ReadyReplicas {
+					foundDeployments[deployment.Name] = true
+				}
+			}
+		}
+		for _, found := range foundDeployments {
+			if !found {
+				return false
+			}
+		}
+		return true
+	}, time.Minute, time.Second*5)
 
 	t.Log("cleaning up the knative addon")
 	require.NoError(t, env.Cluster().DeleteAddon(ctx, knativeAddon))
