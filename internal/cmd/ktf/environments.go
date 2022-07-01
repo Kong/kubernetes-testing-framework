@@ -12,6 +12,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kuma"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/registry"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
@@ -137,6 +138,8 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 			builder = builder.WithAddons(httpbin.New())
 		case "cert-manager":
 			builder = builder.WithAddons(certmanager.New())
+		case "kuma":
+			builder = builder.WithAddons(kuma.New())
 		case "registry":
 			registryAddon := registry.NewBuilder().
 				WithServiceTypeLoadBalancer().

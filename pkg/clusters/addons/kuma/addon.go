@@ -240,7 +240,7 @@ func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err e
 	for i := 0; i < 5; i++ {
 		err = clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
 		if err != nil {
-			time.Sleep(time.Second * 5)
+			time.Sleep(time.Second * 5) //nolint:gomnd
 		} else {
 			break
 		}
