@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.15.0
+
+### Added
+
+- The new Kuma addon installs the Kuma service mesh.
+- `--kong-ingress-controller-image` selects the ingress controller image
+  for the Kong addon.
+
+### Fixed
+
+- Disabled Google Ingress controller on GKE to avoid conflicts with other
+  controllers.
+
 ## v0.14.2
 
 ### Added
