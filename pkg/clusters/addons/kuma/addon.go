@@ -164,7 +164,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	if a.mtlsEnabled {
-		a.enableMTLS(ctx, cluster)
+		if err := a.enableMTLS(ctx, cluster); err != nil {
+			return fmt.Errorf("unable to deploy MTLS Mesh configuration: %w", err)
+		}
 	}
 
 	return nil
