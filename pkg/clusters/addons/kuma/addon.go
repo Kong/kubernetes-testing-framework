@@ -234,6 +234,16 @@ spec:
     enabledBackend: ca-1`
 )
 
-func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) error {
-	return clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+// enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
+// startup
+func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
+	for i := 0; i < 5; i++ {
+		err = clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+		if err != nil {
+			time.Sleep(time.Second * 5)
+		} else {
+			break
+		}
+	}
+	return err
 }
