@@ -114,7 +114,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 var (
 	defaultStartIP = net.ParseIP("0.0.0.240")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
-	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.9.5/manifests/metallb.yaml"
+	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/metallb.yaml"
 	metalConfig    = "config"
 	secretKeyLen   = 128
 )

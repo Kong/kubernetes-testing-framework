@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.15.1
+
+### Improvements
+
+- Update metallb to `v0.12.1`.
+
 ## v0.15.0
 
 ### Added
