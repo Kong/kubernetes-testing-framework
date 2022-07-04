@@ -2,6 +2,9 @@
 
 ## v0.15.1
 
+- Added missing Kuma addon CLI entry.
+- Retry Kuma mesh installations to handle delayed webhook start.
+
 ### Improvements
 
 - Update metallb to `v0.12.1`.

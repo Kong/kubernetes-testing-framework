@@ -12,15 +12,12 @@ import (
 
 	"github.com/blang/semver/v4"
 	"github.com/sirupsen/logrus"
-	batchv1 "k8s.io/api/batch/v1"
-	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/github"
 )
 
 // -----------------------------------------------------------------------------
@@ -47,9 +44,7 @@ type Addon struct {
 	name   string
 	logger *logrus.Logger
 
-	version          semver.Version
-	kumaDeployScript *corev1.ConfigMap
-	kumaDeployJob    *batchv1.Job
+	version semver.Version
 
 	mtlsEnabled bool
 }
@@ -200,17 +195,6 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 // Kuma Addon - Private Methods
 // -----------------------------------------------------------------------------
 
-// useLatestKumaVersion locates and sets the kuma version to deploy to the latest
-// non-prelease tag found.
-func (a *Addon) useLatestKumaVersion() error {
-	latestVersion, err := github.FindLatestReleaseForRepo("kumahq", "kuma")
-	if err != nil {
-		return err
-	}
-	a.version = *latestVersion
-	return nil
-}
-
 // TODO this actually just clobbers the default mesh, which ideally we don't want to do
 // however, Kuma apparently doesn't have a clientset, so vov. could do JSON patches, but eh
 
@@ -234,6 +218,16 @@ spec:
     enabledBackend: ca-1`
 )
 
-func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) error {
-	return clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+// enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
+// startup
+func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
+	for i := 0; i < 5; i++ {
+		err = clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+		if err != nil {
+			time.Sleep(time.Second * 5) //nolint:gomnd
+		} else {
+			break
+		}
+	}
+	return err
 }
