@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.15.1
+
+### Improvements
+
+- Update metallb to `v0.12.1`.
+
 ## v0.15.0
 
 ### Added
@@ -7,7 +13,6 @@
 - The new Kuma addon installs the Kuma service mesh.
 - `--kong-ingress-controller-image` selects the ingress controller image
   for the Kong addon.
-- The metallb tag is now `v0.12.1`.
 
 ### Fixed
 
