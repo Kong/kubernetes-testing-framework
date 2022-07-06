@@ -38,6 +38,8 @@ jobs:
     - name: run integration tests
       run: make test.integration
       env:
+        KTF_TEST_KONG_PULL_USERNAME: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+        KTF_TEST_KONG_PULL_PASSWORD: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
         KONG_LICENSE_DATA: ${{ secrets.KONG_LICENSE_DATA }}
         NCPU: 2 # it was found that github actions (specifically) did not seem to perform well when spawning
                 # multiple kind clusters within a single job so this is hardcoded to 2 to ensure a limit of 2 clusters at any one point.

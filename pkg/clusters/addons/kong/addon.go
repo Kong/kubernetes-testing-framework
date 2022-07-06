@@ -16,6 +16,9 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/cli-runtime/pkg/genericclioptions"
+	"k8s.io/kubectl/pkg/cmd/create"
+	"k8s.io/kubectl/pkg/scheme"
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
@@ -51,6 +54,9 @@ const (
 	// default for the Kbuernetes secret that will be deployed containing the
 	// session configuration for the Kong Admin GUI in enterprise mode.
 	DefaultAdminGUISessionConfSecretName = "kong-session-config"
+
+	// ProxyPullSecretName is the name of the Secret used by the WithProxyImagePullSecret() builder
+	ProxyPullSecretName = "proxy-pull"
 )
 
 // Addon is a Kong Proxy addon which can be deployed on a clusters.Cluster.
@@ -72,11 +78,19 @@ type Addon struct {
 	proxyDBMode                       DBMode
 	proxyImage                        string
 	proxyImageTag                     string
+	proxyPullSecret                   pullSecret
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
 	proxyEnterpriseSuperAdminPassword string
 	proxyEnterpriseLicenseJSON        string
+}
+
+type pullSecret struct {
+	Server   string
+	Username string
+	Password string
+	Email    string
 }
 
 // New produces a new clusters.Addon for Kong but uses a very opionated set of
@@ -190,6 +204,41 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
 	}
 
+	// create a namespace ahead of deployment so things like license secrets and other configurations
+	// can be preloaded.
+	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
+		return err
+	}
+
+	if a.proxyPullSecret != (pullSecret{}) {
+		// create the pull Secret
+		opts := create.CreateSecretDockerRegistryOptions{
+			Name:       ProxyPullSecretName,
+			Namespace:  a.namespace,
+			Client:     cluster.Client().CoreV1(),
+			PrintFlags: genericclioptions.NewPrintFlags("created").WithTypeSetter(scheme.Scheme),
+			Username:   a.proxyPullSecret.Username,
+			Email:      a.proxyPullSecret.Email,
+			Password:   a.proxyPullSecret.Password,
+			Server:     a.proxyPullSecret.Server,
+		}
+		if opts.Server == "" {
+			opts.Server = "https://index.docker.io/v1/"
+		}
+		opts.PrintObj = func(obj runtime.Object) error {
+			return nil
+		}
+
+		if err := opts.Run(); err != nil {
+			return err
+		}
+
+		// use the pull Secret
+		a.deployArgs = append(a.deployArgs, []string{
+			"--set", "image.pullSecrets={proxy-pull}",
+		}...)
+	}
+
 	// if the dbmode is postgres, set several related values
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	if a.proxyDBMode == PostgreSQL {
@@ -232,12 +281,6 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
 	} else {
 		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=ClusterIP"}...)
-	}
-
-	// create a namespace ahead of deployment so things like license secrets and other configurations
-	// can be preloaded.
-	if err := clusters.CreateNamespace(ctx, cluster, a.namespace); err != nil {
-		return err
 	}
 
 	// deploy licenses and other configurations for enterprise mode
