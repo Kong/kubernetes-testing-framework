@@ -29,6 +29,7 @@ type Builder struct {
 	proxyDBMode                       DBMode
 	proxyImage                        string
 	proxyImageTag                     string
+	proxyPullSecret                   pullSecret
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -77,11 +78,22 @@ func (b *Builder) Build() *Addon {
 		proxyDBMode:                       b.proxyDBMode,
 		proxyImage:                        b.proxyImage,
 		proxyImageTag:                     b.proxyImageTag,
+		proxyPullSecret:                   b.proxyPullSecret,
 
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
 		proxyEnterpriseSuperAdminPassword: b.proxyEnterpriseSuperAdminPassword,
 	}
+}
+
+func (b *Builder) WithProxyImagePullSecret(server, username, password, email string) *Builder {
+	b.proxyPullSecret = pullSecret{
+		Server:   server,
+		Username: username,
+		Password: password,
+		Email:    email,
+	}
+	return b
 }
 
 // -----------------------------------------------------------------------------

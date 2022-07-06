@@ -5,6 +5,7 @@ package integration
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
@@ -89,4 +90,39 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Name, "proxy")
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Image, tc.controllerImage())
 	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Image, tc.proxyImage())
+}
+
+func TestKongAddonWithPullSecret(t *testing.T) {
+	t.Log("configuring kong addon with pull secret")
+	kongPullUsername := os.Getenv("KTF_TEST_KONG_PULL_USERNAME")
+	kongPullPassword := os.Getenv("KTF_TEST_KONG_PULL_PASSWORD")
+	if kongPullUsername == "" || kongPullPassword == "" {
+		t.Skip("either KTF_TEST_KONG_PULL_USERNAME or KTF_TEST_KONG_PULL_PASSWORD unset, skipping pull Secret test")
+	}
+	kong := kongaddon.NewBuilder().WithProxyImagePullSecret("", kongPullUsername, kongPullPassword, "").Build()
+
+	t.Log("configuring the testing environment")
+	builder := environment.NewBuilder().WithAddons(kong)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("verifying that addons have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 1)
+
+	t.Log("verifying that the pull secret exists")
+	secret, err := env.Cluster().Client().CoreV1().Secrets(kong.Namespace()).Get(ctx, kongaddon.ProxyPullSecretName, metav1.GetOptions{})
+	require.NoError(t, err)
+
+	deploy, err := env.Cluster().Client().AppsV1().Deployments(kong.Namespace()).Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Len(t, deploy.Spec.Template.Spec.ImagePullSecrets, 1)
+	require.Equal(t, deploy.Spec.Template.Spec.ImagePullSecrets[0].Name, secret.Name)
 }
