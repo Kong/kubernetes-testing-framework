@@ -35,7 +35,7 @@ require (
 require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
-	k8s.io/cli-runtime v0.24.2
+	k8s.io/cli-runtime v0.24.3
 	k8s.io/kubectl v0.24.2
 	sigs.k8s.io/controller-runtime v0.12.3
 )
