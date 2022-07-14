@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.16.0
+
+- Added `WithProxyImagePullSecret()` (`proxy-pull` with
+  `KTF_TEST_KONG_PULL_USERNAME` and `KTF_TEST_KONG_PULL_PASSWORD` set on the
+  CLI) feature to the Kong addon builder. It sets a pull secret for the proxy
+  image.
+  [#314](https://github.com/Kong/kubernetes-testing-framework/pull/314)
+
 ## v0.15.1
 
 - Added missing Kuma addon CLI entry.
