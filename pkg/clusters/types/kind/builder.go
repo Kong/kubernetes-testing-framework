@@ -20,6 +20,7 @@ type Builder struct {
 	addons         clusters.Addons
 	clusterVersion *semver.Version
 	configPath     *string
+	calicoCNI      bool
 }
 
 // NewBuilder provides a new *Builder object.
@@ -50,11 +51,30 @@ func (b *Builder) WithConfig(filename string) *Builder {
 	return b
 }
 
+// WithCalicoCNI disables the default CNI for the kind cluster and instead
+// deploys Calico (https://projectcalico.docs.tigera.io/about/about-calico)
+// which includes deep features including NetworkPolicy enforcement.
+func (b *Builder) WithCalicoCNI() *Builder {
+	b.calicoCNI = true
+	return b
+}
+
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 	deployArgs := make([]string, 0)
 	if b.clusterVersion != nil {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
+	}
+
+	if b.calicoCNI {
+		if err := b.disableDefaultCNI(); err != nil {
+			return nil, err
+		}
+
+		// if calico is enabled, we can't effectively wait for the cluster to
+		// be ready because it wont be possible for it to become ready until we
+		// deploy calico, as the default CNI has been disabled.
+		deployArgs = append(deployArgs, "--wait", "1s")
 	}
 
 	if b.configPath != nil {
@@ -77,6 +97,12 @@ func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 		addons:     make(clusters.Addons),
 		deployArgs: deployArgs,
 		l:          &sync.RWMutex{},
+	}
+
+	if b.calicoCNI {
+		if err := clusters.ApplyManifestByURL(ctx, cluster, defaultCalicoManifests); err != nil {
+			return nil, err
+		}
 	}
 
 	if err := utils.ClusterInitHooks(ctx, cluster); err != nil {

@@ -145,7 +145,7 @@ metadata:
 data:
   message: "batman"
 `
-	require.NoError(t, clusters.ApplyYAML(ctx, env.Cluster(), cfgmapYAML))
+	require.NoError(t, clusters.ApplyManifestByYAML(ctx, env.Cluster(), cfgmapYAML))
 	cfgmap, err := env.Cluster().Client().CoreV1().ConfigMaps(corev1.NamespaceDefault).Get(ctx, "test-cluster-apply", metav1.GetOptions{})
 	require.NoError(t, err)
 	require.Equal(t, "batman", cfgmap.Data["message"])
