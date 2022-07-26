@@ -80,6 +80,7 @@ type Addon struct {
 	proxyImage                        string
 	proxyImageTag                     string
 	proxyPullSecret                   pullSecret
+	proxyLogLevel                     string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -282,6 +283,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
 	} else {
 		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=ClusterIP"}...)
+	}
+
+	// set the proxy log level
+	if len(a.proxyLogLevel) > 0 {
+		a.deployArgs = append(a.deployArgs, []string{"--set", "env.log_level", a.proxyLogLevel}...)
 	}
 
 	// deploy licenses and other configurations for enterprise mode
