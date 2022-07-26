@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"net/http"
 	"net/url"
 	"os"
 	"os/exec"
@@ -366,6 +367,40 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObjects []runtime.Object, ready bool, err error) {
 	return utils.IsNamespaceAvailable(ctx, cluster, a.namespace)
+}
+
+func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+	diagnostics := make(map[string][]byte)
+	admin, err := a.ProxyAdminURL(ctx, cluster)
+	if err != nil {
+		return diagnostics, fmt.Errorf("could not build diagnostic Kong client: %w", err)
+	}
+	resp, err := http.Get(admin.String() + "/")
+	if err != nil {
+		return diagnostics, fmt.Errorf("could not retrieve Kong root: %w", err)
+	}
+	b := new(bytes.Buffer)
+	_, err = b.ReadFrom(resp.Body)
+	if err != nil {
+		return diagnostics, err
+	}
+	diagnostics["root_endpoint.json"] = b.Bytes()
+
+	switch a.proxyDBMode {
+	case PostgreSQL:
+	case DBLESS:
+		resp, err := http.Get(admin.String() + "/config")
+		if err != nil {
+			return diagnostics, fmt.Errorf("could not retrieve Kong /config: %w", err)
+		}
+		b := new(bytes.Buffer)
+		_, err = b.ReadFrom(resp.Body)
+		if err != nil {
+			return diagnostics, err
+		}
+		diagnostics["dbless_config.json"] = b.Bytes()
+	}
+	return diagnostics, nil
 }
 
 // -----------------------------------------------------------------------------

@@ -154,3 +154,8 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObjects []runtime.Object, ready bool, err error) {
 	return utils.IsNamespaceAvailable(ctx, cluster, a.namespace)
 }
+
+func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+	diagnostics := make(map[string][]byte)
+	return diagnostics, nil
+}
