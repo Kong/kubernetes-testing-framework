@@ -30,6 +30,7 @@ type Builder struct {
 	proxyImage                        string
 	proxyImageTag                     string
 	proxyPullSecret                   pullSecret
+	proxyLogLevel                     string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -79,6 +80,7 @@ func (b *Builder) Build() *Addon {
 		proxyImage:                        b.proxyImage,
 		proxyImageTag:                     b.proxyImageTag,
 		proxyPullSecret:                   b.proxyPullSecret,
+		proxyLogLevel:                     b.proxyLogLevel,
 
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
@@ -133,6 +135,12 @@ func (b *Builder) WithProxyImage(repo, tag string) *Builder {
 func (b *Builder) WithControllerImage(repo, tag string) *Builder {
 	b.ingressControllerImage = repo
 	b.ingressControllerImageTag = tag
+	return b
+}
+
+//WithLogLevel sets the proxy log level
+func (b *Builder) WithLogLevel(level string) *Builder {
+	b.proxyLogLevel = level
 	return b
 }
 

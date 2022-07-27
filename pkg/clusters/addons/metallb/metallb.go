@@ -107,6 +107,11 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	return nil, true, nil
 }
 
+func (a *addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+	diagnostics := make(map[string][]byte)
+	return diagnostics, nil
+}
+
 // -----------------------------------------------------------------------------
 // Private Types, Constants & Vars
 // -----------------------------------------------------------------------------
