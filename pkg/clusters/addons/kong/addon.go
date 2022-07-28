@@ -3,6 +3,7 @@ package kong
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -10,7 +11,12 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
+	"github.com/kong/deck/dump"
+	"github.com/kong/deck/file"
+	"github.com/kong/deck/state"
+	deckutils "github.com/kong/deck/utils"
 	pwgen "github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -394,6 +400,69 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 
 	switch a.proxyDBMode {
 	case PostgreSQL:
+		out, err := os.CreateTemp(os.TempDir(), "ktf-kong-")
+		if err != nil {
+			return diagnostics, fmt.Errorf("could not create temp file: %w", err)
+		}
+		defer os.Remove(out.Name())
+		dumpConfig := dump.Config{}
+		addr, err := a.ProxyAdminURL(ctx, cluster)
+		if err != nil {
+			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
+		}
+		opts := deckutils.KongClientConfig{
+			Address:   addr.String(),
+			Workspace: "default",
+			HTTPClient: &http.Client{
+				Timeout: time.Second * 90, //nolint:gomnd
+			},
+			TLSSkipVerify: true,
+		}
+		if a.proxyEnterpriseSuperAdminPassword != "" {
+			opts.Headers = append(opts.Headers, "kong-admin-token:"+a.proxyEnterpriseSuperAdminPassword)
+		}
+		client, err := deckutils.GetKongClient(opts)
+		if err != nil {
+			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
+		}
+		workspaces, err := client.Workspaces.ListAll(ctx)
+		if err != nil {
+			return diagnostics, fmt.Errorf("could get workspaces: %w", err)
+		}
+		for _, workspace := range workspaces {
+			wsOpts := opts
+			wsOpts.Workspace = *workspace.Name
+			wsClient, err := deckutils.GetKongClient(wsOpts)
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
+			}
+			// deck will forcibly append the extension if you omit it
+			out, err := os.CreateTemp(os.TempDir(), "ktf-kong-config-*.yaml")
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not create temp file: %w", err)
+			}
+			defer os.Remove(out.Name())
+			rawState, err := dump.Get(ctx, wsClient, dumpConfig)
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not retrieve config from Kong: %w", err)
+			}
+			currentState, err := state.Get(rawState)
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not build Kong state: %w", err)
+			}
+			err = file.KongStateToFile(currentState, file.WriteConfig{
+				Filename:   out.Name(),
+				FileFormat: file.YAML,
+			})
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not write Kong config: %w", err)
+			}
+			config, err := os.ReadFile(out.Name())
+			if err != nil {
+				return diagnostics, fmt.Errorf("could not read Kong config: %w", err)
+			}
+			diagnostics[*workspace.Name+"_pg_config.yaml"] = config
+		}
 	case DBLESS:
 		resp, err := http.Get(admin.String() + "/config")
 		if err != nil {
@@ -404,7 +473,16 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		if err != nil {
 			return diagnostics, err
 		}
-		diagnostics["dbless_config.json"] = b.Bytes()
+		var kongConfig struct {
+			Config string `json:"config,omitempty" yaml:"config,omitempty"`
+		}
+		err = json.Unmarshal(b.Bytes(), &kongConfig)
+		if err != nil {
+			return diagnostics, fmt.Errorf("could not parse config: %w", err)
+		}
+		yaml := strings.ReplaceAll(kongConfig.Config, "\\\\n", "\n")
+
+		diagnostics["dbless_config.yaml"] = []byte(yaml)
 	}
 	return diagnostics, nil
 }
