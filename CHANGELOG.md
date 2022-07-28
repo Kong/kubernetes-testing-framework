@@ -1,5 +1,23 @@
 # Changelog
 
+## Unreleased
+
+### Breaking Changes
+
+- `ApplyYAML` and `DeleteYAML` cluster utilities were renamed to
+  `ApplyManifestByYAML` and `DeleteManifestByYAML`, respectively.
+  [#330](https://github.com/Kong/kubernetes-testing-framework/pull/330)
+
+### Added
+
+- Added the ability to use Calico CNI instead of the default CNI for `kind`
+  clusters. This can be triggered via the CLI using `--cni-calico` OR using the
+  Go library with `WithCalicoCNI()`.
+  [#330](https://github.com/Kong/kubernetes-testing-framework/pull/330)
+- Added `ApplyManifestByURL` and `DeleteManifestByURL` helper functions to the
+  `cluster` package as siblings to `ApplyYAML` and `DeleteYAML`.
+  [#330](https://github.com/Kong/kubernetes-testing-framework/pull/330)
+
 ## v0.16.0
 
 - Added `WithProxyImagePullSecret()` (`proxy-pull` with

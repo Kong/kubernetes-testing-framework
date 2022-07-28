@@ -34,7 +34,7 @@ func TestCertManagerAddon(t *testing.T) {
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Log("deploying a cert-manager certificate to the cluster")
-	require.NoError(t, clusters.ApplyYAML(ctx, env.Cluster(), `---
+	require.NoError(t, clusters.ApplyManifestByYAML(ctx, env.Cluster(), `---
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:

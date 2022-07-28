@@ -211,14 +211,14 @@ spec:
 )
 
 func (a *Addon) deployDefaultIssuer(ctx context.Context, cluster clusters.Cluster) error {
-	if err := clusters.ApplyYAML(ctx, cluster, defaultIssuer); err != nil {
+	if err := clusters.ApplyManifestByYAML(ctx, cluster, defaultIssuer); err != nil {
 		return err
 	}
 	return clusters.WaitForCondition(ctx, cluster, DefaultNamespace, "clusterissuers.cert-manager.io", DefaultIssuerName, "Ready", defaultIssuerWaitSeconds)
 }
 
 func (a *Addon) cleanupDefaultIssuer(ctx context.Context, cluster clusters.Cluster) error {
-	return clusters.DeleteYAML(ctx, cluster, defaultIssuer)
+	return clusters.DeleteManifestByYAML(ctx, cluster, defaultIssuer)
 }
 
 const webhookWaitJobName = "cert-manager-webhook-wait"

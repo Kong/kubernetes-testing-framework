@@ -227,7 +227,7 @@ spec:
 // startup
 func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
 	for i := 0; i < 5; i++ {
-		err = clusters.ApplyYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+		err = clusters.ApplyManifestByYAML(ctx, cluster, mtlsEnabledDefaultMesh)
 		if err != nil {
 			time.Sleep(time.Second * 5) //nolint:gomnd
 		} else {

@@ -46,6 +46,7 @@ func init() { //nolint:gochecknoinits
 
 	// cluster configurations
 	environmentsCreateCmd.PersistentFlags().String("kubernetes-version", "", "which kubernetes version to use (default: latest for driver)")
+	environmentsCreateCmd.PersistentFlags().Bool("cni-calico", false, "use Calico for cluster CNI instead of the default CNI")
 
 	// addon configurations
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
@@ -79,10 +80,17 @@ var environmentsCreateCmd = &cobra.Command{
 		kubernetesVersion, err := cmd.PersistentFlags().GetString("kubernetes-version")
 		cobra.CheckErr(err)
 
+		// check if Calico CNI was requested
+		useCalicoCNI, err := cmd.PersistentFlags().GetBool("cni-calico")
+		cobra.CheckErr(err)
+
 		// setup the new environment
 		builder := environments.NewBuilder()
 		if !useGeneratedName {
 			builder = builder.WithName(name)
+		}
+		if useCalicoCNI {
+			builder = builder.WithCalicoCNI()
 		}
 		if kubernetesVersion != "" {
 			version, err := semver.Parse(strings.TrimPrefix(kubernetesVersion, "v"))

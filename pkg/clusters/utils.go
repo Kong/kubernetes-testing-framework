@@ -219,7 +219,7 @@ func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeUR
 	}
 
 	// apply the kustomize YAML to the cluster
-	return ApplyYAML(ctx, cluster, stdout.String())
+	return ApplyManifestByYAML(ctx, cluster, stdout.String())
 }
 
 // KustomizeDeleteForCluster deletes the provided kustomize manafests from the cluster
@@ -234,17 +234,27 @@ func KustomizeDeleteForCluster(ctx context.Context, cluster Cluster, kustomizeUR
 	}
 
 	// apply the kustomize YAML to the cluster
-	return DeleteYAML(ctx, cluster, stdout.String())
+	return DeleteManifestByYAML(ctx, cluster, stdout.String())
 }
 
-// ApplyYAML applies a given YAML manifest to the cluster provided
-func ApplyYAML(ctx context.Context, cluster Cluster, yaml string) error {
-	return kubectlSubcommandWithYAML(ctx, cluster, "apply", yaml)
+// ApplyManifestByURL applies a given manifest URL to the cluster provided
+func ApplyManifestByURL(ctx context.Context, cluster Cluster, url string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "apply", url, true)
 }
 
-// DeleteYAML deletes a given YAML manifest on the cluster provided
-func DeleteYAML(ctx context.Context, cluster Cluster, yaml string) error {
-	return kubectlSubcommandWithYAML(ctx, cluster, "delete", yaml)
+// DeleteManifestByURL deletes a given manifest URL on the cluster provided
+func DeleteManifestByURL(ctx context.Context, cluster Cluster, url string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "delete", url, true)
+}
+
+// ApplyManifestByYAML applies a given YAML manifest to the cluster provided
+func ApplyManifestByYAML(ctx context.Context, cluster Cluster, yaml string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "apply", yaml, false)
+}
+
+// DeleteManifestByYAML deletes a given YAML manifest on the cluster provided
+func DeleteManifestByYAML(ctx context.Context, cluster Cluster, yaml string) error {
+	return kubectlSubcommandWithYAML(ctx, cluster, "delete", yaml, false)
 }
 
 // WaitForCondition waits for a condition to be true for an object on the
@@ -281,13 +291,23 @@ func WaitForCondition(ctx context.Context, cluster Cluster, namespace, objectTyp
 // Private Functions
 // -----------------------------------------------------------------------------
 
-func kubectlSubcommandWithYAML(ctx context.Context, cluster Cluster, subcommand, yaml string) error {
+func kubectlSubcommandWithYAML(ctx context.Context, cluster Cluster, subcommand, yaml string, isURL bool) error {
 	// generate a kubeconfig tempfile since we'll be using kubectl
 	kubeconfig, err := TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(kubeconfig.Name())
+
+	// if the provided YAML comes from a URL, we can short circuit as kubectl
+	// will allow a URL to be provided directly.
+	if isURL {
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), subcommand, "-f", yaml) //nolint:gosec
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		return cmd.Run()
+	}
 
 	// configure the command to read YAML from STDIN
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)

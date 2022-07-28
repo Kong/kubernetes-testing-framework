@@ -23,6 +23,7 @@ type Builder struct {
 	addons            clusters.Addons
 	existingCluster   clusters.Cluster
 	kubernetesVersion *semver.Version
+	calicoCNI         bool
 }
 
 // NewBuilder generates a new empty Builder for creating Environments.
@@ -62,11 +63,22 @@ func (b *Builder) WithKubernetesVersion(version semver.Version) *Builder {
 	return b
 }
 
+// WithCalicoCNI indicates that the CNI used for the cluster should be Calico
+// as opposed to any other potential default CNI.
+func (b *Builder) WithCalicoCNI() *Builder {
+	b.calicoCNI = true
+	return b
+}
+
 // Build is a blocking call to construct the configured Environment and it's
 // underlying Kubernetes cluster. The amount of time that it blocks depends
 // entirely on the underlying clusters.Cluster implementation that was requested.
 func (b *Builder) Build(ctx context.Context) (Environment, error) {
 	var cluster clusters.Cluster
+
+	if b.calicoCNI && b.existingCluster != nil {
+		return nil, fmt.Errorf("trying to deploy Calico CNI on an existing cluster is not currently supported")
+	}
 
 	// determine if an existing cluster has been configured for deployment
 	if b.existingCluster == nil {
@@ -74,6 +86,9 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		builder := kind.NewBuilder().WithName(b.Name)
 		if b.kubernetesVersion != nil {
 			builder.WithClusterVersion(*b.kubernetesVersion)
+		}
+		if b.calicoCNI {
+			builder.WithCalicoCNI()
 		}
 		cluster, err = builder.Build(ctx)
 		if err != nil {

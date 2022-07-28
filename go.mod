@@ -38,6 +38,7 @@ require (
 	k8s.io/cli-runtime v0.24.3
 	k8s.io/kubectl v0.24.3
 	sigs.k8s.io/controller-runtime v0.12.3
+	sigs.k8s.io/kind v0.14.0
 )
 
 require (
