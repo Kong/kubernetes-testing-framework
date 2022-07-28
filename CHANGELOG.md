@@ -17,6 +17,10 @@
 - Added `ApplyManifestByURL` and `DeleteManifestByURL` helper functions to the
   `cluster` package as siblings to `ApplyYAML` and `DeleteYAML`.
   [#330](https://github.com/Kong/kubernetes-testing-framework/pull/330)
+- Added a diagnostics system to collect resources, describe information, pod
+  logs, and available plugin diagnostics.
+  [#332](https://github.com/Kong/kubernetes-testing-framework/pull/332)
+  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
 
 ## v0.16.0
 
