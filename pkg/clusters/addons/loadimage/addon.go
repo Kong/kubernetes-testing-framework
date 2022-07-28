@@ -70,3 +70,8 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	// no way to verify this, we rely on Deploy's cmd.Run() not failing
 	return nil, a.loaded, nil
 }
+
+func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+	diagnostics := make(map[string][]byte)
+	return diagnostics, nil
+}

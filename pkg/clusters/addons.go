@@ -33,6 +33,10 @@ type Addon interface {
 	// Delete removes the addon component from the given cluster.
 	Delete(ctx context.Context, cluster Cluster) error
 
+	// DumpDiagnostics gathers and returns diagnostic information for an addon. Its return map is a map of string
+	// filenames to file content byte slices.
+	DumpDiagnostics(ctx context.Context, cluster Cluster) (map[string][]byte, error)
+
 	// Ready is a non-blocking call which checks the status of the addon on the
 	// cluster and reports any runtime.Objects which are still unresolved.
 	// If all components are ready, this method will return [], true, nil.
