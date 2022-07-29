@@ -6,12 +6,15 @@ package integration
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
+	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
 )
 
@@ -125,4 +128,104 @@ func TestKongAddonWithPullSecret(t *testing.T) {
 	require.NoError(t, err)
 	require.Len(t, deploy.Spec.Template.Spec.ImagePullSecrets, 1)
 	require.Equal(t, deploy.Spec.Template.Spec.ImagePullSecrets[0].Name, secret.Name)
+}
+
+// TestKongAddonDiagnostics tests that the addon's DumpDiagnostics function produces output. It furthermore tests the
+// generic diagnostics functionality, because Kong happens to be the first addon with addon-specific diagnostics and
+// we may as well check both at once.
+func TestKongAddonDiagnostics(t *testing.T) {
+	t.Log("configuring kong addon")
+	kong := kongaddon.NewBuilder().WithProxyAdminServiceTypeLoadBalancer().Build()
+
+	t.Log("configuring the testing environment")
+	metallb := metallbaddon.New()
+	builder := environment.NewBuilder().WithAddons(kong, metallb)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+
+	cleaner := clusters.NewCleaner(env.Cluster())
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("verifying that the environment and kong deployment are ready")
+	errChan := env.WaitForReady(ctx)
+	require.NoError(t, <-errChan)
+
+	// this would normally run in the defer iff the test fails, but not for the purposes of testing it
+	t.Log("dumping diagnostics to filesystem")
+	output, err := cleaner.DumpDiagnostics(ctx, t.Name())
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, os.RemoveAll(output))
+	}()
+
+	t.Log("checking that all diagnostics are present")
+	config, err := os.ReadFile(filepath.Join(output, "addons", "kong", "dbless_config.yaml"))
+	require.NoError(t, err)
+	require.NotZero(t, len(config))
+
+	root, err := os.ReadFile(filepath.Join(output, "addons", "kong", "root_endpoint.json"))
+	require.NoError(t, err)
+	require.NotZero(t, len(root))
+
+	logsPath, _ := filepath.Glob(filepath.Join(output, "pod_logs", "kong-system_ingress-controller-kong-*"))
+	require.NotZero(t, len(logsPath))
+	logs, err := os.ReadFile(logsPath[0])
+	require.NoError(t, err)
+	require.NotZero(t, len(logs))
+
+	describe, err := os.ReadFile(filepath.Join(output, "kubectl_describe_all.txt"))
+	require.NoError(t, err)
+	require.NotZero(t, len(describe))
+
+	get, err := os.ReadFile(filepath.Join(output, "kubectl_get_all.yaml"))
+	require.NoError(t, err)
+	require.NotZero(t, len(get))
+
+	meta, err := os.ReadFile(filepath.Join(output, "meta.txt"))
+	require.NoError(t, err)
+	require.NotZero(t, len(meta))
+	require.Contains(t, string(meta), t.Name())
+}
+
+func TestKongAddonDiagnosticsPostgres(t *testing.T) {
+	t.Log("configuring kong addon")
+	kong := kongaddon.NewBuilder().WithPostgreSQL().WithProxyAdminServiceTypeLoadBalancer().Build()
+
+	t.Log("configuring the testing environment")
+	metallb := metallbaddon.New()
+	builder := environment.NewBuilder().WithAddons(kong, metallb)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+
+	cleaner := clusters.NewCleaner(env.Cluster())
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("verifying that the environment and kong deployment are ready")
+	errChan := env.WaitForReady(ctx)
+	require.NoError(t, <-errChan)
+
+	// this would normally run in the defer iff the test fails, but not for the purposes of testing it
+	t.Log("dumping diagnostics to filesystem")
+	output, err := cleaner.DumpDiagnostics(ctx, t.Name())
+	require.NoError(t, err)
+	defer func() {
+		require.NoError(t, os.RemoveAll(output))
+	}()
+
+	t.Log("checking that postgres config is present")
+	config, err := os.ReadFile(filepath.Join(output, "addons", "kong", "default_pg_config.yaml"))
+	require.NoError(t, err)
+	require.NotZero(t, len(config))
 }

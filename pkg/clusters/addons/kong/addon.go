@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/kong/deck/file"
 	"github.com/kong/deck/state"
 	deckutils "github.com/kong/deck/utils"
+	"github.com/kong/go-kong/kong"
 	pwgen "github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
@@ -411,8 +413,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
 		}
 		opts := deckutils.KongClientConfig{
-			Address:   addr.String(),
-			Workspace: "default",
+			Address: addr.String(),
 			HTTPClient: &http.Client{
 				Timeout: time.Second * 90, //nolint:gomnd
 			},
@@ -426,15 +427,26 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
 		}
 		workspaces, err := client.Workspaces.ListAll(ctx)
-		if err != nil {
+		var kongAPIError *kong.APIError
+		if errors.As(err, &kongAPIError) && kongAPIError.Code() == http.StatusNotFound {
+			defaultws := kong.Workspace{Name: kong.String("default")}
+			workspaces = append(workspaces, &defaultws)
+		} else if err != nil {
 			return diagnostics, fmt.Errorf("could get workspaces: %w", err)
 		}
+
 		for _, workspace := range workspaces {
 			wsOpts := opts
 			wsOpts.Workspace = *workspace.Name
-			wsClient, err := deckutils.GetKongClient(wsOpts)
-			if err != nil {
-				return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
+			var wsClient *kong.Client
+			if *workspace.Name == "default" {
+				// arguably a workspaced client for default should work on OSS, but it doesn't!
+				wsClient = client
+			} else {
+				wsClient, err = deckutils.GetKongClient(wsOpts)
+				if err != nil {
+					return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
+				}
 			}
 			// deck will forcibly append the extension if you omit it
 			out, err := os.CreateTemp(os.TempDir(), "ktf-kong-config-*.yaml")
