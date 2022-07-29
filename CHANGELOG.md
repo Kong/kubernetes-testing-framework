@@ -7,6 +7,8 @@
 - Added support for Postgres Kong config diagnostics and improved DB-less
   format.
   [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
+- The cleaner now has an `AddManifest()` function, to clean raw YAML manifests.
+  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
 
 ## v0.17.0
 

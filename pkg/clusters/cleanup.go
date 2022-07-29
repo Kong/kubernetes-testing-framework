@@ -24,6 +24,7 @@ import (
 type Cleaner struct {
 	cluster    Cluster
 	objects    []client.Object
+	manifests  []string
 	namespaces []*corev1.Namespace
 }
 
@@ -38,6 +39,10 @@ func NewCleaner(cluster Cluster) *Cleaner {
 
 func (c *Cleaner) Add(obj client.Object) {
 	c.objects = append([]client.Object{obj}, c.objects...)
+}
+
+func (c *Cleaner) AddManifest(manifest string) {
+	c.manifests = append(c.manifests, manifest)
 }
 
 func (c *Cleaner) AddNamespace(namespace *corev1.Namespace) {
@@ -198,6 +203,13 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 			if !errors.IsNotFound(err) {
 				return err
 			}
+		}
+	}
+
+	for _, manifest := range c.manifests {
+		err := DeleteManifestByYAML(ctx, c.cluster, manifest)
+		if err != nil {
+			return err
 		}
 	}
 
