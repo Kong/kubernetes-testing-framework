@@ -102,7 +102,7 @@ func (c *Cleaner) DumpDiagnostics(ctx context.Context, meta string) (string, err
 			failedPods[fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)] = err
 			continue
 		}
-		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "logs", "-n", pod.Namespace, pod.Name) //nolint:gosec
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "logs", "--all-containers", "-n", pod.Namespace, pod.Name) //nolint:gosec
 		cmd.Stdout = podLogOut
 		if err := cmd.Run(); err != nil {
 			failedPods[fmt.Sprintf("%s/%s", pod.Namespace, pod.Name)] = err
