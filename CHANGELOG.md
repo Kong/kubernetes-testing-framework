@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.18.0
+
+### Added
+
+- Added support for Postgres Kong config diagnostics and improved DB-less
+  format.
+  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
+
 ## v0.17.0
 
 ### Breaking Changes
@@ -20,7 +28,6 @@
 - Added a diagnostics system to collect resources, describe information, pod
   logs, and available plugin diagnostics.
   [#332](https://github.com/Kong/kubernetes-testing-framework/pull/332)
-  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
 
 ## v0.16.0
 
