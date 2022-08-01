@@ -430,7 +430,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		var kongAPIError *kong.APIError
 		if errors.As(err, &kongAPIError) && kongAPIError.Code() == http.StatusNotFound {
 			defaultws := kong.Workspace{Name: kong.String("default")}
-			workspaces = append(workspaces, &defaultws)
+			workspaces = []*kong.Workspace{&defaultws}
 		} else if err != nil {
 			return diagnostics, fmt.Errorf("could get workspaces: %w", err)
 		}
