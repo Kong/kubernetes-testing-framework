@@ -480,15 +480,10 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		if err != nil {
 			return diagnostics, fmt.Errorf("could not retrieve Kong /config: %w", err)
 		}
-		b := new(bytes.Buffer)
-		_, err = b.ReadFrom(resp.Body)
-		if err != nil {
-			return diagnostics, err
-		}
 		var kongConfig struct {
 			Config string `json:"config,omitempty" yaml:"config,omitempty"`
 		}
-		err = json.Unmarshal(b.Bytes(), &kongConfig)
+		err = json.NewDecoder(resp.Body).Decode(&kongConfig)
 		if err != nil {
 			return diagnostics, fmt.Errorf("could not parse config: %w", err)
 		}
