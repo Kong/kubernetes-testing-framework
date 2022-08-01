@@ -1,5 +1,15 @@
 # Changelog
 
+## v0.18.0
+
+### Added
+
+- Added support for Postgres Kong config diagnostics and improved DB-less
+  format.
+  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
+- The cleaner now has an `AddManifest()` function, to clean raw YAML manifests.
+  [#334](https://github.com/Kong/kubernetes-testing-framework/pull/334)
+
 ## v0.17.0
 
 ### Breaking Changes
@@ -17,6 +27,9 @@
 - Added `ApplyManifestByURL` and `DeleteManifestByURL` helper functions to the
   `cluster` package as siblings to `ApplyYAML` and `DeleteYAML`.
   [#330](https://github.com/Kong/kubernetes-testing-framework/pull/330)
+- Added a diagnostics system to collect resources, describe information, pod
+  logs, and available plugin diagnostics.
+  [#332](https://github.com/Kong/kubernetes-testing-framework/pull/332)
 
 ## v0.16.0
 
