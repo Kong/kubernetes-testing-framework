@@ -1,0 +1,13 @@
+# Build the tcptest binary
+FROM golang:1.18 as builder
+WORKDIR /workspace
+COPY cmd/ cmd/
+COPY go.mod go.mod
+COPY go.sum go.sum
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o tcptest -ldflags "-s -w " ./cmd/tcptest
+
+# Build
+FROM gcr.io/distroless/static:nonroot AS distroless
+WORKDIR /
+COPY --from=builder /workspace/tcptest .
+ENTRYPOINT ["/tcptest"]

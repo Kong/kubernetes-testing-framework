@@ -2,6 +2,9 @@ GOOS ?= "linux"
 GOARCH ?= "amd64"
 NCPU ?= $(shell getconf _NPROCESSORS_ONLN)
 
+IMG_TCPTEST ?= "kong/ktf-tcptest"
+TAG_TCPTEST ?= "latest"
+
 all: build
 
 .PHONY: clean
@@ -50,3 +53,9 @@ test.integration:
 .PHONY: test.e2e
 test.e2e:
 	@GOFLAGS="-tags=e2e_tests" go test -timeout 45m -race -v ./test/e2e/...
+
+image.tcptest:
+	docker buildx build -f ./Dockerfile_tcptest -t $(IMG_TCPTEST):$(TAG_TCPTEST) .
+
+push.tcptest:
+	docker push $(IMG_TCPTEST):$(TAG_TCPTEST)
