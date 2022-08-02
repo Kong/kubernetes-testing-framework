@@ -1,0 +1,92 @@
+name: build and push tcptest image
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'The version to release (e.g. v0.18.0)'
+        required: true
+      latest:
+        description: 'Whether to tag this release latest'
+        required: true
+        default: 'false'
+
+jobs:
+  build-and-push-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Parse semver string
+        id: semver_parser
+        uses: booxmedialtd/ws-action-parse-semver@v1
+        with:
+          input_string: ${{ github.event.inputs.tag }}
+          version_extractor_regex: 'v(.*)$'
+      - name: Add standard tags
+        id: standard_tags
+        run: |
+          echo 'TAGS_STANDARD<<EOF' >> $GITHUB_ENV
+          echo 'type=raw,value=${{ steps.semver_parser.outputs.fullversion }}' >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+      - name: Add major.minor tag
+        if: ${{ steps.semver_parser.outputs.prerelease == '' }}
+        run: |
+          echo 'TAGS_SUPPLEMENTAL<<EOF' >> $GITHUB_ENV
+          echo "" >> $GITHUB_ENV
+          echo 'type=raw,value=${{ steps.semver_parser.outputs.major }}.${{ steps.semver_parser.outputs.minor }}' >> $GITHUB_ENV
+          echo 'EOF' >> $GITHUB_ENV
+      - name: Set up QEMU
+        id: set_qemu
+        uses: docker/setup-qemu-action@v2
+      - name: Set up Docker Buildx
+        id: set_buildx
+        uses: docker/setup-buildx-action@v2
+      - name: Cache Docker layers
+        id: cache_layers
+        uses: actions/cache@v3
+        with:
+          path: /tmp/.buildx-cache
+          key: ${{ runner.os }}-buildx-${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os }}-buildx-
+      - name: Login to DockerHub
+        id: login
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v4.0.1
+        with:
+          images: kong/kubernetes-testing-framework-tcptest
+          flavor: |
+            latest=${{ github.event.inputs.latest == 'true' }}
+          tags: ${{ env.TAGS_STANDARD }}${{ env.TAGS_SUPPLEMENTAL }}
+      - name: Build binary
+        id: docker_build_binary
+        uses: docker/build-push-action@v3
+        with:
+          push: false
+          file: Dockerfile_tcptest
+          cache-from: type=local,src=/tmp/.buildx-cache
+          cache-to: type=local,dest=/tmp/.buildx-cache
+          target: builder
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            TAG=${{ steps.meta.outputs.version }}
+            COMMIT=${{ github.sha }}
+            REPO_INFO=https://github.com/${{ github.repository }}.git
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v3
+        with:
+          push: true
+          file: Dockerfile_tcptest
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=local,src=/tmp/.buildx-cache
+          target: distroless
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            TAG=${{ steps.meta.outputs.version }}
+            COMMIT=${{ github.sha }}
+            REPO_INFO=https://github.com/${{ github.repository }}.git

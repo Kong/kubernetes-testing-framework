@@ -56,7 +56,7 @@ func WaitForServiceLoadBalancerAddress(ctx context.Context, c *kubernetes.Client
 // returns error if the address could not be connected with TCP within duration `timeout`.
 func WaitForTCPAddressConnected(ctx context.Context, c *kubernetes.Clientset, jobNamespace string, address string, timeout time.Duration) error {
 	// TODO: push the image to kong repo and put the tcpTestImage to a global var/const
-	var tcpTestImage = "richardyi/ktf-tcptest:0.0" // should FIX this, currently my personal repo, but available.
+	var tcpTestImage = "kong/kubernetes-testing-framework-tcptest:v0.0"
 
 	id := uuid.NewString()
 	job := &batchv1.Job{
@@ -85,15 +85,17 @@ func WaitForTCPAddressConnected(ctx context.Context, c *kubernetes.Clientset, jo
 			},
 		},
 	}
-	// TODO: use another namespace.
+
 	job, err := c.BatchV1().Jobs(jobNamespace).Create(ctx, job, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
 
 	defer func() {
-		// added nolint here because we do not care about error in deleting the job, only the job status.
-		c.BatchV1().Jobs(jobNamespace).Delete(ctx, job.Name, metav1.DeleteOptions{}) // nolint:errcheck
+		err := c.BatchV1().Jobs(jobNamespace).Delete(ctx, job.Name, metav1.DeleteOptions{})
+		if err != nil {
+			fmt.Printf("ERROR: failed to delete job %s, error %v", job.Name, err)
+		}
 	}()
 
 	jobWatch, err := c.BatchV1().Jobs(job.Namespace).Watch(ctx, metav1.ListOptions{
