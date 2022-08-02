@@ -83,7 +83,7 @@ func (c *Cleaner) DumpDiagnostics(ctx context.Context, meta string) (string, err
 	if err != nil {
 		return output, err
 	}
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "get", "all", "--all-namespaces", "-o", "yaml") //nolint:gosec
+	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "describe", "all", "--all-namespaces") //nolint:gosec
 	cmd.Stdout = describeAllOut
 	if err := cmd.Run(); err != nil {
 		return output, err
