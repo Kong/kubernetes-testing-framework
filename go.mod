@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.18
 
 require (
-	cloud.google.com/go/container v1.3.0
+	cloud.google.com/go/container v1.3.1
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.17+incompatible
 	github.com/google/go-github/v39 v39.2.0
@@ -19,7 +19,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.90.0
-	google.golang.org/genproto v0.0.0-20220706132729-d86698d07c53
+	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
 	k8s.io/api v0.24.3
 	k8s.io/apiextensions-apiserver v0.24.3
 	k8s.io/apimachinery v0.24.3
@@ -35,6 +35,7 @@ require (
 require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
+	github.com/kong/deck v1.13.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/cli-runtime v0.24.3
 	k8s.io/kubectl v0.24.3
@@ -89,7 +90,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kong/deck v1.13.0 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
 	github.com/magiconair/properties v1.8.6 // indirect
@@ -136,7 +136,7 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.47.0 // indirect
+	google.golang.org/grpc v1.48.0 // indirect
 	google.golang.org/protobuf v1.28.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
