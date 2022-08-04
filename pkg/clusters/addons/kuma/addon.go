@@ -226,7 +226,7 @@ spec:
 // enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
 // startup
 func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
-	for i := 0; i < 5; i++ {
+	for i := 0; i < 12; i++ {
 		err = clusters.ApplyManifestByYAML(ctx, cluster, mtlsEnabledDefaultMesh)
 		if err != nil {
 			time.Sleep(time.Second * 5) //nolint:gomnd
