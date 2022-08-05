@@ -1,5 +1,18 @@
 # Changelog
 
+## v0.19.0 
+
+### Added
+- Added feature to support waiting for a port of a service to be connective
+  by TCP.
+  [#338](https://github.com/Kong/kubernetes-testing-framework/pull/338)
+
+### Improved
+- Increased retry times to increase the timeout to wait for kuma webhook
+  to be ready to serve.
+  [#341](https://github.com/Kong/kubernetes-testing-framework/pull/341)
+  [#342](https://github.com/Kong/kubernetes-testing-framework/pull/342)
+
 ## v0.18.0
 
 ### Added
