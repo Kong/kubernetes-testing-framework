@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -33,7 +34,7 @@ func TestKindClusterWithCalicoCNI(t *testing.T) {
 
 	t.Log("waiting for the testing environment to be ready")
 	require.NoError(t, <-env.WaitForReady(ctx))
-	defer env.Cleanup(ctx)
+	defer func() { assert.NoError(t, env.Cleanup(ctx)) }()
 
 	t.Log("verifying that Calico is running on the cluster")
 	daemonset, err := env.Cluster().Client().AppsV1().DaemonSets("kube-system").Get(ctx, "calico-node", metav1.GetOptions{})

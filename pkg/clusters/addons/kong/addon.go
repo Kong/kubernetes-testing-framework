@@ -393,6 +393,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 	if err != nil {
 		return diagnostics, fmt.Errorf("could not retrieve Kong root: %w", err)
 	}
+	defer resp.Body.Close()
 	b := new(bytes.Buffer)
 	_, err = b.ReadFrom(resp.Body)
 	if err != nil {
@@ -480,6 +481,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		if err != nil {
 			return diagnostics, fmt.Errorf("could not retrieve Kong /config: %w", err)
 		}
+		defer resp.Body.Close()
 		var kongConfig struct {
 			Config string `json:"config,omitempty" yaml:"config,omitempty"`
 		}
@@ -563,7 +565,8 @@ func exposePortsDefault() []string {
 }
 
 // TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
-//       See: https://github.com/Kong/charts/issues/329
+//
+//	See: https://github.com/Kong/charts/issues/329
 func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace string) error {
 	udpServicePorts := []corev1.ServicePort{{
 		Name:     DefaultUDPServiceName,
