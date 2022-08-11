@@ -138,7 +138,7 @@ func (b *Builder) WithControllerImage(repo, tag string) *Builder {
 	return b
 }
 
-//WithLogLevel sets the proxy log level
+// WithLogLevel sets the proxy log level
 func (b *Builder) WithLogLevel(level string) *Builder {
 	b.proxyLogLevel = level
 	return b

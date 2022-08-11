@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"strings"
@@ -123,7 +122,7 @@ func TempKubeconfig(cluster Cluster) (*os.File, error) {
 	}
 
 	// create a tempfile to store the kubeconfig contents
-	kubeconfig, err := ioutil.TempFile(os.TempDir(), fmt.Sprintf("-kubeconfig-%s", cluster.Name()))
+	kubeconfig, err := os.CreateTemp(os.TempDir(), fmt.Sprintf("-kubeconfig-%s", cluster.Name()))
 	if err != nil {
 		return nil, err
 	}

@@ -188,7 +188,8 @@ func deployMetallbForKindCluster(cluster clusters.Cluster, dockerNetwork string)
 // getIPRangeForMetallb provides a range of IP addresses to use for MetalLB given an IPv4 Network
 //
 // TODO: Just choosing specific default IPs for now, need to check range validity and dynamically assign IPs.
-//       See: https://github.com/Kong/kubernetes-testing-framework/issues/24
+//
+// See: https://github.com/Kong/kubernetes-testing-framework/issues/24
 func getIPRangeForMetallb(network net.IPNet) (startIP, endIP net.IP) {
 	startIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultStartIP))
 	endIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultEndIP))
@@ -206,7 +207,8 @@ address-pools:
 }
 
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.
-//       See: https://github.com/Kong/kubernetes-testing-framework/issues/25
+//
+// See: https://github.com/Kong/kubernetes-testing-framework/issues/25
 func metallbDeployHack(cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using kubectl
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
