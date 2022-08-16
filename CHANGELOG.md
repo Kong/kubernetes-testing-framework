@@ -1,6 +1,14 @@
 # Changelog
 
-## v0.19.0 
+## Unreleased
+
+### Added
+
+- Added the ability to select the `Service` type for the proxy when using the
+  Kong addon via the Go library.
+  [#346](https://github.com/Kong/kubernetes-testing-framework/pull/346)
+
+## v0.19.0
 
 ### Added
 

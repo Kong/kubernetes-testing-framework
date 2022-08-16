@@ -48,4 +48,8 @@ const (
 
 	// DefaultTLSServicePort indicates the default open port that will be used for TLS traffic.
 	DefaultTLSServicePort = 8899
+
+	// DefaultProxyNodePort indicates the default NodePort that will be used for
+	// the proxy when applicable.
+	DefaultProxyNodePort = 30080
 )

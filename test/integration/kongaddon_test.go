@@ -5,17 +5,24 @@ package integration
 
 import (
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
 )
 
 type customImageTest struct {
@@ -228,4 +235,41 @@ func TestKongAddonDiagnosticsPostgres(t *testing.T) {
 	config, err := os.ReadFile(filepath.Join(output, "addons", "kong", "default_pg_config.yaml"))
 	require.NoError(t, err)
 	require.NotZero(t, len(config))
+}
+
+func TestKongWithNodePort(t *testing.T) {
+	t.Log("configuring the testing environment, with the kond addon using NodePort service type for proxy")
+	metallbAddon := metallbaddon.New()
+	kongAddon := kongaddon.NewBuilder().WithProxyServiceType(corev1.ServiceTypeNodePort).Build()
+	builder := environment.NewBuilder().WithAddons(kongAddon, metallbAddon)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+	defer func() { assert.NoError(t, env.Cleanup(ctx)) }()
+
+	t.Log("verifying the proxy is responding on NodePort")
+	proxyIP, err := docker.GetKindContainerIP(env.Cluster().Name())
+	require.NoError(t, err)
+	proxyURL := fmt.Sprintf("http://%s:%d", proxyIP, kong.DefaultProxyNodePort)
+	httpc := http.Client{Timeout: time.Second * 10}
+	require.Eventually(t, func() bool {
+		resp, err := httpc.Get(proxyURL)
+		if err != nil {
+			return false
+		}
+		defer resp.Body.Close()
+
+		if resp.StatusCode == http.StatusNotFound {
+			b, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Logf("WARNING: error while reading response body: %s", err.Error())
+				return false
+			}
+
+			return string(b) == `{"message":"no Route matched with those values"}`
+		}
+
+		return false
+	}, time.Minute*3, time.Second)
 }
