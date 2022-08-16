@@ -4,6 +4,7 @@ import (
 	"io"
 
 	"github.com/sirupsen/logrus"
+	corev1 "k8s.io/api/core/v1"
 )
 
 // -----------------------------------------------------------------------------
@@ -31,6 +32,7 @@ type Builder struct {
 	proxyImageTag                     string
 	proxyPullSecret                   pullSecret
 	proxyLogLevel                     string
+	proxyServiceType                  corev1.ServiceType
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -64,6 +66,11 @@ func (b *Builder) Build() *Addon {
 		b.logger = &logrus.Logger{Out: io.Discard}
 	}
 
+	// LoadBalancer is used by default for historical and convenience reasons.
+	if b.proxyServiceType == "" {
+		b.proxyServiceType = corev1.ServiceTypeLoadBalancer
+	}
+
 	return &Addon{
 		logger: b.logger,
 
@@ -81,6 +88,7 @@ func (b *Builder) Build() *Addon {
 		proxyImageTag:                     b.proxyImageTag,
 		proxyPullSecret:                   b.proxyPullSecret,
 		proxyLogLevel:                     b.proxyLogLevel,
+		proxyServiceType:                  b.proxyServiceType,
 
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
@@ -141,6 +149,13 @@ func (b *Builder) WithControllerImage(repo, tag string) *Builder {
 // WithLogLevel sets the proxy log level
 func (b *Builder) WithLogLevel(level string) *Builder {
 	b.proxyLogLevel = level
+	return b
+}
+
+// WithProxyServiceType indicates which Service type to use for ingress traffic.
+// The default type is LoadBalancer.
+func (b *Builder) WithProxyServiceType(serviceType corev1.ServiceType) *Builder {
+	b.proxyServiceType = serviceType
 	return b
 }
 

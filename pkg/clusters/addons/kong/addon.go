@@ -89,6 +89,7 @@ type Addon struct {
 	proxyImageTag                     string
 	proxyPullSecret                   pullSecret
 	proxyLogLevel                     string
+	proxyServiceType                  corev1.ServiceType
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -292,6 +293,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	} else {
 		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=ClusterIP"}...)
 	}
+
+	// set the service type of the proxy's Kubernetes service
+	if a.proxyServiceType == corev1.ServiceTypeExternalName {
+		return fmt.Errorf("Service type ExternalName is not currently supported")
+	}
+	a.deployArgs = append(a.deployArgs, []string{"--set", "proxy.type=" + string(a.proxyServiceType)}...)
 
 	// set the proxy log level
 	if len(a.proxyLogLevel) > 0 {
@@ -531,8 +538,6 @@ func defaults() []string {
 		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
 		"--set", "tls.enabled=false",
-		// the proxy expects a LoadBalancer Service provisioner (such as MetalLB).
-		"--set", "proxy.type=LoadBalancer",
 	}
 }
 
