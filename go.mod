@@ -21,9 +21,9 @@ require (
 	google.golang.org/api v0.92.0
 	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
 	k8s.io/api v0.24.4
-	k8s.io/apiextensions-apiserver v0.24.3
+	k8s.io/apiextensions-apiserver v0.24.4
 	k8s.io/apimachinery v0.24.4
-	k8s.io/client-go v0.24.3
+	k8s.io/client-go v0.24.4
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -142,7 +142,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.66.4 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	k8s.io/component-base v0.24.3 // indirect
+	k8s.io/component-base v0.24.4 // indirect
 	k8s.io/klog/v2 v2.60.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220328201542-3ee0da9b0b42 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
