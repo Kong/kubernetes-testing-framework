@@ -1,6 +1,7 @@
 package clusters
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -66,29 +67,54 @@ func (c *Cleaner) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		return "", err
 	}
 
-	// kubectl get all --all-namespaces -oyaml
-	getAllOut, err := os.Create(filepath.Join(output, "kubectl_get_all.yaml"))
+	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
+	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
+	// aka "kubectl get all" and "kubectl describe all", but also gets CRs and cluster-scoped resouces
+	getAllOut, err := os.OpenFile(filepath.Join(output, "kubectl_get_all.yaml"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
 	if err != nil {
 		return output, err
 	}
 	defer getAllOut.Close()
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "get", "all", "--all-namespaces", "-o", "yaml") //nolint:gosec
-	cmd.Stdout = getAllOut
-	if err := cmd.Run(); err != nil {
-		return output, err
-	}
-
-	// kubectl describe all --all-namespaces
-	describeAllOut, err := os.Create(filepath.Join(output, "kubectl_describe_all.txt"))
+	describeAllOut, err := os.OpenFile(filepath.Join(output, "kubectl_describe_all.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644) //nolint:gomnd
 	if err != nil {
 		return output, err
 	}
-	cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "describe", "all", "--all-namespaces") //nolint:gosec
-	cmd.Stdout = describeAllOut
-	if err := cmd.Run(); err != nil {
+	defer describeAllOut.Close()
+
+	var namespacedList bytes.Buffer
+	var clusterList bytes.Buffer
+	namespacedResources := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "api-resources", "--verbs=list", "--namespaced", "-o", "name") //nolint:gosec
+	namespacedResources.Stdout = &namespacedList
+	clusterResources := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "api-resources", "--verbs=list", "--namespaced=false", "-o", "name") //nolint:gosec
+	clusterResources.Stdout = &clusterList
+	if err := namespacedResources.Run(); err != nil {
 		return output, err
 	}
-	defer describeAllOut.Close()
+	if err := clusterResources.Run(); err != nil {
+		return output, err
+	}
+	combinedList := strings.Split(namespacedList.String()+clusterList.String(), "\n")
+
+	for _, resource := range combinedList {
+		if resource == "" {
+			// unwanted artifact of the split
+			continue
+		}
+		var getErr bytes.Buffer
+		var descErr bytes.Buffer
+		resourceGet := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "get", "--show-kind", "--ignore-not-found", "-A", "-oyaml", resource) //nolint:gosec
+		resourceGet.Stdout = getAllOut
+		resourceGet.Stderr = &getErr
+		resourceDescribe := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "describe", "--all-namespaces", resource) //nolint:gosec
+		resourceDescribe.Stdout = describeAllOut
+		resourceDescribe.Stderr = &descErr
+		if err := resourceGet.Run(); err != nil {
+			return output, fmt.Errorf("could not get resources for cmd '%s': err %s, stderr: %s", resourceGet.String(), err, getErr.String())
+		}
+		if err := resourceDescribe.Run(); err != nil {
+			return output, fmt.Errorf("could not get resources for cmd '%s': err %s, stderr: %s", resourceDescribe.String(), err, descErr.String())
+		}
+	}
 
 	// for each Pod, run kubectl logs
 	pods, err := c.cluster.Client().CoreV1().Pods("").List(ctx, metav1.ListOptions{})
