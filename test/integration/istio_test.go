@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -30,7 +31,13 @@ func TestIstioAddonDeployment(t *testing.T) {
 		WithJaeger().
 		WithKiali().
 		Build()
-	env, err := environments.NewBuilder().WithAddons(metallbAddon, istioAddon).Build(ctx)
+
+	builder := environments.NewBuilder().WithAddons(metallbAddon, istioAddon)
+
+	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
+	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
+
+	env, err := builder.Build(ctx)
 	require.NoError(t, err)
 
 	t.Log("waiting for the environment to be ready")
