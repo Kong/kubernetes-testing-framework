@@ -33,6 +33,7 @@ type Builder struct {
 	proxyPullSecret                   pullSecret
 	proxyLogLevel                     string
 	proxyServiceType                  corev1.ServiceType
+	proxyEnvVars                      map[string]string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -44,9 +45,10 @@ type Builder struct {
 // Kong Addon objects which can be deployed to cluster.Clusters
 func NewBuilder() *Builder {
 	builder := &Builder{
-		namespace:  DefaultNamespace,
-		name:       DefaultDeploymentName,
-		deployArgs: []string{},
+		namespace:    DefaultNamespace,
+		name:         DefaultDeploymentName,
+		deployArgs:   []string{},
+		proxyEnvVars: make(map[string]string),
 	}
 	return builder.WithDBLess()
 }
@@ -89,6 +91,7 @@ func (b *Builder) Build() *Addon {
 		proxyPullSecret:                   b.proxyPullSecret,
 		proxyLogLevel:                     b.proxyLogLevel,
 		proxyServiceType:                  b.proxyServiceType,
+		proxyEnvVars:                      b.proxyEnvVars,
 
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
@@ -156,6 +159,13 @@ func (b *Builder) WithLogLevel(level string) *Builder {
 // The default type is LoadBalancer.
 func (b *Builder) WithProxyServiceType(serviceType corev1.ServiceType) *Builder {
 	b.proxyServiceType = serviceType
+	return b
+}
+
+// WithProxyEnvVar sets an arbitrary proxy/Kong container environment variable to a string value. The name must be
+// the lowercase kong.conf style with no KONG_ prefix.
+func (b *Builder) WithProxyEnvVar(name, value string) *Builder {
+	b.proxyEnvVars[name] = value
 	return b
 }
 
