@@ -2,11 +2,22 @@
 
 ## Unreleased
 
+## v0.20.0
+
 ### Added
 
 - Added the ability to select the `Service` type for the proxy when using the
   Kong addon via the Go library.
   [#346](https://github.com/Kong/kubernetes-testing-framework/pull/346)
+- Added `WithProxyEnvVar()` Kong addon builder function, which sets environment
+  variables for the proxy container.
+  [#369](https://github.com/Kong/kubernetes-testing-framework/pull/369)
+
+### Fixed
+
+- Diagnostics now gets all resources, not the reduced set of resources returned
+  by `kubectl get all`.
+  [#362](https://github.com/Kong/kubernetes-testing-framework/pull/362)
 
 ## v0.19.0
 
