@@ -90,6 +90,7 @@ type Addon struct {
 	proxyPullSecret                   pullSecret
 	proxyLogLevel                     string
 	proxyServiceType                  corev1.ServiceType
+	proxyEnvVars                      map[string]string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -332,6 +333,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 		// set the enterprise defaults helm installation values
 		a.deployArgs = append(a.deployArgs, enterpriseDefaults()...)
+	}
+
+	for name, value := range a.proxyEnvVars {
+		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("env.%s=%s", name, value)}...)
 	}
 
 	// compile the helm installation values

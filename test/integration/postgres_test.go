@@ -8,6 +8,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -22,6 +23,8 @@ func TestKongWithPostgresDBMode(t *testing.T) {
 	metallb := metallbaddon.New()
 	kong := kongaddon.NewBuilder().WithPostgreSQL().Build()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
+	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
+	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
