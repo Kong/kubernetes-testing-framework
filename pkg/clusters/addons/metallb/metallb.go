@@ -36,6 +36,22 @@ const (
 
 	// DefaultNamespace indicates the default namespace this addon will be deployed to.
 	DefaultNamespace = "metallb-system"
+
+	addressPoolName     = "ktf-pool"
+	l2AdvertisementName = "ktf-empty"
+)
+
+var (
+	ipapResource = schema.GroupVersionResource{
+		Group:    "metallb.io",
+		Version:  "v1beta1",
+		Resource: "ipaddresspools",
+	}
+	l2aResource = schema.GroupVersionResource{
+		Group:    "metallb.io",
+		Version:  "v1beta1",
+		Resource: "l2advertisements",
+	}
 )
 
 type addon struct{}
@@ -69,27 +85,28 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
 
+	dynamicClient, err := dynamic.NewForConfig(cluster.Config())
+	if err != nil {
+		return fmt.Errorf("failed to create dynamic client: %w", err)
+	}
+
+	res := dynamicClient.Resource(l2aResource).Namespace(DefaultNamespace)
+	err = res.Delete(ctx, l2AdvertisementName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+	res = dynamicClient.Resource(ipapResource).Namespace(DefaultNamespace)
+	err = res.Delete(ctx, addressPoolName, metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
 	// generate a temporary kubeconfig since we're going to be using kubectl
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
 	defer os.Remove(kubeconfig.Name())
-
-	args := []string{
-		"--kubeconfig", kubeconfig.Name(),
-		"--namespace", DefaultNamespace,
-		"delete", "configmap", metalConfig,
-	}
-
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", args...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
-	}
 
 	return metallbDeleteHack(kubeconfig)
 }
@@ -124,7 +141,6 @@ var (
 	defaultStartIP = net.ParseIP("0.0.0.240")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
 	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml"
-	metalConfig    = "config"
 	secretKeyLen   = 128
 )
 
@@ -150,6 +166,10 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 
 	// create an ip address pool
 	if err := createIPAddressPool(ctx, cluster, dockerNetwork); err != nil {
+		return err
+	}
+
+	if err := createL2Advertisement(ctx, cluster); err != nil {
 		return err
 	}
 
@@ -189,11 +209,7 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 		return fmt.Errorf("failed to create dynamic client: %w", err)
 	}
 
-	res := dynamicClient.Resource(schema.GroupVersionResource{
-		Group:    "metallb.io",
-		Version:  "v1beta1",
-		Resource: "ipaddresspools",
-	}).Namespace("metallb-system")
+	res := dynamicClient.Resource(ipapResource).Namespace(DefaultNamespace)
 
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
@@ -204,7 +220,7 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 				"apiVersion": "metallb.io/v1beta1",
 				"kind":       "IPAddressPool",
 				"metadata": map[string]string{
-					"name": "metallb-addresspool",
+					"name": addressPoolName,
 				},
 				"spec": map[string]interface{}{
 					"addresses": []string{
@@ -220,6 +236,43 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 				continue
 			case <-ctx.Done():
 				return fmt.Errorf("failed to create metallb.io/v1beta1 IPAddressPool: %w", ctx.Err())
+			}
+		}
+
+		break
+	}
+	return nil
+}
+
+func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error {
+	dynamicClient, err := dynamic.NewForConfig(cluster.Config())
+	if err != nil {
+		return fmt.Errorf("failed to create dynamic client: %w", err)
+	}
+
+	res := dynamicClient.Resource(l2aResource).Namespace(DefaultNamespace)
+
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	for {
+		_, err = res.Create(ctx, &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "metallb.io/v1beta1",
+				"kind":       "L2Advertisement",
+				"metadata": map[string]string{
+					"name": l2AdvertisementName,
+				},
+			},
+		}, metav1.CreateOptions{})
+
+		if err != nil {
+			select {
+			case <-time.After(time.Second):
+				fmt.Println(err)
+				continue
+			case <-ctx.Done():
+				return fmt.Errorf("failed to create metallb.io/v1beta1 L2Advertisement: %w", ctx.Err())
 			}
 		}
 
@@ -275,15 +328,6 @@ func metallbDeleteHack(kubeconfig *os.File) error {
 
 	stderr := new(bytes.Buffer)
 	cmd := exec.Command("kubectl", deployArgs...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
-	}
-
-	stderr = new(bytes.Buffer)
-	cmd = exec.Command("kubectl", "--kubeconfig", kubeconfig.Name(), "delete", "namespace", DefaultNamespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 
