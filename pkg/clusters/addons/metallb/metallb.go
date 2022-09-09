@@ -10,11 +10,15 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"time"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/runtime/schema"
+	"k8s.io/client-go/dynamic"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
@@ -57,7 +61,7 @@ func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
 
-	return deployMetallbForKindCluster(cluster, kind.DefaultKindDockerNetwork)
+	return deployMetallbForKindCluster(ctx, cluster, kind.DefaultKindDockerNetwork)
 }
 
 func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
@@ -119,7 +123,7 @@ func (a *addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 var (
 	defaultStartIP = net.ParseIP("0.0.0.240")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
-	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.12.1/manifests/metallb.yaml"
+	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml"
 	metalConfig    = "config"
 	secretKeyLen   = 128
 )
@@ -129,36 +133,24 @@ var (
 // -----------------------------------------------------------------------------
 
 // deployMetallbForKindCluster deploys Metallb to the given Kind cluster using the Docker network provided for LoadBalancer IPs.
-func deployMetallbForKindCluster(cluster clusters.Cluster, dockerNetwork string) error {
+func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: DefaultNamespace}}
-	if _, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), &ns, metav1.CreateOptions{}); err != nil {
+	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
 		}
 	}
 
-	// get an IP range for the docker container network to use for MetalLB
-	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
-	if err != nil {
+	// create the metallb deployment and related resources (do this first so that
+	// we can create the IPAddressPool below with its CRD already in place).
+	if err := metallbDeployHack(cluster); err != nil {
+		return fmt.Errorf("failed to deploy metallb: %w", err)
+	}
+
+	// create an ip address pool
+	if err := createIPAddressPool(ctx, cluster, dockerNetwork); err != nil {
 		return err
-	}
-	ipStart, ipEnd := getIPRangeForMetallb(*network)
-
-	// deploy the metallb configuration
-	cfgMap := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      metalConfig,
-			Namespace: DefaultNamespace,
-		},
-		Data: map[string]string{
-			"config": getMetallbYAMLCfg(ipStart, ipEnd),
-		},
-	}
-	if _, err := cluster.Client().CoreV1().ConfigMaps(ns.Name).Create(context.Background(), cfgMap, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
-			return err
-		}
 	}
 
 	// generate and deploy a metallb memberlist secret
@@ -175,14 +167,65 @@ func deployMetallbForKindCluster(cluster clusters.Cluster, dockerNetwork string)
 			"secretkey": base64.StdEncoding.EncodeToString(secretKey),
 		},
 	}
-	if _, err := cluster.Client().CoreV1().Secrets(ns.Name).Create(context.Background(), secret, metav1.CreateOptions{}); err != nil {
+	if _, err := cluster.Client().CoreV1().Secrets(ns.Name).Create(ctx, secret, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err
 		}
 	}
 
-	// create the metallb deployment and related resources
-	return metallbDeployHack(cluster)
+	return nil
+}
+
+func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
+	// get an IP range for the docker container network to use for MetalLB
+	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
+	if err != nil {
+		return err
+	}
+	ipStart, ipEnd := getIPRangeForMetallb(*network)
+
+	dynamicClient, err := dynamic.NewForConfig(cluster.Config())
+	if err != nil {
+		return fmt.Errorf("failed to create dynamic client: %w", err)
+	}
+
+	res := dynamicClient.Resource(schema.GroupVersionResource{
+		Group:    "metallb.io",
+		Version:  "v1beta1",
+		Resource: "ipaddresspools",
+	}).Namespace("metallb-system")
+
+	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	defer cancel()
+
+	for {
+		_, err = res.Create(ctx, &unstructured.Unstructured{
+			Object: map[string]interface{}{
+				"apiVersion": "metallb.io/v1beta1",
+				"kind":       "IPAddressPool",
+				"metadata": map[string]string{
+					"name": "metallb-addresspool",
+				},
+				"spec": map[string]interface{}{
+					"addresses": []string{
+						networking.GetIPRangeStr(ipStart, ipEnd),
+					},
+				},
+			},
+		}, metav1.CreateOptions{})
+
+		if err != nil {
+			select {
+			case <-time.After(time.Second):
+				continue
+			case <-ctx.Done():
+				return fmt.Errorf("failed to create metallb.io/v1beta1 IPAddressPool: %w", ctx.Err())
+			}
+		}
+
+		break
+	}
+	return nil
 }
 
 // getIPRangeForMetallb provides a range of IP addresses to use for MetalLB given an IPv4 Network
@@ -194,16 +237,6 @@ func getIPRangeForMetallb(network net.IPNet) (startIP, endIP net.IP) {
 	startIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultStartIP))
 	endIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultEndIP))
 	return
-}
-
-func getMetallbYAMLCfg(ipStart, ipEnd net.IP) string {
-	return fmt.Sprintf(`
-address-pools:
-- name: default
-  protocol: layer2
-  addresses:
-  - %s
-`, networking.GetIPRangeStr(ipStart, ipEnd))
 }
 
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.

@@ -35,7 +35,6 @@ require (
 require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
-	github.com/blang/semver v3.5.1+incompatible
 	github.com/kong/deck v1.14.0
 	gopkg.in/yaml.v2 v2.4.0
 	k8s.io/cli-runtime v0.25.0

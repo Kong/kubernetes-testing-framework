@@ -8,7 +8,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -33,8 +32,6 @@ func TestEnvironmentWithRegistryAddon(t *testing.T) {
 		certmanager.New(),
 		registryAddon,
 	)
-	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
-	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
