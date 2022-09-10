@@ -148,8 +148,6 @@ func TestKongAddonDiagnostics(t *testing.T) {
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
 	builder := environment.NewBuilder().WithAddons(kong, metallb)
-	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
-	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
@@ -247,8 +245,6 @@ func TestKongWithNodePort(t *testing.T) {
 	metallbAddon := metallbaddon.New()
 	kongAddon := kongaddon.NewBuilder().WithProxyServiceType(corev1.ServiceTypeNodePort).Build()
 	builder := environment.NewBuilder().WithAddons(kongAddon, metallbAddon)
-	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
-	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
