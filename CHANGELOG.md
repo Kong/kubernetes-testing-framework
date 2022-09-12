@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+## v0.21.0
+
+### Fixed
+
+- Support k8s v1.25 in metallb addon by bumping to v0.13.5
+  [#371](https://github.com/Kong/kubernetes-testing-framework/pull/371)
+
 ## v0.20.0
 
 ### Added
