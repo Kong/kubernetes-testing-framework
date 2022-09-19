@@ -20,10 +20,10 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.96.0
 	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
-	k8s.io/api v0.25.0
+	k8s.io/api v0.25.1
 	k8s.io/apiextensions-apiserver v0.25.0
-	k8s.io/apimachinery v0.25.0
-	k8s.io/client-go v0.25.0
+	k8s.io/apimachinery v0.25.1
+	k8s.io/client-go v0.25.1
 	sigs.k8s.io/yaml v1.3.0
 )
 
@@ -37,7 +37,7 @@ require github.com/docker/go-connections v0.4.0 // indirect
 require (
 	github.com/kong/deck v1.14.0
 	gopkg.in/yaml.v2 v2.4.0
-	k8s.io/cli-runtime v0.25.0
+	k8s.io/cli-runtime v0.25.1
 	k8s.io/kubectl v0.25.0
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/controller-runtime v0.13.0
