@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.3.1
+	cloud.google.com/go/container v1.4.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.18+incompatible
 	github.com/google/go-github/v39 v39.2.0
@@ -16,10 +16,10 @@ require (
 	github.com/spf13/viper v1.13.0
 	github.com/stretchr/testify v1.8.0
 	golang.org/x/net v0.0.0-20220909164309-bea034e7d591 // indirect
-	golang.org/x/oauth2 v0.0.0-20220822191816-0ebed06d0094
+	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.96.0
-	google.golang.org/genproto v0.0.0-20220802133213-ce4fa296bf78
+	google.golang.org/genproto v0.0.0-20220916172020-2692e8806bfa
 	k8s.io/api v0.25.1
 	k8s.io/apiextensions-apiserver v0.25.1
 	k8s.io/apimachinery v0.25.1
@@ -139,7 +139,7 @@ require (
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/grpc v1.48.0 // indirect
-	google.golang.org/protobuf v1.28.0 // indirect
+	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
