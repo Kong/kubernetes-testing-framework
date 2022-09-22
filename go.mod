@@ -20,9 +20,9 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.96.0
 	google.golang.org/genproto v0.0.0-20220916172020-2692e8806bfa
-	k8s.io/api v0.25.1
+	k8s.io/api v0.25.2
 	k8s.io/apiextensions-apiserver v0.25.1
-	k8s.io/apimachinery v0.25.1
+	k8s.io/apimachinery v0.25.2
 	k8s.io/client-go v0.25.1
 	sigs.k8s.io/yaml v1.3.0
 )
