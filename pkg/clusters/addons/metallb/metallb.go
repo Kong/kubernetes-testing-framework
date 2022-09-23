@@ -214,6 +214,7 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
+	var lastErr error
 	for {
 		_, err = res.Create(ctx, &unstructured.Unstructured{
 			Object: map[string]interface{}{
@@ -231,11 +232,17 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 		}, metav1.CreateOptions{})
 
 		if err != nil {
+			if errors.IsAlreadyExists(err) {
+				// delete the existing resource and recreate it in another round of loop.
+				err = res.Delete(ctx, addressPoolName, metav1.DeleteOptions{})
+			}
+
+			lastErr = err
 			select {
 			case <-time.After(time.Second):
 				continue
 			case <-ctx.Done():
-				return fmt.Errorf("failed to create metallb.io/v1beta1 IPAddressPool: %w", ctx.Err())
+				return fmt.Errorf("failed to create metallb.io/v1beta1 IPAddressPool: %w, last error on create: %v", ctx.Err(), lastErr)
 			}
 		}
 
@@ -255,6 +262,7 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 	ctx, cancel := context.WithTimeout(ctx, time.Minute)
 	defer cancel()
 
+	var lastErr error
 	for {
 		_, err = res.Create(ctx, &unstructured.Unstructured{
 			Object: map[string]interface{}{
@@ -267,12 +275,17 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 		}, metav1.CreateOptions{})
 
 		if err != nil {
+			if errors.IsAlreadyExists(err) {
+				// delete the existing resource and recreate it in another round of loop.
+				err = res.Delete(ctx, l2AdvertisementName, metav1.DeleteOptions{})
+			}
+
+			lastErr = err
 			select {
 			case <-time.After(time.Second):
-				fmt.Println(err)
 				continue
 			case <-ctx.Done():
-				return fmt.Errorf("failed to create metallb.io/v1beta1 L2Advertisement: %w", ctx.Err())
+				return fmt.Errorf("failed to create metallb.io/v1beta1 L2Advertisement: %w, last error %v", ctx.Err(), lastErr)
 			}
 		}
 

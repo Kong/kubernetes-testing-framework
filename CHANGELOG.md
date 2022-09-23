@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Fixed
+
+- Delete `IPAddressPool` and `L2Advertisement` resources if the resource
+  exists before creating in metallb addon.
+  [#390](https://github.com/Kong/kubernetes-testing-framework/pull/390)
+
+
 ## v0.21.0
 
 ### Fixed
