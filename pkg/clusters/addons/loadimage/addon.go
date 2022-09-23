@@ -20,7 +20,7 @@ const (
 )
 
 type Addon struct {
-	image  string
+	images []string
 	loaded bool
 }
 

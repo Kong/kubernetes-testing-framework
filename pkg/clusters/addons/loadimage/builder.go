@@ -9,7 +9,7 @@ import (
 // -----------------------------------------------------------------------------
 
 type Builder struct {
-	image string
+	images []string
 }
 
 func NewBuilder() *Builder {
@@ -20,13 +20,13 @@ func (b *Builder) WithImage(image string) (*Builder, error) {
 	if len(image) == 0 {
 		return nil, errors.New("no image provided")
 	}
-	b.image = image
+	b.images = append(b.images, image)
 	return b, nil
 }
 
 func (b *Builder) Build() *Addon {
 	return &Addon{
-		image:  b.image,
+		images: b.images,
 		loaded: false,
 	}
 }
