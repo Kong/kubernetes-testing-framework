@@ -237,9 +237,9 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 				err = res.Delete(ctx, addressPoolName, metav1.DeleteOptions{})
 			}
 
-			lastErr = err
 			select {
 			case <-time.After(time.Second):
+				lastErr = err
 				continue
 			case <-ctx.Done():
 				return fmt.Errorf("failed to create metallb.io/v1beta1 IPAddressPool: %w, last error on create: %v", ctx.Err(), lastErr)

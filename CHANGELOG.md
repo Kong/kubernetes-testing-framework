@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.22.1
+
+### Fixed
+
+- Moved metallb error recording inside context switch, to avoid
+  recording the context expiration as the last error.
+
 ## v0.22.0
 
 ### Added 
