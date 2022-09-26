@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## v0.22.0
+
+### Added 
+
+- loadimage addon now supports loading multiple images.
+  [#391](https://github.com/Kong/kubernetes-testing-framework/pull/391) 
 
 ### Fixed
 
