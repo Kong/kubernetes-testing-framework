@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.22.2
+
+- Increased the metallb startup timeout.
+
 ## v0.22.1
 
 ### Fixed

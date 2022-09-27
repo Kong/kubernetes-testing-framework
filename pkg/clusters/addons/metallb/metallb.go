@@ -211,7 +211,7 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 
 	res := dynamicClient.Resource(ipapResource).Namespace(DefaultNamespace)
 
-	ctx, cancel := context.WithTimeout(ctx, time.Minute)
+	ctx, cancel := context.WithTimeout(ctx, time.Minute*3) //nolint:gomnd
 	defer cancel()
 
 	var lastErr error
