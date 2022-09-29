@@ -21,13 +21,15 @@ type Builder struct {
 	clusterVersion *semver.Version
 	configPath     *string
 	calicoCNI      bool
+	verbosity      int
 }
 
 // NewBuilder provides a new *Builder object.
 func NewBuilder() *Builder {
 	return &Builder{
-		Name:   uuid.NewString(),
-		addons: make(clusters.Addons),
+		Name:      uuid.NewString(),
+		addons:    make(clusters.Addons),
+		verbosity: 3,
 	}
 }
 
@@ -59,9 +61,16 @@ func (b *Builder) WithCalicoCNI() *Builder {
 	return b
 }
 
+// WithVerbosity sets the kind CLI verbosity level
+func (b *Builder) WithVerbosity(v int) *Builder {
+	b.verbosity = v
+	return b
+}
+
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 	deployArgs := make([]string, 0)
+	deployArgs = append(deployArgs, fmt.Sprintf("-v%d", b.verbosity))
 	if b.clusterVersion != nil {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
 	}
