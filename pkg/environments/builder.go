@@ -3,6 +3,7 @@ package environments
 import (
 	"context"
 	"fmt"
+	"os"
 	"strings"
 
 	"github.com/blang/semver/v4"
@@ -10,6 +11,17 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
+)
+
+const (
+	etcdMemConfig = `kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+kubeadmConfigPatches:
+- |
+  kind: ClusterConfiguration
+  etcd:
+    local:
+      dataDir: /tmp/etcd`
 )
 
 // -----------------------------------------------------------------------------
@@ -106,6 +118,15 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		if b.calicoCNI {
 			builder.WithCalicoCNI()
 		}
+		loc, err := os.CreateTemp("", "ktf-config")
+		if err != nil {
+			return nil, err
+		}
+		_, err = loc.WriteString(etcdMemConfig)
+		if err != nil {
+			return nil, err
+		}
+		builder.WithConfig(loc.Name())
 		cluster, err = builder.Build(ctx)
 		if err != nil {
 			return nil, err
