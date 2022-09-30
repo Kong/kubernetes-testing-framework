@@ -105,18 +105,18 @@ func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 	if err := createCluster(ctx, b.Name, deployArgs...); err != nil {
 		//if clusterDebug {
 		output, tmpErr := os.MkdirTemp(os.TempDir(), "ktf-diag-")
-		if err != nil {
+		if tmpErr != nil {
 			return nil, fmt.Errorf("failed to create cluster %s: %w and failed dumping diagnostics: %s",
 				b.Name, err, tmpErr)
 		}
 		stderr := new(bytes.Buffer)
-		cmd := exec.Command("kind", "export", "logs", output)
+		cmd := exec.Command("kind", "export", "logs", "-n", b.Name, output)
 		cmd.Stdout = io.Discard
 		cmd.Stderr = stderr
 
-		if tmpErr := cmd.Run(); err != nil {
-			return nil, fmt.Errorf("failed to create cluster %s: %w and failed dumping diagnostics: %s",
-				b.Name, err, tmpErr)
+		if tmpErr := cmd.Run(); tmpErr != nil {
+			return nil, fmt.Errorf("failed to create cluster %s: %w and failed dumping diagnostics (%s): %s",
+				b.Name, err, tmpErr, stderr)
 		}
 		return nil, fmt.Errorf("failed to create cluster %s: %w, diagnostics in %s", b.Name, err, output)
 		//}
