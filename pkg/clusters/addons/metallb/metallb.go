@@ -19,10 +19,14 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	"sigs.k8s.io/kustomize/api/types"
+	kustomize "sigs.k8s.io/kustomize/api/types"
+	"sigs.k8s.io/kustomize/kyaml/resid"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/kubectl"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
@@ -140,7 +144,7 @@ func (a *addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 var (
 	defaultStartIP = net.ParseIP("0.0.0.240")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
-	metalManifest  = "https://raw.githubusercontent.com/metallb/metallb/v0.13.5/config/manifests/metallb-native.yaml"
+	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.5"
 	secretKeyLen   = 128
 )
 
@@ -308,23 +312,64 @@ func getIPRangeForMetallb(network net.IPNet) (startIP, endIP net.IP) {
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.
 //
 // See: https://github.com/Kong/kubernetes-testing-framework/issues/25
+
+const admissionPatch = `
+- op: replace
+  # ipaddresspoolvalidationwebhook.metallb.io
+  path: /webhooks/5/failurePolicy
+  value: "Ignore"
+- op: replace
+  # l2advertisementvalidationwebhook.metallb.io
+  path: /webhooks/6/failurePolicy
+  value: "Ignore"
+`
+
+func getManifest() (io.Reader, error) {
+	return kubectl.GetKustomizedManifest(kustomize.Kustomization{
+		Resources: []string{metalManifest},
+		Patches: []kustomize.Patch{
+			{
+				Patch: admissionPatch,
+				Target: &types.Selector{
+					ResId: resid.ResId{
+						Gvk: resid.Gvk{
+							Group:   "admissionregistration.k8s.io",
+							Version: "v1",
+							Kind:    "ValidatingWebhookConfiguration",
+						},
+						Name:      "metallb-webhook-configuration",
+						Namespace: "metallb-system",
+					},
+				},
+			},
+		},
+	})
+}
+
 func metallbDeployHack(cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using kubectl
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
 		return err
 	}
+
 	defer os.Remove(kubeconfig.Name())
 
 	deployArgs := []string{
 		"--kubeconfig", kubeconfig.Name(),
-		"apply", "-f", metalManifest,
+		"apply", "-f", "-",
+	}
+
+	manifest, err := getManifest()
+	if err != nil {
+		return fmt.Errorf("could not deploy metallb: %w", err)
 	}
 
 	stderr := new(bytes.Buffer)
 	cmd := exec.Command("kubectl", deployArgs...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
+	cmd.Stdin = manifest
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", stderr.String(), err)
@@ -336,13 +381,19 @@ func metallbDeployHack(cluster clusters.Cluster) error {
 func metallbDeleteHack(kubeconfig *os.File) error {
 	deployArgs := []string{
 		"--kubeconfig", kubeconfig.Name(),
-		"delete", "-f", metalManifest,
+		"delete", "-f", "-",
+	}
+
+	manifest, err := getManifest()
+	if err != nil {
+		return fmt.Errorf("could not delete metallb: %w", err)
 	}
 
 	stderr := new(bytes.Buffer)
 	cmd := exec.Command("kubectl", deployArgs...)
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
+	cmd.Stdin = manifest
 
 	if err := cmd.Run(); err != nil {
 		return fmt.Errorf("%s: %w", stderr.String(), err)

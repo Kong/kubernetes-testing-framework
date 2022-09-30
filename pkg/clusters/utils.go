@@ -210,7 +210,7 @@ func CleanupGeneratedResources(ctx context.Context, cluster Cluster, creatorID s
 func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeURL string) error {
 	// generate the kustomize YAML
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", "kustomize", kustomizeURL)
+	cmd := exec.CommandContext(ctx, "kubectl", "-v9", "kustomize", kustomizeURL)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
@@ -225,7 +225,7 @@ func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeUR
 func KustomizeDeleteForCluster(ctx context.Context, cluster Cluster, kustomizeURL string) error {
 	// generate the kustomize YAML
 	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kubectl", "kustomize", kustomizeURL)
+	cmd := exec.CommandContext(ctx, "kubectl", "-v9", "kustomize", kustomizeURL)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
