@@ -26,11 +26,11 @@ func GetKustomizedManifest(kustomization types.Kustomization, manifests ...io.Re
 		if err != nil {
 			return nil, err
 		}
-		err = os.WriteFile(filepath.Join(workDir, fmt.Sprintf("base_%d.yaml", i)), orig, 0o600) //nolint:gomnd
+		err = os.WriteFile(filepath.Join(workDir, fmt.Sprintf("resource_%d.yaml", i)), orig, 0o600) //nolint:gomnd
 		if err != nil {
 			return nil, err
 		}
-		kustomization.Resources = append(kustomization.Bases, fmt.Sprintf("base_%d.yaml", i))
+		kustomization.Resources = append(kustomization.Resources, fmt.Sprintf("resource_%d.yaml", i))
 	}
 	marshalled, err := yaml.Marshal(kustomization)
 	if err != nil {
