@@ -1,8 +1,12 @@
 package kind
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
 	"sync"
 
 	"github.com/blang/semver/v4"
@@ -10,6 +14,10 @@ import (
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+)
+
+var (
+	clusterDebug = len(os.Getenv("KTF_KIND_DEBUG")) > 0
 )
 
 // Builder generates clusters.Cluster objects backed by Kind given
@@ -90,7 +98,28 @@ func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
 		deployArgs = append(deployArgs, "--config", *b.configPath)
 	}
 
+	if clusterDebug {
+		deployArgs = append(deployArgs, "--retain")
+	}
+
 	if err := createCluster(ctx, b.Name, deployArgs...); err != nil {
+		if clusterDebug {
+			output, tmpErr := os.MkdirTemp(os.TempDir(), "ktf-diag-")
+			if err != nil {
+				return nil, fmt.Errorf("failed to create cluster %s: %w and failed dumping diagnostics: %s",
+					b.Name, err, tmpErr)
+			}
+			stderr := new(bytes.Buffer)
+			cmd := exec.Command("kind", "export", "logs", output)
+			cmd.Stdout = io.Discard
+			cmd.Stderr = stderr
+
+			if tmpErr := cmd.Run(); err != nil {
+				return nil, fmt.Errorf("failed to create cluster %s: %w and failed dumping diagnostics: %s",
+					b.Name, err, tmpErr)
+			}
+			return nil, fmt.Errorf("failed to create cluster %s: %w, diagnostics in %s", b.Name, err, output)
+		}
 		return nil, fmt.Errorf("failed to create cluster %s: %w", b.Name, err)
 	}
 
