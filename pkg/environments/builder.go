@@ -22,6 +22,7 @@ type Builder struct {
 
 	addons            clusters.Addons
 	existingCluster   clusters.Cluster
+	clusterBuilder    clusters.Builder
 	kubernetesVersion *semver.Version
 	calicoCNI         bool
 }
@@ -75,14 +76,29 @@ func (b *Builder) WithCalicoCNI() *Builder {
 // entirely on the underlying clusters.Cluster implementation that was requested.
 func (b *Builder) Build(ctx context.Context) (Environment, error) {
 	var cluster clusters.Cluster
+	var err error
 
 	if b.calicoCNI && b.existingCluster != nil {
 		return nil, fmt.Errorf("trying to deploy Calico CNI on an existing cluster is not currently supported")
 	}
 
 	// determine if an existing cluster has been configured for deployment
-	if b.existingCluster == nil {
-		var err error
+	if b.existingCluster != nil {
+		if b.kubernetesVersion != nil {
+			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
+		}
+
+		if b.clusterBuilder != nil {
+			return nil, fmt.Errorf("can't provide cluster builder when using an existing cluster")
+		}
+
+		cluster = b.existingCluster
+	} else if b.clusterBuilder != nil {
+		cluster, err = b.clusterBuilder.Build(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
 		builder := kind.NewBuilder().WithName(b.Name)
 		if b.kubernetesVersion != nil {
 			builder.WithClusterVersion(*b.kubernetesVersion)
@@ -94,11 +110,6 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		if b.kubernetesVersion != nil {
-			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
-		}
-		cluster = b.existingCluster
 	}
 
 	// determine the addon dependencies of the cluster before building
