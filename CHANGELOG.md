@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.22.3
+
+- Increased the metallb `IPAddressPool` IP range.
+
 ## v0.22.2
 
 - Increased the metallb startup timeout.
