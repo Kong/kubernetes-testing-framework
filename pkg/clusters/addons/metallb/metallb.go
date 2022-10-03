@@ -142,7 +142,7 @@ func (a *addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 // -----------------------------------------------------------------------------
 
 var (
-	defaultStartIP = net.ParseIP("0.0.0.240")
+	defaultStartIP = net.ParseIP("0.0.0.100")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
 	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.5"
 	secretKeyLen   = 128
