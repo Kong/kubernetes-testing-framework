@@ -42,7 +42,8 @@ type Cluster struct {
 
 // New provides a new clusters.Cluster backed by a Kind based Kubernetes Cluster.
 func New(ctx context.Context) (*Cluster, error) {
-	return NewBuilder().Build(ctx)
+	cluster, err := NewBuilder().Build(ctx)
+	return cluster.(*Cluster), err
 }
 
 // -----------------------------------------------------------------------------

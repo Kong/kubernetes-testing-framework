@@ -60,7 +60,7 @@ func (b *Builder) WithCalicoCNI() *Builder {
 }
 
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
-func (b *Builder) Build(ctx context.Context) (*Cluster, error) {
+func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	deployArgs := make([]string, 0)
 	if b.clusterVersion != nil {
 		deployArgs = append(deployArgs, "--image", "kindest/node:v"+b.clusterVersion.String())
