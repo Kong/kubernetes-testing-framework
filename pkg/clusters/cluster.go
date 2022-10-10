@@ -47,3 +47,7 @@ type Cluster interface {
 	// DeleteAddon removes an existing cluster Addon.
 	DeleteAddon(ctx context.Context, addon Addon) error
 }
+
+type Builder interface {
+	Build(ctx context.Context) (Cluster, error)
+}

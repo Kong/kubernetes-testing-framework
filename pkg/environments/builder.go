@@ -22,6 +22,7 @@ type Builder struct {
 
 	addons            clusters.Addons
 	existingCluster   clusters.Cluster
+	clusterBuilder    clusters.Builder
 	kubernetesVersion *semver.Version
 	calicoCNI         bool
 }
@@ -56,6 +57,12 @@ func (b *Builder) WithExistingCluster(cluster clusters.Cluster) *Builder {
 	return b
 }
 
+// WithClusterBuilder instructs the environment builder to use a provided cluster builder instead of the default one.
+func (b *Builder) WithClusterBuilder(builder clusters.Builder) *Builder {
+	b.clusterBuilder = builder
+	return b
+}
+
 // WithKubernetesVersion indicates which Kubernetes version to deploy clusters
 // with, if the caller wants something other than the default.
 func (b *Builder) WithKubernetesVersion(version semver.Version) *Builder {
@@ -80,9 +87,26 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		return nil, fmt.Errorf("trying to deploy Calico CNI on an existing cluster is not currently supported")
 	}
 
+	if b.existingCluster != nil && b.clusterBuilder != nil {
+		return nil, fmt.Errorf("Environment cannot specify both existingCluster and clusterBuilder")
+	}
+
 	// determine if an existing cluster has been configured for deployment
-	if b.existingCluster == nil {
-		var err error
+	var err error
+	if b.existingCluster != nil {
+		if b.kubernetesVersion != nil {
+			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
+		}
+		cluster = b.existingCluster
+	} else if b.clusterBuilder != nil {
+		if b.kubernetesVersion != nil {
+			return nil, fmt.Errorf("can't provide kubernetes version when providing a cluster builder")
+		}
+		cluster, err = b.clusterBuilder.Build(ctx)
+		if err != nil {
+			return nil, err
+		}
+	} else {
 		builder := kind.NewBuilder().WithName(b.Name)
 		if b.kubernetesVersion != nil {
 			builder.WithClusterVersion(*b.kubernetesVersion)
@@ -94,11 +118,6 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
-		if b.kubernetesVersion != nil {
-			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
-		}
-		cluster = b.existingCluster
 	}
 
 	// determine the addon dependencies of the cluster before building
