@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.23.0
+
+- Upgrade `metallb` addon to `v0.13.6`
+
 ## v0.22.3
 
 - Increased the metallb `IPAddressPool` IP range.
