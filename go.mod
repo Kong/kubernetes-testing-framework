@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.4.0
+	cloud.google.com/go/container v1.5.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.19+incompatible
 	github.com/google/go-github/v39 v39.2.0
@@ -19,7 +19,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20220909003341-f21342109be1
 	golang.org/x/text v0.3.7 // indirect
 	google.golang.org/api v0.98.0
-	google.golang.org/genproto v0.0.0-20220916172020-2692e8806bfa
+	google.golang.org/genproto v0.0.0-20221014173430-6e2ab493f96b
 	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.3
 	k8s.io/apimachinery v0.25.3
@@ -81,7 +81,7 @@ require (
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
-	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
+	github.com/googleapis/gax-go/v2 v2.5.1 // indirect
 	github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
 	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
@@ -140,7 +140,7 @@ require (
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect
 	golang.org/x/time v0.0.0-20220609170525-579cf78fd858 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
-	google.golang.org/grpc v1.48.0 // indirect
+	google.golang.org/grpc v1.50.0 // indirect
 	google.golang.org/protobuf v1.28.1 // indirect
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
