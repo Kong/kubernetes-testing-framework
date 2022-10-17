@@ -14,10 +14,6 @@ jobs:
     environment: "integration-tests"
     runs-on: ubuntu-latest
     steps:
-    - uses: Kong/kong-license@master
-      id: license
-      with:
-        password: ${{ secrets.PULP_PASSWORD }}
 
     - name: setup golang
       uses: actions/setup-go@v3
