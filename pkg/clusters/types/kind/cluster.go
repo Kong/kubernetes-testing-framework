@@ -138,3 +138,11 @@ func (c *Cluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
 
 	return nil
 }
+
+// DumpDiagnostics produces diagnostics data for the cluster at a given time.
+// It uses the provided meta string to write to meta.txt file which will allow
+// for diagnostics identification.
+// It returns the path to directory containing all the diagnostic files and an error.
+func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, error) {
+	return clusters.DumpDiagnostics(ctx, c, meta)
+}

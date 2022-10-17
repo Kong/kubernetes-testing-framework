@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	metallbaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
@@ -153,10 +152,10 @@ func TestKongAddonDiagnostics(t *testing.T) {
 	env, err := builder.Build(ctx)
 	require.NoError(t, err)
 
-	cleaner := clusters.NewCleaner(env.Cluster())
-	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	cluster := env.Cluster()
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), cluster.Name())
 	defer func() {
-		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), cluster.Name())
 		require.NoError(t, env.Cleanup(ctx))
 	}()
 
@@ -166,7 +165,7 @@ func TestKongAddonDiagnostics(t *testing.T) {
 
 	// this would normally run in the defer iff the test fails, but not for the purposes of testing it
 	t.Log("dumping diagnostics to filesystem")
-	output, err := cleaner.DumpDiagnostics(ctx, t.Name())
+	output, err := cluster.DumpDiagnostics(ctx, t.Name())
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, os.RemoveAll(output))
@@ -215,10 +214,10 @@ func TestKongAddonDiagnosticsPostgres(t *testing.T) {
 	env, err := builder.Build(ctx)
 	require.NoError(t, err)
 
-	cleaner := clusters.NewCleaner(env.Cluster())
-	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	cluster := env.Cluster()
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), cluster.Name())
 	defer func() {
-		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), cluster.Name())
 		require.NoError(t, env.Cleanup(ctx))
 	}()
 
@@ -228,7 +227,7 @@ func TestKongAddonDiagnosticsPostgres(t *testing.T) {
 
 	// this would normally run in the defer iff the test fails, but not for the purposes of testing it
 	t.Log("dumping diagnostics to filesystem")
-	output, err := cleaner.DumpDiagnostics(ctx, t.Name())
+	output, err := cluster.DumpDiagnostics(ctx, t.Name())
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, os.RemoveAll(output))
