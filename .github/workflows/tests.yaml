@@ -11,7 +11,6 @@ on:
 
 jobs:
   unit-tests:
-    environment: "integration-tests"
     runs-on: ubuntu-latest
     steps:
 
@@ -49,7 +48,9 @@ jobs:
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
     steps:
+
     - uses: actions/checkout@v3
+
     - id: set_test_names
       name: Set test names
       working-directory: test/integration/
@@ -57,22 +58,38 @@ jobs:
       # sed to add the extra $ is because some of our test names overlap. we need it so the -run regex only matches one test
       run: |
         echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
+
     - name: Print test names
       run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
 
+  setup-kong-license:
+    runs-on: ubuntu-latest
+    environment: "integration-tests"
+    outputs:
+      license_encrypted: ${{ steps.license.outputs.encrypted }}
+    steps:
+
+    - uses: Kong/kong-license@master
+      with:
+        password: ${{ secrets.PULP_PASSWORD }}
+    - name: set encrypted license as output
+      id: license
+      run: |
+        echo "encrypted=$(gpg --symmetric --batch --passphrase ${{ secrets.LICENSE_ENCRYPTION_PASSWORD }} --output - <(echo ${KONG_LICENSE_DATA}) | base64 -w0)" >> $GITHUB_OUTPUT
+
   integration-tests:
-    needs: setup-integration-tests
+    needs:
+    - setup-integration-tests
+    - setup-kong-license
     strategy:
       fail-fast: false
       matrix:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
-    environment: "integration-tests"
     runs-on: ubuntu-latest
     steps:
-    - uses: Kong/kong-license@master
-      id: license
-      with:
-        password: ${{ secrets.PULP_PASSWORD }}
+
+    - name: set Kong license env
+      run: echo "KONG_LICENSE_DATA=$(gpg --decrypt --quiet --batch --passphrase ${{ secrets.LICENSE_ENCRYPTION_PASSWORD }} --output - <(echo ${{ needs.setup-kong-license.outputs.license_encrypted }} | base64 --decode ))" >> $GITHUB_ENV
 
     - name: setup golang
       uses: actions/setup-go@v3
@@ -97,7 +114,7 @@ jobs:
       env:
         KTF_TEST_KONG_PULL_USERNAME: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
         KTF_TEST_KONG_PULL_PASSWORD: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
-        KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
+        KONG_LICENSE_DATA: ${{ env.KONG_LICENSE_DATA }}
         TEST_RUN: ${{ matrix.test }}
         NCPU: 1
 
