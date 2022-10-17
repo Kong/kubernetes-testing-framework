@@ -151,5 +151,4 @@ func generateNetPol(app string, allowCIDR string) *netv1.NetworkPolicy {
 			}},
 		},
 	}
-
 }
