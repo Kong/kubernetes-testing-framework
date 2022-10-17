@@ -3,14 +3,14 @@ name: tests
 on:
   pull_request:
     branches:
-      - 'main'
+    - 'main'
   push:
     branches:
-      - 'main'
+    - 'main'
   workflow_dispatch: {}
 
 jobs:
-  tests-and-coverage:
+  unit-tests:
     environment: "integration-tests"
     runs-on: ubuntu-latest
     steps:
@@ -40,14 +40,70 @@ jobs:
     - name: run unit tests
       run: make test.unit
 
-    - name: run integration tests
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        fail_ci_if_error: true
+        files: unit.coverage.out
+        verbose: true
+
+  setup-integration-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      test_names: ${{ steps.set_test_names.outputs.test_names }}
+    steps:
+    - uses: actions/checkout@v3
+    - id: set_test_names
+      name: Set test names
+      working-directory: test/integration/
+      # grep magic described in https://unix.stackexchange.com/a/13472
+      # sed to add the extra $ is because some of our test names overlap. we need it so the -run regex only matches one test
+      run: |
+        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
+    - name: Print test names
+      run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
+
+  integration-tests:
+    needs: setup-integration-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
+    environment: "integration-tests"
+    runs-on: ubuntu-latest
+    steps:
+    - uses: Kong/kong-license@master
+      id: license
+      with:
+        password: ${{ secrets.PULP_PASSWORD }}
+
+    - name: setup golang
+      uses: actions/setup-go@v3
+      with:
+        go-version: '^1.19'
+
+    - name: cache go modules
+      uses: actions/cache@v3
+      with:
+        path: ~/go/pkg/mod
+        key: ${{ runner.os }}-build-codegen-${{ hashFiles('**/go.sum') }}
+        restore-keys: |
+          ${{ runner.os }}-build-codegen-
+
+    - name: checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
+    - name: run integration test ${{ matrix.test }}
       run: make test.integration
       env:
         KTF_TEST_KONG_PULL_USERNAME: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
         KTF_TEST_KONG_PULL_PASSWORD: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
         KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
-        NCPU: 2 # it was found that github actions (specifically) did not seem to perform well when spawning
-                # multiple kind clusters within a single job so this is hardcoded to 2 to ensure a limit of 2 clusters at any one point.
+        TEST_RUN: ${{ matrix.test }}
+        NCPU: 1
 
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
@@ -56,3 +112,10 @@ jobs:
         fail_ci_if_error: true
         files: unit.coverage.out,integration.coverage.out
         verbose: true
+
+  integration-tests-passed:
+    needs: integration-tests
+    runs-on: ubuntu-latest
+    steps:
+    - name: integrations tests pased
+      run: echo all integrations tests passed

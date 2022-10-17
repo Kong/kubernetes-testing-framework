@@ -36,11 +36,14 @@ test.unit:
 		-coverprofile=unit.coverage.out \
 		./pkg/...
 
+TEST_RUN ?= ""
+
 .PHONY: test.integration
 test.integration:
 	@GOFLAGS="-tags=integration_tests" go test \
 		-parallel $(NCPU) \
 		-timeout 45m \
+		-run $(TEST_RUN) \
 		-race \
 		-v \
 		-covermode=atomic \
