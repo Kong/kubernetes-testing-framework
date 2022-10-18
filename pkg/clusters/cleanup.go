@@ -79,3 +79,10 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 
 	return nil
 }
+
+// DumpDiagnostics dumps diagnostics from the underlying cluster.
+//
+// Deprecated. Users should use Cluster.DumpDiagnostics().
+func (c *Cleaner) DumpDiagnostics(ctx context.Context, meta string) (string, error) {
+	return c.cluster.DumpDiagnostics(ctx, meta)
+}
