@@ -46,6 +46,11 @@ type Cluster interface {
 
 	// DeleteAddon removes an existing cluster Addon.
 	DeleteAddon(ctx context.Context, addon Addon) error
+
+	// DumpDiagnostics dumps the diagnostic data to temporary directory and return the name
+	// of said directory and an error.
+	// It uses the provided meta string allow for diagnostics identification.
+	DumpDiagnostics(ctx context.Context, meta string) (string, error)
 }
 
 type Builder interface {
