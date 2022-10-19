@@ -413,6 +413,15 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 	}
 	diagnostics["root_endpoint.json"] = b.Bytes()
 
+	// Extract the version from the root endpoint.
+	var kongVersion struct {
+		Version string `json:"version"`
+	}
+	err = json.Unmarshal(b.Bytes(), &kongVersion)
+	if err != nil {
+		return diagnostics, fmt.Errorf("could not unmarshal Kong version: %w", err)
+	}
+
 	switch a.proxyDBMode {
 	case PostgreSQL:
 		out, err := os.CreateTemp(os.TempDir(), "ktf-kong-")
@@ -476,8 +485,9 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 				return diagnostics, fmt.Errorf("could not build Kong state: %w", err)
 			}
 			err = file.KongStateToFile(currentState, file.WriteConfig{
-				Filename:   out.Name(),
-				FileFormat: file.YAML,
+				Filename:    out.Name(),
+				FileFormat:  file.YAML,
+				KongVersion: kongVersion.Version,
 			})
 			if err != nil {
 				return diagnostics, fmt.Errorf("could not write Kong config: %w", err)
