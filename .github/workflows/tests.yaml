@@ -75,7 +75,8 @@ jobs:
     - name: set encrypted license as output
       id: license
       run: |
-        echo "encrypted=$(gpg --symmetric --batch --passphrase ${{ secrets.LICENSE_ENCRYPTION_PASSWORD }} --output - <(echo ${KONG_LICENSE_DATA}) | base64 -w0)" >> $GITHUB_OUTPUT
+        ENCRYPTED_LICENSE=$(gpg --symmetric --batch --passphrase '${{ secrets.LICENSE_ENCRYPTION_PASSWORD }}' --output - <(echo ${KONG_LICENSE_DATA}) | base64 -w0)
+        echo "encrypted=${ENCRYPTED_LICENSE}" >> $GITHUB_OUTPUT
 
   integration-tests:
     needs:
