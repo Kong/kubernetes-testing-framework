@@ -7,10 +7,10 @@ import (
 	"strings"
 	"sync"
 
+	"github.com/blang/semver/v4"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
-	"github.com/blang/semver/v4"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
 

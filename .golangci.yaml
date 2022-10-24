@@ -4,7 +4,6 @@ linters:
   enable:
   - asciicheck
   - bodyclose
-  - deadcode
   - depguard
   - dogsled
   - durationcheck
@@ -16,6 +15,7 @@ linters:
   - goimports
   - gomnd
   - gosec
+  - gci
   - gosimple
   - govet
   - importas
@@ -27,9 +27,18 @@ linters:
   - predeclared
   - revive
   - staticcheck
-  - structcheck
   - typecheck
   - unconvert
   - unparam
-  - varcheck
+  - unused
   - wastedassign
+
+linters-settings:
+  gci:
+    sections:
+    - standard
+    - default
+    - prefix(github.com/kong/kubernetes-testing-framework)
+
+issues:
+  fix: true

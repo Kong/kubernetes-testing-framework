@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"testing"
 
+	"github.com/kong/go-kong/kong"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/kong/go-kong/kong"
 	kongt "github.com/kong/kubernetes-testing-framework/pkg/utils/kong"
 )
 
