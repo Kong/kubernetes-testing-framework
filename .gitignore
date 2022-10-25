@@ -14,3 +14,10 @@ build/*
 
 # Dependency directories (remove the comment below to include it)
 # vendor/
+
+# IDE directories and files
+.idea/
+.vscode/
+
+# Mac files
+.DS_Store
