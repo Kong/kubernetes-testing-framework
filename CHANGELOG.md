@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Changed Kong addon to use udpProxy dict from charts value file to instantiate 
+  a udp proxy, instead of creating a udp proxy by kubectl.
+
 ## v0.23.0
 
 - Upgrade `metallb` addon to `v0.13.6`

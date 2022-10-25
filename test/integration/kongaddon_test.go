@@ -240,7 +240,7 @@ func TestKongAddonDiagnosticsPostgres(t *testing.T) {
 }
 
 func TestKongWithNodePort(t *testing.T) {
-	t.Log("configuring the testing environment, with the kond addon using NodePort service type for proxy")
+	t.Log("configuring the testing environment, with the kong addon using NodePort service type for proxy")
 	metallbAddon := metallbaddon.New()
 	kongAddon := kongaddon.NewBuilder().WithProxyServiceType(corev1.ServiceTypeNodePort).Build()
 	builder := environment.NewBuilder().WithAddons(kongAddon, metallbAddon)
@@ -270,6 +270,34 @@ func TestKongWithNodePort(t *testing.T) {
 			}
 
 			return string(b) == `{"message":"no Route matched with those values"}`
+		}
+
+		return false
+	}, time.Minute*3, time.Second)
+}
+
+func TestKongUDPProxy(t *testing.T) {
+	t.Log("configuring the testing environment")
+	kongAddon := kongaddon.NewBuilder().Build()
+	builder := environment.NewBuilder().WithAddons(kongAddon)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+	defer func() { assert.NoError(t, env.Cleanup(ctx)) }()
+
+	t.Log("verifying the udp-proxy is bound to UDP proto")
+	require.Eventually(t, func() bool {
+		kongServices := env.Cluster().Client().CoreV1().Services(kong.DefaultNamespace)
+		service, err := kongServices.Get(ctx, kong.DefaultUDPServiceName, metav1.GetOptions{})
+		if err != nil {
+			return false
+		}
+
+		for _, port := range service.Spec.Ports {
+			if port.Port == kong.DefaultUDPServicePort && port.Protocol == corev1.ProtocolUDP {
+				return true
+			}
 		}
 
 		return false
