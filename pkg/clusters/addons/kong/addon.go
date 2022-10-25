@@ -255,8 +255,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "env.database=postgres",
 			"--set", "postgresql.enabled=true",
-			"--set", "postgresql.postgresqlUsername=kong",
-			"--set", "postgresql.postgresqlDatabase=kong",
+			"--set", "postgresql.auth.username=kong",
+			"--set", "postgresql.auth.database=kong",
 			"--set", "postgresql.service.port=5432",
 		}...)
 	}
