@@ -32,13 +32,14 @@ const (
 	// DefaultProxyTCPServicePort is the port on the service at which the Kong proxy can be reached by default.
 	DefaultProxyTCPServicePort = 80
 
+	// DefaultProxyHTTPServicePort is the port on the service at which the Kong proxy servers HTTP traffic by default.
+	DefaultProxyHTTPPort = 80
+
 	// DefaultProxyTLSServicePort is the port on the service at which the Kong proxy can be reached by default.
 	DefaultProxyTLSServicePort = 443
 
 	// DefaultUDPServiceName provides the name of the LoadBalancer service the proxy uses for UDP traffic.
-	// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
-	//       See: https://github.com/Kong/charts/issues/329
-	DefaultUDPServiceName = DefaultReleaseName + "-udp"
+	DefaultUDPServiceName = DefaultReleaseName + "-udp-proxy"
 
 	// DefaultUDPServicePort indicates the default open port to be found on the Kong proxy's UDP service.
 	DefaultUDPServicePort = 9999

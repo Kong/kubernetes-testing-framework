@@ -122,8 +122,6 @@ func (a *Addon) Namespace() string {
 // Kong Addon - Proxy Endpoint Methods
 // -----------------------------------------------------------------------------
 
-const defaultHTTPPort = 80
-
 // ProxyURL provides a routable *url.URL for accessing the Kong proxy.
 func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
 	waitForObjects, ready, err := a.Ready(ctx, cluster)
@@ -135,7 +133,7 @@ func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.UR
 		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
 	}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, defaultHTTPPort)
+	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultProxyHTTPPort)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
@@ -357,8 +355,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
-	// run any other cleanup jobs or ancillary tasks
-	return runUDPServiceHack(ctx, cluster, DefaultNamespace)
+	return nil
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
@@ -553,6 +550,7 @@ func defaults() []string {
 		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
 		"--set", "tls.enabled=false",
+		"--set", "udpProxy.enabled=true",
 	}
 }
 
@@ -573,45 +571,16 @@ func exposePortsDefault() []string {
 	return []string{
 		"--set", fmt.Sprintf("proxy.stream[0].containerPort=%d", DefaultTCPServicePort),
 		"--set", fmt.Sprintf("proxy.stream[0].servicePort=%d", DefaultTCPServicePort),
-		"--set", fmt.Sprintf("proxy.stream[1].containerPort=%d", DefaultUDPServicePort),
-		"--set", fmt.Sprintf("proxy.stream[1].servicePort=%d", DefaultUDPServicePort),
-		"--set", "proxy.stream[1].parameters[0]=udp",
+		"--set", fmt.Sprintf("proxy.stream[1].containerPort=%d", DefaultTLSServicePort),
+		"--set", fmt.Sprintf("proxy.stream[1].servicePort=%d", DefaultTLSServicePort),
+		"--set", "proxy.stream[1].parameters[0]=ssl",
 		"--set", "proxy.stream[1].parameters[1]=reuseport",
-		"--set", fmt.Sprintf("proxy.stream[2].containerPort=%d", DefaultTLSServicePort),
-		"--set", fmt.Sprintf("proxy.stream[2].servicePort=%d", DefaultTLSServicePort),
-		"--set", "proxy.stream[2].parameters[0]=ssl",
-		"--set", "proxy.stream[2].parameters[1]=reuseport",
+		"--set", fmt.Sprintf("udpProxy.stream[0].containerPort=%d", DefaultUDPServicePort),
+		"--set", fmt.Sprintf("udpProxy.stream[0].servicePort=%d", DefaultUDPServicePort),
+		"--set", "udpProxy.stream[0].protocol=UDP",
+		"--set", "udpProxy.stream[0].parameters[0]=udp",
+		"--set", "udpProxy.stream[0].parameters[1]=reuseport",
 	}
-}
-
-// TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
-//
-//	See: https://github.com/Kong/charts/issues/329
-func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace string) error {
-	udpServicePorts := []corev1.ServicePort{{
-		Name:     DefaultUDPServiceName,
-		Port:     DefaultUDPServicePort,
-		Protocol: corev1.ProtocolUDP,
-	}}
-	udpService := &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: DefaultUDPServiceName,
-		},
-		Spec: corev1.ServiceSpec{
-			Type: corev1.ServiceTypeLoadBalancer,
-			Selector: map[string]string{
-				"app.kubernetes.io/component": "app",
-				"app.kubernetes.io/instance":  DefaultDeploymentName,
-				"app.kubernetes.io/name":      "kong",
-			},
-			Ports: udpServicePorts,
-		},
-	}
-	_, err := cluster.Client().CoreV1().Services(namespace).Create(ctx, udpService, metav1.CreateOptions{})
-	if err != nil && strings.Contains(err.Error(), "already exists") { // don't fail if the svc already exists
-		err = nil
-	}
-	return err
 }
 
 func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (*url.URL, error) {
