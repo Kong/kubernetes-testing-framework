@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Updated default version of Kong Enterprise image from 2.7.0.0 to 3.0.0.0.
 - Changed Kong addon to use udpProxy dict from charts value file to instantiate 
   a udp proxy, instead of creating a udp proxy by kubectl.
 
