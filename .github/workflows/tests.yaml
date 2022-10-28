@@ -62,25 +62,9 @@ jobs:
     - name: Print test names
       run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
 
-  setup-kong-license:
-    runs-on: ubuntu-latest
-    environment: "integration-tests"
-    outputs:
-      license_encrypted: ${{ steps.license.outputs.encrypted }}
-    steps:
-
-    - uses: Kong/kong-license@master
-      with:
-        password: ${{ secrets.PULP_PASSWORD }}
-    - name: set encrypted license as output
-      id: license
-      run: |
-        echo "encrypted=$(gpg --symmetric --batch --passphrase ${{ secrets.LICENSE_ENCRYPTION_PASSWORD }} --output - <(echo ${KONG_LICENSE_DATA}) | base64 -w0)" >> $GITHUB_OUTPUT
-
   integration-tests:
     needs:
     - setup-integration-tests
-    - setup-kong-license
     strategy:
       fail-fast: false
       matrix:
@@ -88,8 +72,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - name: set Kong license env
-      run: echo "KONG_LICENSE_DATA=$(gpg --decrypt --quiet --batch --passphrase ${{ secrets.LICENSE_ENCRYPTION_PASSWORD }} --output - <(echo ${{ needs.setup-kong-license.outputs.license_encrypted }} | base64 --decode ))" >> $GITHUB_ENV
+    - uses: Kong/kong-license@master
+      id: license
+      with:
+        password: ${{ secrets.PULP_PASSWORD }}
 
     - name: setup golang
       uses: actions/setup-go@v3
@@ -114,7 +100,7 @@ jobs:
       env:
         KTF_TEST_KONG_PULL_USERNAME: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
         KTF_TEST_KONG_PULL_PASSWORD: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
-        KONG_LICENSE_DATA: ${{ env.KONG_LICENSE_DATA }}
+        KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
         TEST_RUN: ${{ matrix.test }}
         NCPU: 1
 
