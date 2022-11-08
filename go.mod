@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.6.0
+	cloud.google.com/go/container v1.7.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.21+incompatible
 	github.com/google/go-github/v39 v39.2.0
@@ -19,7 +19,7 @@ require (
 	golang.org/x/oauth2 v0.0.0-20221014153046-6fdb5e3db783
 	golang.org/x/text v0.4.0 // indirect
 	google.golang.org/api v0.102.0
-	google.golang.org/genproto v0.0.0-20221024183307-1bc688fe9f3e
+	google.golang.org/genproto v0.0.0-20221027153422-115e99e71e1c
 	k8s.io/api v0.25.3
 	k8s.io/apiextensions-apiserver v0.25.3
 	k8s.io/apimachinery v0.25.3
