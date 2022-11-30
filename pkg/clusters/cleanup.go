@@ -2,11 +2,14 @@ package clusters
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
+	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 )
@@ -71,13 +74,44 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 		}
 	}
 
+	g, ctx := errgroup.WithContext(ctx)
+	// Limit the concurrency level to not overwhelm the API server.
+	g.SetLimit(8) //nolint:gomnd
+
 	for _, namespace := range c.namespaces {
-		if err := c.cluster.Client().CoreV1().Namespaces().Delete(ctx, namespace.Name, metav1.DeleteOptions{}); err != nil {
-			return err
-		}
+		namespace := namespace
+		g.Go(func() error {
+			namespaceClient := c.cluster.Client().CoreV1().Namespaces()
+
+			if err := namespaceClient.Delete(ctx, namespace.Name, metav1.DeleteOptions{}); err != nil {
+				return err
+			}
+
+			w, err := namespaceClient.Watch(ctx, metav1.ListOptions{
+				LabelSelector: "kubernetes.io/metadata.name=" + namespace.Name,
+			})
+			if err != nil {
+				return err
+			}
+
+			defer w.Stop()
+			for {
+				select {
+				case event := <-w.ResultChan():
+					if event.Type == watch.Deleted {
+						return nil
+					}
+
+				case <-ctx.Done():
+					return fmt.Errorf(
+						"failed to delete namespace %q because the context is done", namespace.Name,
+					)
+				}
+			}
+		})
 	}
 
-	return nil
+	return g.Wait()
 }
 
 // DumpDiagnostics dumps diagnostics from the underlying cluster.
