@@ -7,9 +7,9 @@ import (
 	"sync"
 	"time"
 
+	containerpb "cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
-	containerpb "google.golang.org/genproto/googleapis/container/v1"
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"

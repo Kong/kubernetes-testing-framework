@@ -6,11 +6,11 @@ import (
 	"fmt"
 
 	container "cloud.google.com/go/container/apiv1"
+	containerpb "cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"google.golang.org/api/compute/v1"
 	"google.golang.org/api/option"
 	"google.golang.org/api/transport"
-	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
