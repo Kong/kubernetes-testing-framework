@@ -2,7 +2,11 @@
 
 ## Unreleased
 
-- Changed Kong addon to use udpProxy dict from charts value file to instantiate 
+- When available, calls to Github API, requesting the latest release from a repository
+  will use `GITHUB_TOKEN` environment variable as token to authenticate against
+  Github API.
+  [#456](https://github.com/Kong/kubernetes-testing-framework/pull/456)
+- Changed Kong addon to use udpProxy dict from charts value file to instantiate
   a udp proxy, instead of creating a udp proxy by kubectl.
 
 ## v0.23.0
@@ -26,10 +30,10 @@
 
 ## v0.22.0
 
-### Added 
+### Added
 
 - loadimage addon now supports loading multiple images.
-  [#391](https://github.com/Kong/kubernetes-testing-framework/pull/391) 
+  [#391](https://github.com/Kong/kubernetes-testing-framework/pull/391)
 
 ### Fixed
 

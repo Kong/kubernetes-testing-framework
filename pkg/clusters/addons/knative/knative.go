@@ -55,7 +55,7 @@ func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if a.version == "0.0.0" {
-		if err := a.useLatestKnativeVersion(); err != nil {
+		if err := a.useLatestKnativeVersion(ctx); err != nil {
 			return err
 		}
 	}
@@ -249,8 +249,8 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 
 // useLatestKnativeVersion locates and sets the knative version to deploy to the latest
 // non-prelease tag found.
-func (a *Addon) useLatestKnativeVersion() error {
-	latestVersion, err := github.FindRawLatestReleaseForRepo("knative", "serving")
+func (a *Addon) useLatestKnativeVersion(ctx context.Context) error {
+	latestVersion, err := github.FindRawLatestReleaseForRepo(ctx, "knative", "serving")
 	if err != nil {
 		return err
 	}

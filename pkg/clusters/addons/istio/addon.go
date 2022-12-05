@@ -114,7 +114,7 @@ func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// if an specific version was not provided we'll fetch and use the latest release tag
 	if a.istioVersion.String() == "0.0.0" {
-		if err := a.useLatestIstioVersion(); err != nil {
+		if err := a.useLatestIstioVersion(ctx); err != nil {
 			return err
 		}
 	}
@@ -230,8 +230,8 @@ const (
 
 // useLatestIstioVersion locates and sets the istio version to deploy to the latest
 // non-prelease tag found.
-func (a *Addon) useLatestIstioVersion() error {
-	latestVersion, err := github.FindLatestReleaseForRepo("istio", "istio")
+func (a *Addon) useLatestIstioVersion(ctx context.Context) error {
+	latestVersion, err := github.FindLatestReleaseForRepo(ctx, "istio", "istio")
 	if err != nil {
 		return err
 	}
