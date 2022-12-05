@@ -82,7 +82,7 @@ func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	var err error
 	if a.version == nil {
-		a.version, err = github.FindLatestReleaseForRepo("jetstack", "cert-manager")
+		a.version, err = github.FindLatestReleaseForRepo(ctx, "jetstack", "cert-manager")
 		if err != nil {
 			return err
 		}
@@ -199,8 +199,7 @@ const (
 	defaultIssuerWaitSeconds = 60
 )
 
-var (
-	defaultIssuer = fmt.Sprintf(`---
+var defaultIssuer = fmt.Sprintf(`---
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -208,7 +207,6 @@ metadata:
 spec:
   selfSigned: {}
 `, DefaultIssuerName)
-)
 
 func (a *Addon) deployDefaultIssuer(ctx context.Context, cluster clusters.Cluster) error {
 	if err := clusters.ApplyManifestByYAML(ctx, cluster, defaultIssuer); err != nil {
