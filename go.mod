@@ -36,6 +36,7 @@ require github.com/docker/go-connections v0.4.0 // indirect
 
 require (
 	github.com/ghodss/yaml v1.0.0
+	github.com/google/go-github/v48 v48.1.0
 	github.com/kong/deck v1.16.1
 	golang.org/x/sync v0.1.0
 	gopkg.in/yaml.v2 v2.4.0

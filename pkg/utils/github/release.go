@@ -1,15 +1,15 @@
 package github
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io"
 	"net/http"
+	"os"
 
 	"github.com/blang/semver/v4"
+	"github.com/google/go-github/v48/github"
+	"golang.org/x/oauth2"
 )
-
-const releaseURLFormatter = "https://api.github.com/repos/%s/%s/releases/latest"
 
 // FindLatestReleaseForRepo returns the latest release tag for a Github
 // repository given an Organization and Repository name.
@@ -17,8 +17,8 @@ const releaseURLFormatter = "https://api.github.com/repos/%s/%s/releases/latest"
 // NOTE: latest release in this context does not necessarily mean the newest
 // version: if a repo releases a patch for an older release for instance
 // the the returned version could be that instead.
-func FindLatestReleaseForRepo(org, repo string) (*semver.Version, error) {
-	rawTag, err := FindRawLatestReleaseForRepo(org, repo)
+func FindLatestReleaseForRepo(ctx context.Context, org, repo string) (*semver.Version, error) {
+	rawTag, err := FindRawLatestReleaseForRepo(ctx, org, repo)
 	if err != nil {
 		return nil, err
 	}
@@ -33,27 +33,25 @@ func FindLatestReleaseForRepo(org, repo string) (*semver.Version, error) {
 
 // FindRawLatestReleaseForRepo returns the latest release tag as a string.
 // It should be used directly for non-semver releases. Semver releases should use FindLatestReleaseForRepo
-func FindRawLatestReleaseForRepo(org, repo string) (string, error) {
-	releaseURL := fmt.Sprintf(releaseURLFormatter, org, repo)
-	resp, err := http.Get(releaseURL) //nolint:gosec
+func FindRawLatestReleaseForRepo(ctx context.Context, org, repo string) (string, error) {
+	var tc *http.Client
+	if ghToken := os.Getenv("GITHUB_TOKEN"); ghToken != "" {
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: ghToken},
+		)
+		tc = oauth2.NewClient(ctx, ts)
+	}
+	client := github.NewClient(tc)
+
+	release, _, err := client.Repositories.GetLatestRelease(context.Background(), org, repo)
 	if err != nil {
-		return "", fmt.Errorf("couldn't determine latest %s/%s release: %w", org, repo, err)
-	}
-	defer resp.Body.Close()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
+		return "", fmt.Errorf("couldn't fetch latest %s/%s release: %w", org, repo, err)
 	}
 
-	type latestReleaseData struct {
-		TagName string `json:"tag_name"`
+	releaseURL := release.URL
+	if releaseURL == nil {
+		return "", fmt.Errorf("release URL is nil for %s/%s", org, repo)
 	}
 
-	data := latestReleaseData{}
-	if err := json.Unmarshal(body, &data); err != nil {
-		return "", fmt.Errorf("bad data from api when fetching latest %s/%s release tag: %w", org, repo, err)
-	}
-
-	return data.TagName, nil
+	return *release.TagName, nil
 }
