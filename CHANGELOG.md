@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.24.0
+
 - When available, calls to Github API, requesting the latest release from a repository
   will use `GITHUB_TOKEN` environment variable as token to authenticate against
   Github API.
