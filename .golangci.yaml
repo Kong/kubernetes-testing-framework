@@ -16,6 +16,7 @@ linters:
   - gomnd
   - gosec
   - gci
+  - gomodguard
   - gosimple
   - govet
   - importas
@@ -39,6 +40,18 @@ linters-settings:
     - standard
     - default
     - prefix(github.com/kong/kubernetes-testing-framework)
+  gomodguard:
+    blocked:
+      modules:
+      - github.com/ghodss/yaml:
+          recommendations:
+          - sigs.k8s.io/yaml
+      - gopkg.in/yaml.v2:
+          recommendations:
+          - sigs.k8s.io/yaml
+      - gopkg.in/yaml.v3:
+          recommendations:
+          - sigs.k8s.io/yaml
 
 issues:
   fix: true
