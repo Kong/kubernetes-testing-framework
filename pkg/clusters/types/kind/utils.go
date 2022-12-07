@@ -9,11 +9,11 @@ import (
 	"os/exec"
 	"sync"
 
-	"gopkg.in/yaml.v2"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/kind/pkg/apis/config/v1alpha4"
+	"sigs.k8s.io/yaml"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
