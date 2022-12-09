@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+## v0.24.1
+
+- Golang dependencies for several Kubernetes libraries were updated to
+  the latest `v0.26.0` release (corresponds with Kubernetes `v1.26.0`release).
+  ([k8s@v1.26.0](https://github.com/kubernetes/kubernetes/releases/tag/v1.26.0))
+- [sigs.k8s.io/yaml](https://github.com/kubernetes-sigs/yaml) is used as the only 
+  YAML library.
+  [#463](https://github.com/Kong/kubernetes-testing-framework/pull/463)
+
 ## v0.24.0
 
 - When available, calls to Github API, requesting the latest release from a repository
