@@ -19,8 +19,8 @@ import (
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
-	kustomize "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/api/types"
+	kustomize "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
