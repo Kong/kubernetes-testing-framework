@@ -9,6 +9,8 @@ import (
 	"os/exec"
 	"strings"
 
+	"github.com/kong/kubernetes-testing-framework/internal/conversion"
+
 	"github.com/google/uuid"
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
@@ -82,19 +84,19 @@ func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace stri
 		if err != nil {
 			return nil, err
 		}
-		return &refresh.Status.LoadBalancer, nil
+		return conversion.NetV1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
 	case *netv1beta1.Ingress:
 		refresh, err := c.Client().NetworkingV1beta1().Ingresses(namespace).Get(ctx, obj.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
-		return &refresh.Status.LoadBalancer, nil
+		return conversion.NetV1beta1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
 	case *extv1beta1.Ingress:
 		refresh, err := c.Client().ExtensionsV1beta1().Ingresses(namespace).Get(ctx, obj.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
-		return &refresh.Status.LoadBalancer, nil
+		return conversion.ExtV1beta1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
 	default:
 		return nil, fmt.Errorf("%T is not a supported ingress type", ingress)
 	}
