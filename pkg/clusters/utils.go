@@ -18,6 +18,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"github.com/kong/kubernetes-testing-framework/internal/conversion"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
@@ -74,14 +75,27 @@ func DeleteIngress(ctx context.Context, c Cluster, namespace string, ingress run
 // given an Ingress object provided by the caller determine the version and pull a fresh copy
 // of the current LoadBalancerStatus for that Ingress object without the caller needing to be
 // aware of which version of Ingress they're using.
-func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace string, ingress runtime.Object) (*netv1.IngressLoadBalancerStatus, error) {
+// TODO: once we stop supporting old Kubernetes versions <1.19 we can remove this.
+func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace string, ingress runtime.Object) (*corev1.LoadBalancerStatus, error) {
 	switch obj := ingress.(type) {
 	case *netv1.Ingress:
 		refresh, err := c.Client().NetworkingV1().Ingresses(namespace).Get(ctx, obj.Name, metav1.GetOptions{})
 		if err != nil {
 			return nil, err
 		}
-		return &refresh.Status.LoadBalancer, nil
+		return conversion.NetV1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
+	case *netv1beta1.Ingress:
+		refresh, err := c.Client().NetworkingV1beta1().Ingresses(namespace).Get(ctx, obj.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		return conversion.NetV1beta1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
+	case *extv1beta1.Ingress:
+		refresh, err := c.Client().ExtensionsV1beta1().Ingresses(namespace).Get(ctx, obj.Name, metav1.GetOptions{})
+		if err != nil {
+			return nil, err
+		}
+		return conversion.ExtV1beta1ToCoreV1LoadBalancerStatus(refresh.Status.LoadBalancer), nil
 	default:
 		return nil, fmt.Errorf("%T is not a supported ingress type", ingress)
 	}
