@@ -119,9 +119,11 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 			return err
 		}
 
-		fullTeardownOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", c.project, c.location, teardownOp.Name)
-		if err := waitForTeardown(ctx, mgrc, fullTeardownOpName); err != nil {
-			return err
+		if c.waitForTeardown {
+			fullTeardownOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", c.project, c.location, teardownOp.Name)
+			if err := waitForTeardown(ctx, mgrc, fullTeardownOpName); err != nil {
+				return err
+			}
 		}
 
 		return nil
