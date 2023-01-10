@@ -214,8 +214,8 @@ func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClus
 	return nil
 }
 
-func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID string, authToken string) error {
-	tokenFile, err := os.CreateTemp("/tmp", "gcloud-token-")
+func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID, authToken string) error {
+	tokenFile, err := os.CreateTemp("", "gcloud-token-")
 	if err != nil {
 		return fmt.Errorf("failed to create a temporary file for gcloud token: %w", err)
 	}
@@ -226,6 +226,7 @@ func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.Cr
 		return fmt.Errorf("failed to write a token to the temporary file: %w", err)
 	}
 
+	//nolint:gosec
 	cmd := exec.CommandContext(ctx, "gcloud", "container", "clusters", "create", req.Cluster.Name,
 		`--access-token-file`, tokenFile.Name(),
 		`--project`, b.project,
