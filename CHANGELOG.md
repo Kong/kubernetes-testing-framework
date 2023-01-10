@@ -4,7 +4,7 @@
 
 - MetalLB addon will use an extended timeout when fetching manifests from GH which 
   should improve its stability. 
-  [#]()
+  [#492](https://github.com/Kong/kubernetes-testing-framework/pull/492)
 
 ## v0.24.1
 
