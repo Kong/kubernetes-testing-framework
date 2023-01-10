@@ -7,7 +7,6 @@
   [#490](https://github.com/Kong/kubernetes-testing-framework/pull/490)
 - GKE cluster is able to wait for its cleanup synchronously. 
   [#491](https://github.com/Kong/kubernetes-testing-framework/pull/491)
-
 - MetalLB addon will use an extended timeout when fetching manifests from GH which 
   should improve its stability. 
   [#492](https://github.com/Kong/kubernetes-testing-framework/pull/492)
