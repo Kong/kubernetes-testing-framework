@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- MetalLB addon will use an extended timeout when fetching manifests from GH which 
+  should improve its stability. 
+  [#]()
+
 ## v0.24.1
 
 - Golang dependencies for several Kubernetes libraries were updated to
