@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## Unreleased 
+
+- GKE cluster builder allows creating a subnet for the cluster instead of using 
+  a default one.
+  [#490](https://github.com/Kong/kubernetes-testing-framework/pull/490)
 
 - MetalLB addon will use an extended timeout when fetching manifests from GH which 
   should improve its stability. 
