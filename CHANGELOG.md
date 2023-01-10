@@ -6,6 +6,10 @@
   a default one.
   [#490](https://github.com/Kong/kubernetes-testing-framework/pull/490)
 
+- MetalLB addon will use an extended timeout when fetching manifests from GH which 
+  should improve its stability. 
+  [#492](https://github.com/Kong/kubernetes-testing-framework/pull/492)
+
 ## v0.24.1
 
 - Golang dependencies for several Kubernetes libraries were updated to
