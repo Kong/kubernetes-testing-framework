@@ -62,7 +62,7 @@ func TestGKECluster(t *testing.T) {
 
 	t.Logf("setting up cleanup for cluster %s", cluster.Name())
 	defer func() {
-		t.Log("running cluster cleanup")
+		t.Logf("running cluster cleanup for %s", cluster.Name())
 		assert.NoError(t, cluster.Cleanup(ctx))
 	}()
 
