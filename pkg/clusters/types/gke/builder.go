@@ -11,6 +11,7 @@ import (
 	"strings"
 	"sync"
 	"time"
+	"unicode"
 
 	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
@@ -200,10 +201,7 @@ func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClus
 	// createSubnet is currently only available via gcloud CLI:
 	// https://github.com/googleapis/google-cloud-go/issues/7219
 	if b.createSubnet {
-		if err := b.createClusterUsingCLI(ctx, req, createdByID, authToken); err != nil {
-			return err
-		}
-		return nil
+		return b.createClusterUsingCLI(ctx, req, createdByID, authToken)
 	}
 
 	_, err := mgrc.CreateCluster(ctx, req)
@@ -235,7 +233,7 @@ func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.Cr
 		`--enable-ip-alias`,
 		`--num-nodes`, `1`,
 		`--cluster-version`, req.Cluster.InitialClusterVersion,
-		`--addons`, `HorizontalPodAutoscaling`,
+		`--addons`, ``,
 		`--labels`, fmt.Sprintf(`%s=%s`, GKECreateLabel, createdByID),
 		`--async`,
 	)
@@ -250,11 +248,20 @@ func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.Cr
 	return nil
 }
 
+// sanitizeCreatedByID modifies the clientID to comply with GKE label values constraints.
 func sanitizeCreatedByID(id string) string {
-	// Replace dots with dashes as dots are not allowed by the CLI:
-	// "It must only contain lowercase letters ([a-z]), numeric characters ([0-9]), underscores (_) and dashes (-)."
-	id = strings.ReplaceAll(id, ".", "-")
+	var builder strings.Builder
+	for _, char := range strings.ToLower(id) {
+		if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' || char == '-' {
+			// allowed character, pass it
+			builder.WriteRune(char)
+		} else {
+			// disallowed character, replace it with a dash
+			builder.WriteString("-")
+		}
+
+	}
 
 	// Truncate to the maximum allowed length.
-	return id[:63]
+	return builder.String()[:63]
 }
