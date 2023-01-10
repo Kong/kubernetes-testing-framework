@@ -15,10 +15,10 @@ import (
 	"time"
 
 	container "cloud.google.com/go/container/apiv1"
+	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"google.golang.org/api/option"
-	containerpb "google.golang.org/genproto/googleapis/container/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -36,6 +36,16 @@ var (
 )
 
 func TestGKECluster(t *testing.T) {
+	t.Run("create subnet (using gcloud CLI)", func(t *testing.T) {
+		testGKECluster(t, true)
+	})
+
+	t.Run("use default subnet (using gRPC API)", func(t *testing.T) {
+		testGKECluster(t, false)
+	})
+}
+
+func testGKECluster(t *testing.T, createSubnet bool) {
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute*15)
 	defer cancel()
 
@@ -55,6 +65,7 @@ func TestGKECluster(t *testing.T) {
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
 	builder.WithClusterMinorVersion(1, 23)
 	builder.WithWaitForTeardown(true)
+	builder.WithCreateSubnet(createSubnet)
 
 	t.Logf("building cluster %s (this can take some time)", builder.Name)
 	cluster, err := builder.Build(ctx)
@@ -83,10 +94,15 @@ func TestGKECluster(t *testing.T) {
 	gkeCluster, err := mgrc.GetCluster(ctx, &getClusterReq)
 	require.NoError(t, err)
 
-	t.Log("verify integrity of the createdBy label")
-	createdBy, ok := gkeCluster.ResourceLabels[gke.GKECreateLabel]
+	t.Log("verify createdBy label exists")
+	_, ok = gkeCluster.ResourceLabels[gke.GKECreateLabel]
 	require.True(t, ok)
-	require.Equal(t, clientID, createdBy)
+	// Do not verify whether the label value is equal to the clientID as it won't be always true
+	// due to required sanitization of the clientID to match label's format requirements.
+
+	if createSubnet {
+		require.NotEqual(t, "default", gkeCluster.Subnetwork)
+	}
 
 	t.Log("loading the gke cluster into a testing environment and deploying kong addon")
 	env, err := environments.NewBuilder().WithAddons(kong.New()).WithExistingCluster(cluster).Build(ctx)

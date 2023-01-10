@@ -1,7 +1,10 @@
 # Changelog
 
-## Unreleased
+## Unreleased 
 
+- GKE cluster builder allows creating a subnet for the cluster instead of using 
+  a default one.
+  [#490](https://github.com/Kong/kubernetes-testing-framework/pull/490)
 - GKE cluster is able to wait for its cleanup synchronously. 
   [#491](https://github.com/Kong/kubernetes-testing-framework/pull/491)
 

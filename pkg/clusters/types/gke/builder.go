@@ -1,12 +1,19 @@
 package gke
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"os/exec"
+	"strings"
 	"sync"
 	"time"
+	"unicode"
 
+	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
@@ -23,6 +30,7 @@ type Builder struct {
 	jsonCreds         []byte
 	waitForTeardown   bool
 
+	createSubnet   bool
 	addons         clusters.Addons
 	clusterVersion *semver.Version
 	majorMinor     string
@@ -70,6 +78,18 @@ func (b *Builder) WithWaitForTeardown(wait bool) *Builder {
 	return b
 }
 
+// WithCreateSubnet sets a flag telling whether the builder should create a subnet
+// for the cluster. If set to `true`, it will create a subnetwork in a default VPC
+// with a uniquely generated name. The subnetwork will be removed once the cluster
+// gets removed.
+// https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--create-subnetwork
+//
+// Default: `false`.
+func (b *Builder) WithCreateSubnet(create bool) *Builder {
+	b.createSubnet = create
+	return b
+}
+
 // Build creates and configures clients for a GKE-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	// validate the credential contents by finding the IAM service account
@@ -85,6 +105,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	if createdByID == "" {
 		return nil, fmt.Errorf("provided credentials were invalid: 'client_id' can not be an empty string")
 	}
+	createdByID = sanitizeCreatedByID(createdByID)
 
 	// generate an auth token and management client
 	mgrc, authToken, err := clientAuthFromCreds(ctx, b.jsonCreds)
@@ -104,7 +125,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		},
 		ResourceLabels: map[string]string{GKECreateLabel: createdByID},
 	}
-	req := containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
+	req := &containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
 
 	// use any provided custom cluster version
 	if b.clusterVersion != nil && b.majorMinor != "" {
@@ -125,9 +146,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		pbcluster.InitialClusterVersion = v.String()
 	}
 
-	// create the GKE cluster asynchronously
-	_, err = mgrc.CreateCluster(ctx, &req)
-	if err != nil {
+	if err := b.createCluster(ctx, req, mgrc, createdByID, authToken); err != nil {
 		return nil, err
 	}
 
@@ -186,4 +205,74 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	}
 
 	return cluster, nil
+}
+
+// createCluster creates the GKE cluster asynchronously.
+func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClusterRequest, mgrc *container.ClusterManagerClient, createdByID, authToken string) error {
+	// createSubnet is currently only available via gcloud CLI:
+	// https://github.com/googleapis/google-cloud-go/issues/7219
+	if b.createSubnet {
+		return b.createClusterUsingCLI(ctx, req, createdByID, authToken)
+	}
+
+	_, err := mgrc.CreateCluster(ctx, req)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID, authToken string) error {
+	tokenFile, err := os.CreateTemp("", "gcloud-token-")
+	if err != nil {
+		return fmt.Errorf("failed to create a temporary file for gcloud token: %w", err)
+	}
+	defer func() {
+		_ = os.Remove(tokenFile.Name())
+	}()
+	if _, err := io.WriteString(tokenFile, authToken); err != nil {
+		return fmt.Errorf("failed to write a token to the temporary file: %w", err)
+	}
+
+	//nolint:gosec
+	cmd := exec.CommandContext(ctx, "gcloud", "container", "clusters", "create", req.Cluster.Name,
+		`--access-token-file`, tokenFile.Name(),
+		`--project`, b.project,
+		`--region`, b.location,
+		`--create-subnetwork`, ``,
+		`--enable-ip-alias`,
+		`--num-nodes`, `1`,
+		`--cluster-version`, req.Cluster.InitialClusterVersion,
+		`--addons`, ``,
+		`--labels`, fmt.Sprintf(`%s=%s`, GKECreateLabel, createdByID),
+		`--async`,
+	)
+	stderr := &bytes.Buffer{}
+	cmd.Stderr = stderr
+
+	if err := cmd.Run(); err != nil {
+		fmt.Println(stderr.String())
+		return fmt.Errorf("failed to run gcloud CLI: %w", err)
+	}
+
+	return nil
+}
+
+// sanitizeCreatedByID modifies the clientID to comply with GKE label values constraints.
+func sanitizeCreatedByID(id string) string {
+	var builder strings.Builder
+	for _, char := range strings.ToLower(id) {
+		if unicode.IsLetter(char) || unicode.IsDigit(char) || char == '_' || char == '-' {
+			// allowed character, pass it
+			builder.WriteRune(char)
+		} else {
+			// disallowed character, replace it with a dash
+			builder.WriteString("-")
+		}
+
+	}
+
+	// Truncate to the maximum allowed length.
+	return builder.String()[:63]
 }
