@@ -6,8 +6,10 @@ import (
 	"os"
 	"strings"
 	"sync"
+	"time"
 
 	container "cloud.google.com/go/container/apiv1"
+	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/kubernetes"
@@ -22,14 +24,15 @@ import (
 
 // Cluster is a clusters.Cluster implementation backed by Google Kubernetes Engine (GKE)
 type Cluster struct {
-	name      string
-	project   string
-	location  string
-	jsonCreds []byte
-	client    *kubernetes.Clientset
-	cfg       *rest.Config
-	addons    clusters.Addons
-	l         *sync.RWMutex
+	name            string
+	project         string
+	location        string
+	jsonCreds       []byte
+	waitForTeardown bool
+	client          *kubernetes.Clientset
+	cfg             *rest.Config
+	addons          clusters.Addons
+	l               *sync.RWMutex
 }
 
 // NewFromExistingWithEnv provides a new clusters.Cluster backed by an existing GKE cluster,
@@ -111,11 +114,42 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 		}
 		defer mgrc.Close()
 
-		_, err = deleteCluster(ctx, mgrc, c.name, c.project, c.location)
-		return err
+		teardownOp, err := deleteCluster(ctx, mgrc, c.name, c.project, c.location)
+		if err != nil {
+			return err
+		}
+
+		if c.waitForTeardown {
+			fullTeardownOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", c.project, c.location, teardownOp.Name)
+			if err := waitForTeardown(ctx, mgrc, fullTeardownOpName); err != nil {
+				return err
+			}
+		}
+
+		return nil
 	}
 
 	return nil
+}
+
+func waitForTeardown(ctx context.Context, mgrc *container.ClusterManagerClient, teardownOpName string) error {
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-ticker.C:
+			op, err := mgrc.GetOperation(ctx, &containerpb.GetOperationRequest{Name: teardownOpName})
+			if err != nil {
+				return err
+			}
+			if op.Status == containerpb.Operation_DONE {
+				return nil
+			}
+		}
+	}
 }
 
 func (c *Cluster) Client() *kubernetes.Clientset {

@@ -28,6 +28,7 @@ type Builder struct {
 	Name              string
 	project, location string
 	jsonCreds         []byte
+	waitForTeardown   bool
 
 	createSubnet   bool
 	addons         clusters.Addons
@@ -65,6 +66,15 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 // know the entire version tag).
 func (b *Builder) WithClusterMinorVersion(major, minor uint64) *Builder {
 	b.majorMinor = fmt.Sprintf("%d.%d", major, minor)
+	return b
+}
+
+// WithWaitForTeardown sets a flag telling whether the cluster should wait for
+// a cleanup operation synchronously.
+//
+// Default: `false`.
+func (b *Builder) WithWaitForTeardown(wait bool) *Builder {
+	b.waitForTeardown = wait
 	return b
 }
 
@@ -176,14 +186,15 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	}
 
 	cluster := &Cluster{
-		name:      b.Name,
-		project:   b.project,
-		location:  b.location,
-		jsonCreds: b.jsonCreds,
-		client:    k8s,
-		cfg:       restCFG,
-		addons:    make(clusters.Addons),
-		l:         &sync.RWMutex{},
+		name:            b.Name,
+		project:         b.project,
+		location:        b.location,
+		jsonCreds:       b.jsonCreds,
+		waitForTeardown: b.waitForTeardown,
+		client:          k8s,
+		cfg:             restCFG,
+		addons:          make(clusters.Addons),
+		l:               &sync.RWMutex{},
 	}
 
 	if err := utils.ClusterInitHooks(ctx, cluster); err != nil {

@@ -64,6 +64,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
 	builder.WithClusterMinorVersion(1, 23)
+	builder.WithWaitForTeardown(true)
 	builder.WithCreateSubnet(createSubnet)
 
 	t.Logf("building cluster %s (this can take some time)", builder.Name)
@@ -72,6 +73,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 
 	t.Logf("setting up cleanup for cluster %s", cluster.Name())
 	defer func() {
+		t.Logf("running cluster cleanup for %s", cluster.Name())
 		assert.NoError(t, cluster.Cleanup(ctx))
 	}()
 
