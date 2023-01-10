@@ -1,6 +1,6 @@
 # Changelog
 
-## v0.25.0
+## Unreleased
 
 - GKE cluster is able to wait for its cleanup synchronously. 
   [#491](https://github.com/Kong/kubernetes-testing-framework/pull/491)
