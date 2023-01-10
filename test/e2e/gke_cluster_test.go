@@ -54,6 +54,7 @@ func TestGKECluster(t *testing.T) {
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
 	builder.WithClusterMinorVersion(1, 23)
+	builder.WithWaitForTeardown(true)
 
 	t.Logf("building cluster %s (this can take some time)", builder.Name)
 	cluster, err := builder.Build(ctx)
@@ -61,6 +62,7 @@ func TestGKECluster(t *testing.T) {
 
 	t.Logf("setting up cleanup for cluster %s", cluster.Name())
 	defer func() {
+		t.Log("running cluster cleanup")
 		assert.NoError(t, cluster.Cleanup(ctx))
 	}()
 
