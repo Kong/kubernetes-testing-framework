@@ -1,9 +1,11 @@
 package gke
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"strings"
@@ -65,6 +67,13 @@ func (b *Builder) WithClusterMinorVersion(major, minor uint64) *Builder {
 	return b
 }
 
+// WithCreateSubnet sets a flag telling whether the builder should create a subnet
+// for the cluster. If set to `true`, it will create a subnetwork in a default VPC
+// with a uniquely generated name. The subnetwork will be removed once the cluster
+// gets removed.
+// https://cloud.google.com/sdk/gcloud/reference/container/clusters/create#--create-subnetwork
+//
+// Default: `false`.
 func (b *Builder) WithCreateSubnet(create bool) *Builder {
 	b.createSubnet = create
 	return b
@@ -126,7 +135,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		pbcluster.InitialClusterVersion = v.String()
 	}
 
-	if err := b.createCluster(ctx, req, mgrc, createdByID); err != nil {
+	if err := b.createCluster(ctx, req, mgrc, createdByID, authToken); err != nil {
 		return nil, err
 	}
 
@@ -187,11 +196,11 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 }
 
 // createCluster creates the GKE cluster asynchronously.
-func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClusterRequest, mgrc *container.ClusterManagerClient, createdByID string) error {
+func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClusterRequest, mgrc *container.ClusterManagerClient, createdByID, authToken string) error {
 	// createSubnet is currently only available via gcloud CLI:
 	// https://github.com/googleapis/google-cloud-go/issues/7219
 	if b.createSubnet {
-		if err := b.createClusterUsingCLI(ctx, req, createdByID); err != nil {
+		if err := b.createClusterUsingCLI(ctx, req, createdByID, authToken); err != nil {
 			return err
 		}
 		return nil
@@ -205,9 +214,20 @@ func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClus
 	return nil
 }
 
-func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID string) error {
+func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID string, authToken string) error {
+	tokenFile, err := os.CreateTemp("/tmp", "gcloud-token-")
+	if err != nil {
+		return fmt.Errorf("failed to create a temporary file for gcloud token: %w", err)
+	}
+	defer func() {
+		_ = os.Remove(tokenFile.Name())
+	}()
+	if _, err := io.WriteString(tokenFile, authToken); err != nil {
+		return fmt.Errorf("failed to write a token to the temporary file: %w", err)
+	}
 
 	cmd := exec.CommandContext(ctx, "gcloud", "container", "clusters", "create", req.Cluster.Name,
+		`--access-token-file`, tokenFile.Name(),
 		`--project`, b.project,
 		`--region`, b.location,
 		`--create-subnetwork`, ``,
@@ -218,11 +238,11 @@ func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.Cr
 		`--labels`, fmt.Sprintf(`%s=%s`, GKECreateLabel, createdByID),
 		`--async`,
 	)
-	cmd.Stderr = os.Stderr
-	cmd.Stdout = os.Stdout
+	stderr := &bytes.Buffer{}
+	cmd.Stderr = stderr
 
-	fmt.Println(cmd.String())
 	if err := cmd.Run(); err != nil {
+		fmt.Println(stderr.String())
 		return fmt.Errorf("failed to run gcloud CLI: %w", err)
 	}
 
