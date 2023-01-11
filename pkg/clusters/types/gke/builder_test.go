@@ -7,7 +7,28 @@ import (
 )
 
 func TestSanitizeCreatedByID(t *testing.T) {
-	sanitized := sanitizeCreatedByID("764086051850-6qr4p6gpi6hn506pt8ejuq83di345HUR.apps^googleusercontent$com")
-	require.Equal(t, "764086051850-6qr4p6gpi6hn506pt8ejuq83di345hur-apps-googleuserco", sanitized,
-		"expected disallowed characters to be replaced with dashes, capitals to be lowered, and output to be truncated")
+	testCases := []struct {
+		name     string
+		input    string
+		expected string
+	}{
+		{
+			name:     "longer than allowed",
+			input:    "764086051850-6qr4p6gpi6hn506pt8ejuq83di345HUR.apps^googleusercontent$com",
+			expected: "764086051850-6qr4p6gpi6hn506pt8ejuq83di345hur-apps-googleuserco",
+		},
+		{
+			name:     "short",
+			input:    "764086051850",
+			expected: "764086051850",
+		},
+	}
+
+	for _, tc := range testCases {
+		tc := tc
+		t.Run(tc.name, func(t *testing.T) {
+			sanitized := sanitizeCreatedByID(tc.input)
+			require.Equal(t, tc.expected, sanitized)
+		})
+	}
 }

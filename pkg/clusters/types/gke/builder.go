@@ -274,5 +274,10 @@ func sanitizeCreatedByID(id string) string {
 	}
 
 	// Truncate to the maximum allowed length.
-	return builder.String()[:63]
+	const maxAllowedLength = 63
+	s := builder.String()
+	if len(s) > maxAllowedLength {
+		return s[:maxAllowedLength]
+	}
+	return s
 }
