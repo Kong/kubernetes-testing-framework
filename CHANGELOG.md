@@ -1,6 +1,8 @@
 # Changelog
 
-## Unreleased 
+## Unreleased
+
+## v0.25.0 
 
 - GKE cluster builder allows creating a subnet for the cluster instead of using 
   a default one.
