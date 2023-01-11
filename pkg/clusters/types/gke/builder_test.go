@@ -26,7 +26,7 @@ func TestSanitizeCreatedByID(t *testing.T) {
 
 	for _, tc := range testCases {
 		tc := tc
-		t.Run(tc.input, func(t *testing.T) {
+		t.Run(tc.name, func(t *testing.T) {
 			sanitized := sanitizeCreatedByID(tc.input)
 			require.Equal(t, tc.expected, sanitized)
 		})
