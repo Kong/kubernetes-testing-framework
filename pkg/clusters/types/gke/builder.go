@@ -1,19 +1,14 @@
 package gke
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
-	"io"
-	"os"
-	"os/exec"
 	"strings"
 	"sync"
 	"time"
 	"unicode"
 
-	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
@@ -145,8 +140,19 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		}
 		pbcluster.InitialClusterVersion = v.String()
 	}
+	if b.createSubnet {
+		pbcluster.IpAllocationPolicy = &containerpb.IPAllocationPolicy{
+			UseIpAliases:     true,
+			CreateSubnetwork: true,
+			// We're allocating the GKE minimal sizes for the IP ranges to not exhaust quota too fast.
+			// More on the IP ranges planning: https://cloud.google.com/kubernetes-engine/docs/concepts/alias-ips#defaults_limits
+			NodeIpv4CidrBlock:     "/29",
+			ClusterIpv4CidrBlock:  "/21",
+			ServicesIpv4CidrBlock: "/27",
+		}
+	}
 
-	if err := b.createCluster(ctx, req, mgrc, createdByID, authToken); err != nil {
+	if _, err = mgrc.CreateCluster(ctx, req); err != nil {
 		return nil, err
 	}
 
@@ -205,58 +211,6 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	}
 
 	return cluster, nil
-}
-
-// createCluster creates the GKE cluster asynchronously.
-func (b *Builder) createCluster(ctx context.Context, req *containerpb.CreateClusterRequest, mgrc *container.ClusterManagerClient, createdByID, authToken string) error {
-	// createSubnet is currently only available via gcloud CLI:
-	// https://github.com/googleapis/google-cloud-go/issues/7219
-	if b.createSubnet {
-		return b.createClusterUsingCLI(ctx, req, createdByID, authToken)
-	}
-
-	_, err := mgrc.CreateCluster(ctx, req)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (b *Builder) createClusterUsingCLI(ctx context.Context, req *containerpb.CreateClusterRequest, createdByID, authToken string) error {
-	tokenFile, err := os.CreateTemp("", "gcloud-token-")
-	if err != nil {
-		return fmt.Errorf("failed to create a temporary file for gcloud token: %w", err)
-	}
-	defer func() {
-		_ = os.Remove(tokenFile.Name())
-	}()
-	if _, err := io.WriteString(tokenFile, authToken); err != nil {
-		return fmt.Errorf("failed to write a token to the temporary file: %w", err)
-	}
-
-	//nolint:gosec
-	cmd := exec.CommandContext(ctx, "gcloud", "container", "clusters", "create", req.Cluster.Name,
-		`--access-token-file`, tokenFile.Name(),
-		`--project`, b.project,
-		`--region`, b.location,
-		`--create-subnetwork`, ``,
-		`--enable-ip-alias`,
-		`--num-nodes`, `1`,
-		`--cluster-version`, req.Cluster.InitialClusterVersion,
-		`--addons`, ``,
-		`--labels`, fmt.Sprintf(`%s=%s`, GKECreateLabel, createdByID),
-		`--async`,
-	)
-	stderr := &bytes.Buffer{}
-	cmd.Stderr = stderr
-
-	if err := cmd.Run(); err != nil {
-		fmt.Println(stderr.String())
-		return fmt.Errorf("failed to run gcloud CLI: %w", err)
-	}
-
-	return nil
 }
 
 // sanitizeCreatedByID modifies the clientID to comply with GKE label values constraints.
