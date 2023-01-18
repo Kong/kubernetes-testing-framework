@@ -5,6 +5,8 @@
 - gRPC API is used instead of gcloud CLI when createSubnetwork is enabled in 
   GKE cluster builder.
   [#498](https://github.com/Kong/kubernetes-testing-framework/pull/498)
+- GKE cluster builder accepts custom labels. 
+  [#499](https://github.com/Kong/kubernetes-testing-framework/pull/499)
 
 ## v0.25.0 
 

@@ -12,6 +12,7 @@ import (
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
+	"github.com/samber/lo"
 
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
@@ -29,6 +30,7 @@ type Builder struct {
 	addons         clusters.Addons
 	clusterVersion *semver.Version
 	majorMinor     string
+	labels         map[string]string
 }
 
 // NewBuilder provides a new *Builder object.
@@ -85,6 +87,12 @@ func (b *Builder) WithCreateSubnet(create bool) *Builder {
 	return b
 }
 
+// WithLabels adds labels that the created cluster is going to be labeled with.
+func (b *Builder) WithLabels(labels map[string]string) *Builder {
+	b.labels = lo.Assign(b.labels, labels)
+	return b
+}
+
 // Build creates and configures clients for a GKE-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	// validate the credential contents by finding the IAM service account
@@ -118,7 +126,10 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		AddonsConfig: &containerpb.AddonsConfig{
 			HttpLoadBalancing: &containerpb.HttpLoadBalancing{Disabled: true},
 		},
-		ResourceLabels: map[string]string{GKECreateLabel: createdByID},
+		ResourceLabels: lo.Assign(
+			map[string]string{GKECreateLabel: createdByID},
+			b.labels,
+		),
 	}
 	req := &containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
 
