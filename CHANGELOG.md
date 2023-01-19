@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## v0.26.0
 
 - gRPC API is used instead of gcloud CLI when createSubnetwork is enabled in 
   GKE cluster builder.
