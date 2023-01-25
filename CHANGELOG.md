@@ -1,21 +1,26 @@
 # Changelog
 
+## v0.27.0
+
+- fix cluster cleaner for Gateway API objects
+  [#510](https://github.com/Kong/kubernetes-testing-framework/pull/510)
+
 ## v0.26.0
 
-- gRPC API is used instead of gcloud CLI when createSubnetwork is enabled in 
+- gRPC API is used instead of gcloud CLI when createSubnetwork is enabled in
   GKE cluster builder.
   [#498](https://github.com/Kong/kubernetes-testing-framework/pull/498)
 - GKE cluster builder accepts custom labels. 
   [#499](https://github.com/Kong/kubernetes-testing-framework/pull/499)
 
-## v0.25.0 
+## v0.25.0
 
 - GKE cluster builder allows creating a subnet for the cluster instead of using 
   a default one.
   [#490](https://github.com/Kong/kubernetes-testing-framework/pull/490)
 - GKE cluster is able to wait for its cleanup synchronously. 
   [#491](https://github.com/Kong/kubernetes-testing-framework/pull/491)
-- MetalLB addon will use an extended timeout when fetching manifests from GH which 
+- MetalLB addon will use an extended timeout when fetching manifests from GH which
   should improve its stability. 
   [#492](https://github.com/Kong/kubernetes-testing-framework/pull/492)
 
@@ -24,7 +29,7 @@
 - Golang dependencies for several Kubernetes libraries were updated to
   the latest `v0.26.0` release (corresponds with Kubernetes `v1.26.0`release).
   ([k8s@v1.26.0](https://github.com/kubernetes/kubernetes/releases/tag/v1.26.0))
-- [sigs.k8s.io/yaml](https://github.com/kubernetes-sigs/yaml) is used as the only 
+- [sigs.k8s.io/yaml](https://github.com/kubernetes-sigs/yaml) is used as the only
   YAML library.
   [#463](https://github.com/Kong/kubernetes-testing-framework/pull/463)
 
