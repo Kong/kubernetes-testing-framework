@@ -9,9 +9,13 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+
+	gatewayv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
+	gatewayv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
 
 // -----------------------------------------------------------------------------
@@ -55,12 +59,9 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 	}
 
 	for _, obj := range c.objects {
-		namespace := obj.GetNamespace()
-		name := obj.GetName()
-		res := strings.ToLower(obj.GetObjectKind().GroupVersionKind().Kind) + "s"
-		gvr := obj.GetObjectKind().GroupVersionKind().GroupVersion().WithResource(res)
-		resource := dyn.Resource(gvr).Namespace(namespace)
-		if err := resource.Delete(ctx, name, metav1.DeleteOptions{}); err != nil {
+		resource := resourceDeleterForObj(dyn, obj)
+
+		if err := resource.Delete(ctx, obj.GetName(), metav1.DeleteOptions{}); err != nil {
 			if !errors.IsNotFound(err) {
 				return err
 			}
@@ -84,7 +85,9 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 			namespaceClient := c.cluster.Client().CoreV1().Namespaces()
 
 			if err := namespaceClient.Delete(ctx, namespace.Name, metav1.DeleteOptions{}); err != nil {
-				return err
+				if !errors.IsNotFound(err) {
+					return err
+				}
 			}
 
 			w, err := namespaceClient.Watch(ctx, metav1.ListOptions{
@@ -112,6 +115,100 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 	}
 
 	return g.Wait()
+}
+
+// fixupObjKinds takes a client.Object and checks if it's of one of the gateway
+// API types and if so then it adjusts that object's Kind and APIVersion.
+// This possibly might also need other types to be included but those are enough
+// for our needs for now especially since that will help cleaning up non-namespaced
+// GatewayClasses which are not cleaned up on namespace removal also done in
+// Cleanup().
+//
+// The reason we need this is that when decoding to go structs APIVersion and Kind
+// are dropper because the type info is inherent in the object.
+// Decoding to unstructured objects (like the dynamic client does) preserves that
+// information.
+// There should be a better way of doing this.
+//
+// Possibly related:
+// - https://github.com/kubernetes/kubernetes/issues/3030
+// - https://github.com/kubernetes/kubernetes/issues/80609
+func fixupObjKinds(obj client.Object) client.Object {
+	// If Kind and APIVersion are set then we're good.
+	if obj.GetObjectKind().GroupVersionKind().Kind != "" && obj.GetResourceVersion() != "" {
+		return obj
+	}
+
+	// Otherwise try to fix that up by performing type assertions and filling
+	// those 2 fields accordingly.
+	switch o := obj.(type) {
+	case *gatewayv1beta1.GatewayClass:
+		o.Kind = "GatewayClass"
+		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		return o
+	case *gatewayv1beta1.Gateway:
+		o.Kind = "Gateway"
+		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		return o
+	case *gatewayv1beta1.HTTPRoute:
+		o.Kind = "HTTPRoute"
+		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		return o
+
+	case *gatewayv1alpha2.TCPRoute:
+		o.Kind = "TCPRoute"
+		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
+		return o
+	case *gatewayv1alpha2.UDPRoute:
+		o.Kind = "UDPRoute"
+		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
+		return o
+	case *gatewayv1alpha2.TLSRoute:
+		o.Kind = "TLSRoute"
+		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
+		return o
+	case *gatewayv1alpha2.ReferenceGrant:
+		o.Kind = "ReferenceGrant"
+		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
+		return o
+
+	default:
+		return obj
+	}
+}
+
+type deleter interface {
+	Delete(ctx context.Context, name string, options metav1.DeleteOptions, subresources ...string) error
+}
+
+func resourceDeleterForObj(dyn *dynamic.DynamicClient, obj client.Object) deleter {
+	obj = fixupObjKinds(obj)
+
+	var (
+		namespace = obj.GetNamespace()
+		kind      = obj.GetObjectKind()
+		gvk       = kind.GroupVersionKind()
+	)
+
+	var gvr schema.GroupVersionResource
+	switch gvk.Kind {
+	// GatewayClass is a special case because gatewayclass + "s" is not a plural
+	// of gatewayclass.
+	case "GatewayClass":
+		gvr = schema.GroupVersionResource{
+			Group:    gvk.Group,
+			Version:  gvk.Version,
+			Resource: "gatewayclasses",
+		}
+	default:
+		res := strings.ToLower(gvk.Kind) + "s"
+		gvr = gvk.GroupVersion().WithResource(res)
+	}
+
+	if namespace == "" {
+		return dyn.Resource(gvr)
+	}
+	return dyn.Resource(gvr).Namespace(namespace)
 }
 
 // DumpDiagnostics dumps diagnostics from the underlying cluster.
