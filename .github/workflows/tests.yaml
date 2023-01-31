@@ -1,5 +1,11 @@
 name: tests
 
+concurrency:
+  # Run only for most recent commit in PRs but for all tags and commits on main
+  # Ref: https://docs.github.com/en/actions/using-jobs/using-concurrency
+  group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches:
@@ -10,6 +16,21 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  installer-tests:
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: checkout repository
+      uses: actions/checkout@v3
+
+    - name: run installer script
+      env:
+        GITHUB_TOKEN: ${{ github.token }}
+      run: ./docs/install.sh
+
+    - name: run ktf
+      run: ~/.local/bin/ktf --help
+
   unit-tests:
     runs-on: ubuntu-latest
     steps:
