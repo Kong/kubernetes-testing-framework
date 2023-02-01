@@ -40,6 +40,7 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
+        flags: unit-test
         files: unit.coverage.out
         verbose: true
 
@@ -110,7 +111,8 @@ jobs:
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         fail_ci_if_error: true
-        files: unit.coverage.out,integration.coverage.out
+        flags: integration-test
+        files: integration.coverage.out
         verbose: true
 
   integration-tests-passed:
