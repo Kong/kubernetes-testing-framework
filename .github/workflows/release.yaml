@@ -102,12 +102,9 @@ jobs:
 
     - name: Release
       uses: softprops/action-gh-release@v1
-      id: create_release
       with:
-        draft: true
-        prerelease: true
-        name: ${{ github.ref }}
-        tag_name: ${{ github.ref }}
+        draft: false
+        prerelease: false
         files: |
           CHECKSUMS
           ktf.*
