@@ -1,9 +1,12 @@
 # Changelog
 
-## Unreleased
+## v0.28.0
 
-- Add a retry when deploying knative manifests
+- Add arm64 artifacts
+  [#518](https://github.com/Kong/kubernetes-testing-framework/pull/518)
+- Add a retry when deploying knative manifests and during kong chart installation
   [#520](https://github.com/Kong/kubernetes-testing-framework/pull/520)
+  [#523](https://github.com/Kong/kubernetes-testing-framework/pull/523)
 
 ## v0.27.0
 

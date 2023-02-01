@@ -29,6 +29,7 @@ import (
 	"k8s.io/kubectl/pkg/cmd/create"
 	"k8s.io/kubectl/pkg/scheme"
 
+	"github.com/kong/kubernetes-testing-framework/internal/retry"
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
@@ -197,21 +198,15 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	defer os.Remove(kubeconfig.Name())
 
 	// ensure the repo exists
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "--force-update", "kong", KongHelmRepoURL) //nolint:gosec
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
+	err = retry.Command("helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "--force-update", "kong", KongHelmRepoURL).Do(ctx)
+	if err != nil {
+		return err
 	}
 
 	// ensure all repos are up to date
-	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "repo", "update") //nolint:gosec
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
+	err = retry.Command("helm", "--kubeconfig", kubeconfig.Name(), "repo", "update").Do(ctx)
+	if err != nil {
+		return err
 	}
 
 	// create a namespace ahead of deployment so things like license secrets and other configurations
@@ -344,18 +339,15 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args = append(args, exposePortsDefault()...)
 	a.logger.Debugf("helm install arguments: %+v", args)
 
-	// run the helm install command
-	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "helm", args...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf("%s: %w", stderr.String(), err)
-		}
-	}
-
-	return nil
+	// Sometimes running helm install fails. Just in case this happens, retry.
+	return retry.
+		Command("helm", args...).
+		DoWithErrorHandling(ctx, func(err error, _, stderr *bytes.Buffer) error {
+			if !strings.Contains(stderr.String(), "cannot re-use") {
+				return fmt.Errorf("%s: %w", stderr, err)
+			}
+			return nil
+		})
 }
 
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
