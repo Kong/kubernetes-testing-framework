@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/avast/retry-go/v4"
+	"github.com/sirupsen/logrus"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -99,8 +101,6 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 const (
 	knativeCRDs = "https://github.com/knative/serving/releases/download/%s/serving-crds.yaml"
 	knativeCore = "https://github.com/knative/serving/releases/download/%s/serving-core.yaml"
-	retryCount  = 5
-	retryWait   = 10
 )
 
 func deployKnative(ctx context.Context, cluster clusters.Cluster, version string) error {
@@ -111,30 +111,58 @@ func deployKnative(ctx context.Context, cluster clusters.Cluster, version string
 	}
 	defer os.Remove(kubeconfig.Name())
 
-	// apply the CRDs: we wait here as this avoids any subsecond timing issues
-	cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
-	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("knative CRD deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
-	}
+	const (
+		retryCount = 10
+		retryWait  = 3 * time.Second
+	)
 
-	// apply the core deployments, but don't wait because we're going to patch them
-	// the CRDs applied earlier may not become available immediately, so retry this several times if it fails
-	for i := 0; i < retryCount; i++ {
-		cmd = exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
-		stdout, stderr = new(bytes.Buffer), new(bytes.Buffer)
+	// Sometimes accessing knative CRDs URL fails. Just in case this happens, retry.
+	err = retry.Do(func() error {
+		// apply the CRDs: we wait here as this avoids any subsecond timing issues
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCRDs, version)) //nolint:gosec
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
 		if err := cmd.Run(); err != nil {
-			if i == retryCount {
-				return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
-			}
-			time.Sleep(time.Second * retryWait)
-		} else {
-			break
+			return fmt.Errorf("knative CRD deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
 		}
+		return nil
+	},
+		retry.Context(ctx),
+		retry.Attempts(retryCount),
+		retry.DelayType(retry.FixedDelay),
+		retry.Delay(retryWait),
+		retry.OnRetry(func(_ uint, err error) {
+			logrus.WithError(err).Error("failed applying knative CRDs")
+		}),
+	)
+	if err != nil {
+		return err
+	}
+
+	// Sometimes accessing knative deployment URL fails. Just in case this happens, retry.
+	err = retry.Do(func() error {
+		// apply the core deployments, but don't wait because we're going to patch them
+		// the CRDs applied earlier may not become available immediately, so retry this several times if it fails
+		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "apply", "-f", fmt.Sprintf(knativeCore, version)) //nolint:gosec
+		stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
+		cmd.Stdout = stdout
+		cmd.Stderr = stderr
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("knative core deployment failed STDOUT=(%s) STDERR=(%s): %w", stdout.String(), stderr.String(), err)
+		}
+		return nil
+	},
+		retry.Context(ctx),
+		retry.Attempts(retryCount),
+		retry.DelayType(retry.FixedDelay),
+		retry.Delay(retryWait),
+		retry.OnRetry(func(_ uint, err error) {
+			logrus.WithError(err).Error("failed applying knative core deployment")
+		}),
+	)
+	if err != nil {
+		return err
 	}
 
 	// the deployment manifests for knative include some CPU and Memory limits which

@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add a retry when deploying knative manifests
+  [#520](https://github.com/Kong/kubernetes-testing-framework/pull/520)
+
 ## v0.27.0
 
 - fix cluster cleaner for Gateway API objects
