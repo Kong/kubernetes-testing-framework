@@ -39,8 +39,33 @@ jobs:
     - name: run unit tests
       run: make test.unit
 
+  setup-integration-tests:
+    runs-on: ubuntu-latest
+    outputs:
+      test_names: ${{ steps.set_test_names.outputs.test_names }}
+    steps:
+
+    - uses: actions/checkout@v3
+
+    - id: set_test_names
+      name: Set test names
+      working-directory: test/integration/
+      # grep magic described in https://unix.stackexchange.com/a/13472
+      # sed to add the extra $ is because some of our test names overlap. we need it so the -run regex only matches one test
+      run: |
+        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
+
+    - name: Print test names
+      run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
+
   integration-tests:
     runs-on: ubuntu-latest
+    needs:
+    - setup-integration-tests
+    strategy:
+      fail-fast: false
+      matrix:
+        test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     steps:
 
     - uses: Kong/kong-license@master
@@ -71,7 +96,10 @@ jobs:
       run: make test.integration
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        KTF_TEST_KONG_PULL_USERNAME: ${{ secrets.GHA_DOCKERHUB_PULL_USER }}
+        KTF_TEST_KONG_PULL_PASSWORD: ${{ secrets.GHA_KONG_ORG_DOCKERHUB_PUBLIC_TOKEN }}
         KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
+        TEST_RUN: ${{ matrix.test }}
 
   e2e-tests:
     environment: gcloud
@@ -122,11 +150,17 @@ jobs:
     - integration-tests
     - e2e-tests
     steps:
+
+    - name: checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+
     # --------------------------------------------------------------------------
     # Release Tagging
     # --------------------------------------------------------------------------
 
-    - name: tag the release
+    - name: set the tag ${{ github.event.inputs.tag }} and push it
       run: |
         git tag ${{ github.event.inputs.tag }}
         git push origin refs/tags/${{ github.event.inputs.tag }}
