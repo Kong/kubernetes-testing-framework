@@ -3,22 +3,35 @@ name: release
 on:
   push:
     tags:
-      - "v*"
+    - "v*"
   workflow_dispatch: {}
 
 jobs:
 
-  # --------------------------------------------------------------------------
-  # Release Job
-  # --------------------------------------------------------------------------
-
-  release:
+  artifacts:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+        - os: linux
+          arch: amd64
+        - os: linux
+          arch: arm64
+        - os: darwin
+          arch: amd64
+        - os: darwin
+          arch: arm64
     steps:
 
     # --------------------------------------------------------------------------
     # Repository Checkout
     # --------------------------------------------------------------------------
+
+    - name: checkout repository
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
 
     - name: setup golang
       uses: actions/setup-go@v3
@@ -33,75 +46,72 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-build-codegen-
 
-    - name: checkout repository
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-
-    # --------------------------------------------------------------------------
-    # Github Release
-    # --------------------------------------------------------------------------
-
-    - name: release
-      id: create_release
-      uses: actions/create-release@v1
-      with:
-        draft: false
-        prerelease: false
-        release_name: ${{ github.ref }}
-        tag_name: ${{ github.ref }}
-        body: |
-          See the [CHANGELOG.md](https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/main/CHANGELOG.md)
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-
     # --------------------------------------------------------------------------
     # Build & Upload Artifacts
     # --------------------------------------------------------------------------
 
-    - name: build linux amd64 artifacts
-      run: make build GOOS=linux GOARCH=amd64
-    - name: upload linux amd64 artifacts
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
+    - name: build for ${{ matrix.os }} ${{ matrix.arch }}
+      run: make build GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }}
+    - name: upload ${{ matrix.os }} ${{ matrix.arch }} artifact
+      uses: actions/upload-artifact@v3
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build/ktf.linux.amd64
-        asset_name: ktf.linux.amd64
-        asset_content_type: application/octet-stream
-
-    - name: build mac amd64 artifacts
-      run: make build GOOS=darwin GOARCH=amd64
-    - name: upload mac amd64 artifacts
-      uses: actions/upload-release-asset@v1
-      env:
-        GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build/ktf.darwin.amd64
-        asset_name: ktf.darwin.amd64
-        asset_content_type: application/octet-stream
+        name: bin
+        path: build/ktf.${{ matrix.os }}.${{ matrix.arch }}
+        if-no-files-found: error
 
     # --------------------------------------------------------------------------
     # Generate Checksums
     # --------------------------------------------------------------------------
 
-    - name: generate checksums for linux amd64 artifacts
-      run: sha256sum ktf.linux.amd64 >> CHECKSUMS
+    - name: generate checksum for ${{ matrix.os }} ${{ matrix.arch }} artifact
+      run: sha256sum ktf.${{ matrix.os }}.${{ matrix.arch }} >> CHECKSUMS.${{ matrix.os }}.${{ matrix.arch }}
       working-directory: ./build/
+    - name: upload checksum for ${{ matrix.os }} ${{ matrix.arch }}
+      uses: actions/upload-artifact@v3
+      with:
+        name: CHECKSUMS
+        path: build/CHECKSUMS.${{ matrix.os }}.${{ matrix.arch }}
+        if-no-files-found: error
 
-    - name: generate checksums for mac amd64 artifacts
-      run: sha256sum ktf.darwin.amd64 >> CHECKSUMS
-      working-directory: ./build/
+  # --------------------------------------------------------------------------
+  # Release Job
+  # --------------------------------------------------------------------------
 
-    - name: upload checksums
-      uses: actions/upload-release-asset@v1
+  release:
+    runs-on: ubuntu-latest
+    needs:
+    - artifacts
+    steps:
+
+    # --------------------------------------------------------------------------
+    # Github Release
+    # --------------------------------------------------------------------------
+
+    - name: download checksums artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: CHECKSUMS
+
+    - name: concatenate all checksums
+      run: cat CHECKSUMS.* > CHECKSUMS
+
+    - name: download binary artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: bin
+
+    - name: Release
+      uses: softprops/action-gh-release@v1
+      id: create_release
+      with:
+        draft: true
+        prerelease: true
+        name: ${{ github.ref }}
+        tag_name: ${{ github.ref }}
+        files: |
+          CHECKSUMS
+          ktf.*
+        body: |
+          See the [CHANGELOG.md](https://raw.githubusercontent.com/Kong/kubernetes-testing-framework/main/CHANGELOG.md)
       env:
         GITHUB_TOKEN: ${{ github.token }}
-      with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./build/CHECKSUMS
-        asset_name: CHECKSUMS
-        asset_content_type: text/plain
-
