@@ -34,9 +34,11 @@ test.unit:
 		-v \
 		-covermode=atomic \
 		-coverprofile=unit.coverage.out \
+		-coverpkg=$(PKG_LIST) \
 		./pkg/...
 
 TEST_RUN ?= ""
+PKG_LIST ?= ./pkg/...,./internal/...
 
 .PHONY: test.integration
 test.integration:
@@ -48,6 +50,7 @@ test.integration:
 		-v \
 		-covermode=atomic \
 		-coverprofile=integration.coverage.out \
+		-coverpkg=$(PKG_LIST) \
 		./test/integration/...
 
 .PHONY: test.e2e
