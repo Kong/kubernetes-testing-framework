@@ -76,9 +76,11 @@ func (c commandDoer) createOpts(ctx context.Context) []retry.Option {
 		retry.Attempts(retryCount),
 		retry.DelayType(retry.FixedDelay),
 		retry.OnRetry(func(_ uint, err error) {
-			logrus.WithError(err).
-				WithField("args", c.args).
-				Errorf("failed running %s", c.cmd)
+			if err != nil {
+				logrus.WithError(err).
+					WithField("args", c.args).
+					Errorf("failed running %s", c.cmd)
+			}
 		}),
 	}
 }
