@@ -245,7 +245,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// if the dbmode is postgres, set several related values
-	args := []string{"--kubeconfig", kubeconfig.Name(), "upgrade", "--install", DefaultDeploymentName, "kong/kong"}
+	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
 	if a.proxyDBMode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "env.database=postgres",
