@@ -54,7 +54,10 @@ func (c commandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFun
 	return retry.Do(func() error {
 		cmd, stdout, stderr := c.createCmd(ctx)
 		err := cmd.Run()
-		return errorFunc(err, stdout, stderr)
+		if err != nil {
+			return errorFunc(err, stdout, stderr)
+		}
+		return nil
 	},
 		c.createOpts(ctx)...,
 	)
