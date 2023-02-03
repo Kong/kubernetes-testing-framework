@@ -50,11 +50,16 @@ func (c commandDoer) Do(ctx context.Context) error {
 	)
 }
 
+// DoWithErrorHandling executes the command and runs errorFunc passing a resulting err, stdout and stderr to be handled
+// by the caller. The errorFunc is going to be called only when the resulting err != nil.
 func (c commandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFunc) error {
 	return retry.Do(func() error {
 		cmd, stdout, stderr := c.createCmd(ctx)
 		err := cmd.Run()
-		return errorFunc(err, stdout, stderr)
+		if err != nil {
+			return errorFunc(err, stdout, stderr)
+		}
+		return nil
 	},
 		c.createOpts(ctx)...,
 	)
