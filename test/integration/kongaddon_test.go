@@ -48,12 +48,6 @@ func TestKongAddonWithCustomImage(t *testing.T) {
 	tests := []customImageTest{
 		{
 			controllerImageRepo: "kong/kubernetes-ingress-controller",
-			controllerImageTag:  "2.3.0",
-			proxyImageRepo:      "kong",
-			proxyImageTag:       "2.7",
-		},
-		{
-			controllerImageRepo: "kong/kubernetes-ingress-controller",
 			controllerImageTag:  "2.3.1",
 			proxyImageRepo:      "kong",
 			proxyImageTag:       "2.8",
