@@ -23,11 +23,10 @@ import (
 func deleteCluster(
 	ctx context.Context,
 	c *container.ClusterManagerClient,
-	name, project, location string,
+	fullClusterName string,
 ) (*containerpb.Operation, error) {
 	// tear down the cluster and return the teardown operation
-	fullname := fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, name)
-	req := containerpb.DeleteClusterRequest{Name: fullname}
+	req := containerpb.DeleteClusterRequest{Name: fullClusterName}
 	return c.DeleteCluster(ctx, &req)
 }
 
@@ -139,4 +138,8 @@ func clientAuthFromCreds(ctx context.Context, jsonCreds []byte) (*container.Clus
 	}
 
 	return mgrc, oauthToken.AccessToken, nil
+}
+
+func fullClusterName(project, location, name string) string {
+	return fmt.Sprintf("projects/%s/locations/%s/clusters/%s", project, location, name)
 }

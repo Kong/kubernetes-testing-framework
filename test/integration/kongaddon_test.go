@@ -83,6 +83,9 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 	env, err := builder.Build(ctx)
 	require.NoError(t, err)
 
+	err := <-env.WaitForReady(ctx)
+	require.NoError(t, err)
+
 	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
 	defer func() {
 		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())

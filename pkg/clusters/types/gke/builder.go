@@ -9,6 +9,7 @@ import (
 	"time"
 	"unicode"
 
+	container "cloud.google.com/go/container/apiv1"
 	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
@@ -94,7 +95,7 @@ func (b *Builder) WithLabels(labels map[string]string) *Builder {
 }
 
 // Build creates and configures clients for a GKE-based Kubernetes clusters.Cluster.
-func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
+func (b *Builder) Build(ctx context.Context) (cluster clusters.Cluster, err error) {
 	// validate the credential contents by finding the IAM service account
 	// ID which is creating this cluster.
 	var creds map[string]string
@@ -163,46 +164,34 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		}
 	}
 
-	if _, err = mgrc.CreateCluster(ctx, req); err != nil {
+	clusterName := fullClusterName(b.project, b.location, b.Name)
+	createOperation, err := mgrc.CreateCluster(ctx, req)
+	if err != nil {
 		return nil, err
 	}
-
-	// wait for cluster readiness
-	clusterReady := false
-	for !clusterReady {
-		select {
-		case <-ctx.Done():
-			if err := ctx.Err(); err != nil {
-				return nil, fmt.Errorf("failed to build cluster: %w", err)
+	defer func() {
+		if err != nil {
+			if _, deleteErr := deleteCluster(ctx, mgrc, clusterName); deleteErr != nil {
+				err = fmt.Errorf("failed to retrieve cluster after building (%s), then failed to clean up: %w", err, deleteErr)
 			}
-			return nil, fmt.Errorf("failed to build cluster: context completed")
-		default:
-			req := containerpb.GetClusterRequest{Name: fmt.Sprintf("%s/clusters/%s", parent, b.Name)}
-			cluster, err := mgrc.GetCluster(ctx, &req)
-			if err != nil {
-				if _, deleteErr := deleteCluster(ctx, mgrc, b.Name, b.project, b.location); deleteErr != nil {
-					return nil, fmt.Errorf("failed to retrieve cluster after building (%s), then failed to clean up: %w", err, deleteErr)
-				}
-				return nil, err
-			}
-			if cluster.Status == containerpb.Cluster_RUNNING {
-				clusterReady = true
-				break
-			}
-			time.Sleep(waitForClusterTick)
 		}
+	}()
+
+	if err := waitForOperationDone(ctx, mgrc, fullOperationName(b.project, b.location, createOperation.Name)); err != nil {
+		return nil, fmt.Errorf("failed waiting for cluster create operation to be completed: %w", err)
+	}
+
+	if err := waitForClusterReadiness(ctx, mgrc, clusterName); err != nil {
+		return nil, fmt.Errorf("failed waiting for cluster readiness: %w", err)
 	}
 
 	// get the restconfig and kubernetes client for the cluster
 	restCFG, k8s, err := clientForCluster(ctx, mgrc, authToken, b.Name, b.project, b.location)
 	if err != nil {
-		if _, deleteErr := deleteCluster(ctx, mgrc, b.Name, b.project, b.location); deleteErr != nil {
-			return nil, fmt.Errorf("failed to get cluster client (%s), then failed to clean up: %w", err, deleteErr)
-		}
-		return nil, err
+		return nil, fmt.Errorf("failed getting client for the cluster: %w", err)
 	}
 
-	cluster := &Cluster{
+	cluster = &Cluster{
 		name:            b.Name,
 		project:         b.project,
 		location:        b.location,
@@ -222,6 +211,28 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	}
 
 	return cluster, nil
+}
+
+// waitForClusterReadiness waits for the cluster to be in running state. It's going to be aborted when passed context
+// gets cancelled.
+func waitForClusterReadiness(ctx context.Context, mgrc *container.ClusterManagerClient, fullClusterName string) error {
+	ticker := time.NewTicker(waitForClusterTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("failed to build cluster: %w", ctx.Err())
+		case <-ticker.C:
+			cluster, err := mgrc.GetCluster(ctx, &containerpb.GetClusterRequest{Name: fullClusterName})
+			if err != nil {
+				return fmt.Errorf("failed getting cluster details: %w", err)
+			}
+			if cluster.Status == containerpb.Cluster_RUNNING {
+				return nil
+			}
+		}
+	}
 }
 
 // sanitizeCreatedByID modifies the clientID to comply with GKE label values constraints.

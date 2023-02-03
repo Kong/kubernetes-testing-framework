@@ -36,11 +36,11 @@ var (
 )
 
 func TestGKECluster(t *testing.T) {
-	t.Run("create subnet (using gcloud CLI)", func(t *testing.T) {
+	t.Run("create subnet", func(t *testing.T) {
 		testGKECluster(t, true)
 	})
 
-	t.Run("use default subnet (using gRPC API)", func(t *testing.T) {
+	t.Run("use default subnet", func(t *testing.T) {
 		testGKECluster(t, false)
 	})
 }
@@ -72,10 +72,11 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	require.NoError(t, err)
 
 	t.Logf("setting up cleanup for cluster %s", cluster.Name())
-	defer func() {
+	t.Cleanup(func() {
 		t.Logf("running cluster cleanup for %s", cluster.Name())
-		assert.NoError(t, cluster.Cleanup(ctx))
-	}()
+		// don't use test ctx as it may be cancelled already
+		assert.NoError(t, cluster.Cleanup(context.Background()))
+	})
 
 	t.Log("verifying that the cluster can be communicated with")
 	version, err := cluster.Client().ServerVersion()

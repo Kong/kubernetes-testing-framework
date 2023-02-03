@@ -6,10 +6,8 @@ import (
 	"os"
 	"strings"
 	"sync"
-	"time"
 
 	container "cloud.google.com/go/container/apiv1"
-	"cloud.google.com/go/container/apiv1/containerpb"
 	"github.com/blang/semver/v4"
 	"google.golang.org/api/option"
 	"k8s.io/client-go/kubernetes"
@@ -114,14 +112,13 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 		}
 		defer mgrc.Close()
 
-		teardownOp, err := deleteCluster(ctx, mgrc, c.name, c.project, c.location)
+		teardownOp, err := deleteCluster(ctx, mgrc, fullClusterName(c.project, c.location, c.name))
 		if err != nil {
 			return err
 		}
 
 		if c.waitForTeardown {
-			fullTeardownOpName := fmt.Sprintf("projects/%s/locations/%s/operations/%s", c.project, c.location, teardownOp.Name)
-			if err := waitForTeardown(ctx, mgrc, fullTeardownOpName); err != nil {
+			if err := waitForOperationDone(ctx, mgrc, fullOperationName(c.project, c.location, teardownOp.Name)); err != nil {
 				return err
 			}
 		}
@@ -130,26 +127,6 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 	}
 
 	return nil
-}
-
-func waitForTeardown(ctx context.Context, mgrc *container.ClusterManagerClient, teardownOpName string) error {
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	for {
-		select {
-		case <-ctx.Done():
-			return ctx.Err()
-		case <-ticker.C:
-			op, err := mgrc.GetOperation(ctx, &containerpb.GetOperationRequest{Name: teardownOpName})
-			if err != nil {
-				return err
-			}
-			if op.Status == containerpb.Operation_DONE {
-				return nil
-			}
-		}
-	}
 }
 
 func (c *Cluster) Client() *kubernetes.Clientset {
