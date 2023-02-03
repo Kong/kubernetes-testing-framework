@@ -77,7 +77,11 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 		Build()
 
 	t.Log("configuring the testing environment")
-	builder := environment.NewBuilder().WithAddons(kong)
+	// Add metallb to get an IP address for Kong's LoadBalancerservices
+	// TODO: when https://github.com/Kong/kubernetes-testing-framework/issues/540
+	// gets resolved then we can configure service types to be of ClusterIP and
+	// do away with metallb deployment here.
+	builder := environment.NewBuilder().WithAddons(kong, metallbaddon.New())
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
@@ -92,8 +96,8 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 		require.NoError(t, env.Cleanup(ctx))
 	}()
 
-	t.Log("verifying that addons have been loaded into the environment")
-	require.Len(t, env.Cluster().ListAddons(), 1)
+	t.Log("verifying that addons (kong and metallb) have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 2)
 
 	t.Log("verifying that the kong deployment is using custom images")
 	deployments := env.Cluster().Client().AppsV1().Deployments(kong.Namespace())
