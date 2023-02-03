@@ -138,6 +138,7 @@ jobs:
 
   integration-tests-passed:
     needs: integration-tests
+    if: ${{ always() }}
     runs-on: ubuntu-latest
     steps:
     - name: integrations tests pased
