@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.28.1
+
+- Fix command error handling when error is `nil`
+  [#527](https://github.com/Kong/kubernetes-testing-framework/pull/527)
+
 ## v0.28.0
 
 - Add arm64 artifacts
