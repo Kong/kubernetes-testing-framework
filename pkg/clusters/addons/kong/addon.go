@@ -245,7 +245,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// if the dbmode is postgres, set several related values
-	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultDeploymentName, "kong/kong"}
+	args := []string{"--kubeconfig", kubeconfig.Name(), "upgrade", "--install", DefaultDeploymentName, "kong/kong"}
 	if a.proxyDBMode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs, []string{
 			"--set", "env.database=postgres",
@@ -343,10 +343,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	return retry.
 		Command("helm", args...).
 		DoWithErrorHandling(ctx, func(err error, _, stderr *bytes.Buffer) error {
-			if !strings.Contains(stderr.String(), "cannot re-use") {
-				return fmt.Errorf("%s: %w", stderr, err)
+			// ignore if addon is already deployed
+			if strings.Contains(stderr.String(), "cannot re-use") {
+				return nil
 			}
-			return nil
+			return fmt.Errorf("%s: %w", stderr, err)
 		})
 }
 
