@@ -66,6 +66,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	builder.WithClusterMinorVersion(1, 23)
 	builder.WithWaitForTeardown(true)
 	builder.WithCreateSubnet(createSubnet)
+	builder.WithLabels(map[string]string{"test-cluster": "true"})
 
 	t.Logf("building cluster %s (this can take some time)", builder.Name)
 	cluster, err := builder.Build(ctx)
