@@ -178,7 +178,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 			return false
 		}
 		return len(lbstatus.Ingress) > 0
-	}, time.Minute*1, time.Second*1)
+	}, time.Minute*3, time.Second*1)
 
 	t.Logf("accessing the deployment via ingress to validate that the kong proxy is functioning")
 	httpc := http.Client{Timeout: time.Second * 3}
