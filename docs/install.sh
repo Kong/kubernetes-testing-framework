@@ -27,10 +27,10 @@ echo "INFO: verifying cpu architecture compatibility"
 
 ARCH=$(uname -m | tr '[:upper:]' '[:lower:]')
 
-if [ "$ARCH" = x86_64 ]; then
+if [ "$ARCH" = "x86_64" ]; then
     ARCH="amd64"
 fi
-if [ "$ARCH" = aarch64 ]; then
+if [ "$ARCH" = "aarch64" ]; then
     ARCH="arm64"
 fi
 

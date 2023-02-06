@@ -28,8 +28,8 @@ jobs:
         GITHUB_TOKEN: ${{ github.token }}
       run: ./docs/install.sh
 
-    - name: run ktf
-      run: ~/.local/bin/ktf --help
+    - name: run ktf to verify if it installed properly to a desired location
+      run: ~/.local/bin/ktf
 
   unit-tests:
     runs-on: ubuntu-latest
