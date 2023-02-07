@@ -153,25 +153,25 @@ jobs:
         run: echo "result=${{ secrets.PULP_PASSWORD != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
       - uses: Kong/kong-license@master
-        if: steps.detect_if_should_run.outputs.result
+        if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:
           password: ${{ secrets.PULP_PASSWORD }}
 
       - name: checkout repository
-        if: steps.detect_if_should_run.outputs.result
+        if: steps.detect_if_should_run.outputs.result == 'true'
         uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
       - name: setup golang
-        if: steps.detect_if_should_run.outputs.result
+        if: steps.detect_if_should_run.outputs.result == 'true'
         uses: actions/setup-go@v3
         with:
           go-version: '^1.19'
 
       - name: cache go modules
-        if: steps.detect_if_should_run.outputs.result
+        if: steps.detect_if_should_run.outputs.result == 'true'
         uses: actions/cache@v3
         with:
           path: ~/go/pkg/mod
@@ -180,7 +180,7 @@ jobs:
             ${{ runner.os }}-build-codegen-
 
       - name: run e2e tests
-        if: steps.detect_if_should_run.outputs.result
+        if: steps.detect_if_should_run.outputs.result == 'true'
         run: make test.e2e
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
