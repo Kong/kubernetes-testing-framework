@@ -80,11 +80,12 @@ func deleteKindCluster(ctx context.Context, name string) error {
 // clientForCluster provides a *kubernetes.Clientset for a KIND cluster provided the cluster name.
 func clientForCluster(name string) (*rest.Config, *kubernetes.Clientset, error) {
 	kubeconfig := new(bytes.Buffer)
+	stderr := new(bytes.Buffer)
 	cmd := exec.Command("kind", "get", "kubeconfig", "--name", name)
 	cmd.Stdout = kubeconfig
-	cmd.Stderr = os.Stderr
+	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
-		return nil, nil, err
+		return nil, nil, fmt.Errorf("command %q failed STDERR=(%s): %w", cmd.String(), stderr.String(), err)
 	}
 
 	clientCfg, err := clientcmd.NewClientConfigFromBytes(kubeconfig.Bytes())
@@ -110,7 +111,7 @@ func (b *Builder) ensureConfigFile() error {
 	if b.configPath == nil {
 		f, err := os.CreateTemp(os.TempDir(), "ktf-kind-config")
 		if err != nil {
-			return err
+			return fmt.Errorf("failed creating temp file for kind config: %w", err)
 		}
 		defer f.Close()
 
@@ -133,20 +134,24 @@ func (b *Builder) disableDefaultCNI() error {
 
 	configYAML, err := os.ReadFile(*b.configPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed reading kind config from %s: %w", *b.configPath, err)
 	}
 
 	kindConfig := v1alpha4.Cluster{}
 	if err := yaml.Unmarshal(configYAML, &kindConfig); err != nil {
-		return err
+		return fmt.Errorf("failed unmarshalling kind config: %w", err)
 	}
 
 	kindConfig.Networking.DisableDefaultCNI = true
 
 	configYAML, err = yaml.Marshal(kindConfig)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed marshalling kind config: %w", err)
 	}
 
-	return os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
+	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("failed writing kind config %s: %w", *b.configPath, err)
+	}
+	return nil
 }

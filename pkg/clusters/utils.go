@@ -307,7 +307,10 @@ func kubectlSubcommandWithYAML(ctx context.Context, cluster Cluster, subcommand,
 		cmd := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), subcommand, "-f", yaml) //nolint:gosec
 		cmd.Stdout = stdout
 		cmd.Stderr = stderr
-		return cmd.Run()
+		if err := cmd.Run(); err != nil {
+			return fmt.Errorf("command %q failed STDERR=(%s) STDERR=(%s): %w", cmd.String(), stdout.String(), stderr.String(), err)
+		}
+		return nil
 	}
 
 	// configure the command to read YAML from STDIN
