@@ -68,7 +68,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 
 	if b.calicoCNI {
 		if err := b.disableDefaultCNI(); err != nil {
-			return nil, err
+			return nil, fmt.Errorf("failed disabling default CNI for kind cluster: %w", err)
 		}
 
 		// if calico is enabled, we can't effectively wait for the cluster to
