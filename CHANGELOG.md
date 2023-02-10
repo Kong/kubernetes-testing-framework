@@ -4,6 +4,8 @@
 
 - Fix calico manifests URL
   [#555](https://github.com/Kong/kubernetes-testing-framework/pull/555)
+- `clusters.Cleaner` can be used concurrently
+  [#552](https://github.com/Kong/kubernetes-testing-framework/pull/552)
 
 ## v0.28.1
 
