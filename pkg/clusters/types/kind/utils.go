@@ -42,7 +42,7 @@ func NewFromExisting(name string) (clusters.Cluster, error) {
 // -----------------------------------------------------------------------------
 
 const (
-	defaultCalicoManifests = "https://projectcalico.docs.tigera.io/manifests/calico.yaml"
+	defaultCalicoManifests = "https://raw.githubusercontent.com/projectcalico/calico/v3.25.0/manifests/calico.yaml"
 )
 
 // -----------------------------------------------------------------------------
@@ -148,5 +148,5 @@ func (b *Builder) disableDefaultCNI() error {
 		return err
 	}
 
-	return os.WriteFile(*b.configPath, configYAML, 0600) //nolint:gomnd
+	return os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
 }
