@@ -84,13 +84,11 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 			namespaceClient := c.cluster.Client().CoreV1().Namespaces()
 
 			if err := namespaceClient.Delete(ctx, namespace.Name, metav1.DeleteOptions{}); err != nil {
-				switch errors.IsNotFound(err) {
-				// If the namespace cannot be found then we're good to go.
-				case true:
+				if errors.IsNotFound(err) {
+					// If the namespace cannot be found then we're good to go.
 					return nil
-				// If there was a different error then report it to the caller.
-				case false:
-					return err
+				}
+				return err
 				}
 			}
 
