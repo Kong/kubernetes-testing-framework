@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## v0.24.0-fix.calico
+
+- Fix calico manifests URL
+  [#555](https://github.com/Kong/kubernetes-testing-framework/pull/555)
 
 ## v0.24.0
 
