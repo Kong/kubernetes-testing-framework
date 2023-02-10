@@ -99,7 +99,6 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 					return nil
 				}
 				return err
-				}
 			}
 
 			w, err := namespaceClient.Watch(ctx, metav1.ListOptions{
