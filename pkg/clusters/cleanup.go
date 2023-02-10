@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"sync"
 
 	"golang.org/x/sync/errgroup"
 	corev1 "k8s.io/api/core/v1"
@@ -28,6 +29,7 @@ type Cleaner struct {
 	objects    []client.Object
 	manifests  []string
 	namespaces []*corev1.Namespace
+	lock       sync.RWMutex
 }
 
 // NewCleaner provides a new initialized *Cleaner object.
@@ -40,18 +42,26 @@ func NewCleaner(cluster Cluster) *Cleaner {
 // -----------------------------------------------------------------------------
 
 func (c *Cleaner) Add(obj client.Object) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.objects = append([]client.Object{obj}, c.objects...)
 }
 
 func (c *Cleaner) AddManifest(manifest string) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.manifests = append(c.manifests, manifest)
 }
 
 func (c *Cleaner) AddNamespace(namespace *corev1.Namespace) {
+	c.lock.Lock()
+	defer c.lock.Unlock()
 	c.namespaces = append(c.namespaces, namespace)
 }
 
 func (c *Cleaner) Cleanup(ctx context.Context) error {
+	c.lock.RLock()
+	defer c.lock.RUnlock()
 	dyn, err := dynamic.NewForConfig(c.cluster.Config())
 	if err != nil {
 		return err
