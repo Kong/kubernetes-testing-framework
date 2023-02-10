@@ -1,9 +1,11 @@
 package clusters
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
@@ -117,5 +119,25 @@ func TestFixupObjKinds(t *testing.T) {
 			assert.Equal(t, tc.expected.Kind, obj.GetObjectKind().GroupVersionKind().Kind)
 			assert.Equal(t, tc.expected.Version, obj.GetObjectKind().GroupVersionKind().Version)
 		})
+	}
+}
+
+func TestCleanerCanBeUsedConcurrently(t *testing.T) {
+	cleaner := NewCleaner(nil)
+	for i := 0; i < 100; i++ {
+		i := i
+		go func() {
+			cleaner.Add(&v1.Pod{})
+		}()
+		go func() {
+			cleaner.AddManifest(fmt.Sprintf("manifest-%d.yaml", i))
+		}()
+		go func() {
+			cleaner.AddNamespace(&v1.Namespace{
+				ObjectMeta: metav1.ObjectMeta{
+					Name: fmt.Sprintf("ns-%d", i),
+				},
+			})
+		}()
 	}
 }
