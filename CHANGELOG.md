@@ -2,8 +2,13 @@
 
 ## Unreleased
 
+- Fix an endless loop in cleaner's `Cleanup()` when a namespace to be deleted
+  is already gone.
+  [#553](https://github.com/Kong/kubernetes-testing-framework/pull/553)
 - Fix calico manifests URL
   [#555](https://github.com/Kong/kubernetes-testing-framework/pull/555)
+- `clusters.Cleaner` can be used concurrently
+  [#552](https://github.com/Kong/kubernetes-testing-framework/pull/552)
 
 ## v0.28.1
 
