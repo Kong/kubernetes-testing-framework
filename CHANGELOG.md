@@ -3,7 +3,7 @@
 ## Unreleased
 
 - Fix an endless loop in cleaner's `Cleanup()` when a namespace to be deleted
-  is alread gone.
+  is already gone.
   [#553](https://github.com/Kong/kubernetes-testing-framework/pull/553)
 - Fix calico manifests URL
   [#555](https://github.com/Kong/kubernetes-testing-framework/pull/555)
