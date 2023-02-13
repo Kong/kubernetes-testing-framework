@@ -259,8 +259,8 @@ github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kong/deck v1.18.0 h1:N23/QT7ISs2cU0/PjAk6C74oGjYqzhCoYL+kAyQmZQ4=
 github.com/kong/deck v1.18.0/go.mod h1:cHU6K+Z4DmTqVr0dYFZHZKiizVe0cXI3c5HT2itAzL8=
-github.com/kong/go-kong v0.37.0 h1:81I49dJF6gKTCcWR+bxwp3VHlN4/2kaQ4oxVw252mGY=
-github.com/kong/go-kong v0.37.0/go.mod h1:4xT4uMMGcysH3qOqm458JyIbDBUw8MVAQIi+DP8ggtc=
+github.com/kong/go-kong v0.38.0 h1:FEsFuowZbTGnONQXmylqDAp8zvnS/EwP4Bu1vLT+dC4=
+github.com/kong/go-kong v0.38.0/go.mod h1:4xT4uMMGcysH3qOqm458JyIbDBUw8MVAQIi+DP8ggtc=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
 github.com/kong/semver/v4 v4.0.1/go.mod h1:LImQ0oT15pJvSns/hs2laLca2zcYoHu5EsSNY0J6/QA=
 github.com/kr/fs v0.1.0/go.mod h1:FFnZGqtBN9Gxj7eW1uZ42v5BccTP0vu6NEaFoC2HwRg=
