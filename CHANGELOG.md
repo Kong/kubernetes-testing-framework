@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## v0.29.0
+
 - Fix an endless loop in cleaner's `Cleanup()` when a namespace to be deleted
   is already gone.
   [#553](https://github.com/Kong/kubernetes-testing-framework/pull/553)
