@@ -13,6 +13,7 @@ import (
 	"testing"
 	"time"
 
+	gokong "github.com/kong/go-kong/kong"
 	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
@@ -70,30 +71,34 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, err)
 	req.Header.Set("Kong-Admin-Token", adminPassword)
 
-	t.Log("pulling the admin api information")
-	httpc := http.Client{Timeout: time.Second * 10}
-	var body []byte
-	require.Eventually(t, func() bool {
-		resp, err := httpc.Do(req)
-		if err != nil {
-			return false
-		}
-		defer resp.Body.Close()
-		body, err = io.ReadAll(resp.Body)
-		if err != nil {
-			return false
-		}
-		t.Logf("RESPONSE CODE: %d STATUS: %s", resp.StatusCode, resp.Status)
-		return resp.StatusCode == http.StatusOK
-	}, time.Minute, time.Second)
+	t.Run("verifying the admin api version is enterprise", func(t *testing.T) {
+		t.Log("pulling the admin api information")
+		httpc := http.Client{Timeout: time.Second * 10}
+		var body []byte
+		require.Eventually(t, func() bool {
+			resp, err := httpc.Do(req)
+			if err != nil {
+				return false
+			}
+			defer resp.Body.Close()
+			body, err = io.ReadAll(resp.Body)
+			if err != nil {
+				return false
+			}
+			t.Logf("RESPONSE CODE: %d STATUS: %s", resp.StatusCode, resp.Status)
+			return resp.StatusCode == http.StatusOK
+		}, time.Minute, time.Second)
 
-	t.Log("verifying the admin api version is enterprise")
-	adminOutput := struct {
-		Version string `json:"version"`
-	}{}
-	require.NoError(t, json.Unmarshal(body, &adminOutput))
-	t.Logf("admin output: %+v", &adminOutput)
-	require.True(t, strings.Contains(adminOutput.Version, "enterprise-edition"))
+		adminOutput := struct {
+			Version string `json:"version"`
+		}{}
+		require.NoError(t, json.Unmarshal(body, &adminOutput))
+		v, err := gokong.NewVersion(adminOutput.Version)
+		require.NoError(t, err)
+
+		t.Logf("admin api version %s", v)
+		require.Truef(t, v.IsKongGatewayEnterprise(), "version %s should be an enterprise version but wasn't", v)
+	})
 
 	t.Log("verifying enterprise workspace API functionality")
 	workspaceEnabledProxyURL := adminURL.String() + "/workspaces"
@@ -118,6 +123,7 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
+	httpc := http.Client{Timeout: time.Second * 10}
 	require.Eventually(t, func() bool {
 		resp, err := httpc.Get(fmt.Sprintf("%s/%s", proxyURL, httpbinAddon.Path()))
 		if err != nil {
