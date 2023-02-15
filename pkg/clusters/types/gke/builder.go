@@ -26,21 +26,27 @@ type Builder struct {
 	jsonCreds         []byte
 	waitForTeardown   bool
 
-	createSubnet   bool
-	addons         clusters.Addons
-	clusterVersion *semver.Version
-	majorMinor     string
-	labels         map[string]string
+	createSubnet    bool
+	addons          clusters.Addons
+	clusterVersion  *semver.Version
+	majorMinor      string
+	nodeMachineType string
+	labels          map[string]string
 }
+
+const (
+	defaultNodeMachineType = "e2-highcpu-4"
+)
 
 // NewBuilder provides a new *Builder object.
 func NewBuilder(gkeJSONCredentials []byte, project, location string) *Builder {
 	return &Builder{
-		Name:      fmt.Sprintf("t-%s", uuid.NewString()),
-		project:   project,
-		location:  location,
-		jsonCreds: gkeJSONCredentials,
-		addons:    make(clusters.Addons),
+		Name:            fmt.Sprintf("t-%s", uuid.NewString()),
+		project:         project,
+		location:        location,
+		jsonCreds:       gkeJSONCredentials,
+		nodeMachineType: defaultNodeMachineType,
+		addons:          make(clusters.Addons),
 	}
 }
 
@@ -63,6 +69,11 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 // know the entire version tag).
 func (b *Builder) WithClusterMinorVersion(major, minor uint64) *Builder {
 	b.majorMinor = fmt.Sprintf("%d.%d", major, minor)
+	return b
+}
+
+func (b *Builder) WithNodeMachineType(machineType string) *Builder {
+	b.nodeMachineType = machineType
 	return b
 }
 
@@ -120,7 +131,10 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	// configure the cluster creation request
 	parent := fmt.Sprintf("projects/%s/locations/%s", b.project, b.location)
 	pbcluster := containerpb.Cluster{
-		Name:             b.Name,
+		Name: b.Name,
+		NodeConfig: &containerpb.NodeConfig{
+			MachineType: b.nodeMachineType,
+		},
 		InitialNodeCount: 1,
 		// disable the GKE ingress controller, which will otherwise interact with classless Ingresses
 		AddonsConfig: &containerpb.AddonsConfig{
@@ -131,7 +145,10 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 			b.labels,
 		),
 	}
-	req := &containerpb.CreateClusterRequest{Parent: parent, Cluster: &pbcluster}
+	req := &containerpb.CreateClusterRequest{
+		Parent:  parent,
+		Cluster: &pbcluster,
+	}
 
 	// use any provided custom cluster version
 	if b.clusterVersion != nil && b.majorMinor != "" {
@@ -235,7 +252,6 @@ func sanitizeCreatedByID(id string) string {
 			// disallowed character, replace it with a dash
 			builder.WriteString("-")
 		}
-
 	}
 
 	// Truncate to the maximum allowed length.
