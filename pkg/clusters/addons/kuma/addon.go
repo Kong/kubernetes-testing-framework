@@ -16,6 +16,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"github.com/kong/kubernetes-testing-framework/internal/retry"
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 )
@@ -147,15 +148,18 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args = append(args, "--create-namespace", "--namespace", Namespace)
 	a.logger.Debugf("helm install arguments: %+v", args)
 
-	// run the helm install command
-	stderr = new(bytes.Buffer)
-	cmd = exec.CommandContext(ctx, "helm", args...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		if !strings.Contains(stderr.String(), "cannot re-use") { // ignore if addon is already deployed
-			return fmt.Errorf("%s: %w", stderr.String(), err)
-		}
+	// Sometimes running helm install fails. Just in case this happens, retry.
+	err = retry.
+		Command("helm", args...).
+		DoWithErrorHandling(ctx, func(err error, _, stderr *bytes.Buffer) error {
+			// ignore if addon is already deployed
+			if strings.Contains(stderr.String(), "cannot re-use") {
+				return nil
+			}
+			return fmt.Errorf("%s: %w", stderr, err)
+		})
+	if err != nil {
+		return err
 	}
 
 	if a.mtlsEnabled {
