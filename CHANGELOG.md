@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bump Kong Gateway Enterprise default image to 3.1.1.3
+  [#566](https://github.com/Kong/kubernetes-testing-framework/pull/566)
+
 ## v0.29.0
 
 - Fix an endless loop in cleaner's `Cleanup()` when a namespace to be deleted
