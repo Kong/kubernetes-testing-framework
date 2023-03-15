@@ -332,6 +332,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("env.%s=%s", name, value)}...)
 	}
 
+	a.deployArgs = append(a.deployArgs, []string{"--set", "containerSecurityContext.readOnlyRootFilesystem=true"}...)
 	// compile the helm installation values
 	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
