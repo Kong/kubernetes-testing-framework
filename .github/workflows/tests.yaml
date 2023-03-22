@@ -85,6 +85,12 @@ jobs:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     runs-on: ubuntu-latest
     steps:
+    # This step is needed to avoid running the integration tests if the secrets are not available.
+    # TODO: remove this step once we have a way to run integration tests on forks.
+    # https://github.com/Kong/kubernetes-testing-framework/issues/596
+    - name: Detect if we should run (have required secrets)
+      id: detect_if_should_run
+      run: echo "result=${{ secrets.PULP_PASSWORD != '' }}" >> $GITHUB_OUTPUT
 
     - name: checkout repository
       uses: actions/checkout@v3
@@ -92,16 +98,19 @@ jobs:
         fetch-depth: 0
 
     - uses: Kong/kong-license@master
+      if: steps.detect_if_should_run.outputs.result == 'true'
       id: license
       with:
         password: ${{ secrets.PULP_PASSWORD }}
 
     - name: setup golang
+      if: steps.detect_if_should_run.outputs.result == 'true'
       uses: actions/setup-go@v4
       with:
         go-version: '^1.19'
 
     - name: run integration test ${{ matrix.test }}
+      if: steps.detect_if_should_run.outputs.result == 'true'
       run: make test.integration
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -112,6 +121,7 @@ jobs:
         NCPU: 1
 
     - name: Upload coverage to Codecov
+      if: steps.detect_if_should_run.outputs.result == 'true'
       uses: codecov/codecov-action@v3
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
@@ -132,6 +142,9 @@ jobs:
     environment: gcloud
     runs-on: ubuntu-latest
     steps:
+      # This step is needed to avoid running the e2e tests if the secrets are not available.
+      # TODO: remove this step once we have a way to run integration tests on forks.
+      # https://github.com/Kong/kubernetes-testing-framework/issues/596
       - name: Detect if we should run (have required secrets)
         id: detect_if_should_run
         run: echo "result=${{ secrets.PULP_PASSWORD != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
