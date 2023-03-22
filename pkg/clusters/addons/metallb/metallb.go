@@ -117,7 +117,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
 	deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
-		Get(context.TODO(), "controller", metav1.GetOptions{})
+		Get(ctx, "controller", metav1.GetOptions{})
 	if err != nil {
 		if errors.IsNotFound(err) {
 			return nil, false, nil
@@ -132,7 +132,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	return nil, true, nil
 }
 
-func (a *addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+func (a *addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
 	diagnostics := make(map[string][]byte)
 	return diagnostics, nil
 }

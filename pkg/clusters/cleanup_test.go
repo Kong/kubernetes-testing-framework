@@ -122,7 +122,7 @@ func TestFixupObjKinds(t *testing.T) {
 	}
 }
 
-func TestCleanerCanBeUsedConcurrently(t *testing.T) {
+func TestCleanerCanBeUsedConcurrently(*testing.T) {
 	cleaner := NewCleaner(nil)
 	for i := 0; i < 100; i++ {
 		i := i
