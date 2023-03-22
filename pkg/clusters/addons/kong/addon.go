@@ -173,7 +173,7 @@ func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
-func (a *Addon) Dependencies(ctx context.Context, cluster clusters.Cluster) []clusters.AddonName {
+func (a *Addon) Dependencies(_ context.Context, cluster clusters.Cluster) []clusters.AddonName {
 	if _, ok := cluster.(*kind.Cluster); ok {
 		if a.proxyAdminServiceTypeLoadBalancer {
 			return []clusters.AddonName{
@@ -361,7 +361,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	// delete the chart release from the cluster
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultDeploymentName, "--namespace", a.namespace) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultDeploymentName, "--namespace", a.namespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {

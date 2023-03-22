@@ -452,7 +452,7 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 	return utils.IsNamespaceAvailable(ctx, cluster, Namespace)
 }
 
-func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
 	diagnostics := make(map[string][]byte)
 	return diagnostics, nil
 }

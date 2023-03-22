@@ -181,7 +181,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	// delete the chart release from the cluster
 	stderr := new(bytes.Buffer)
-	cmd := exec.Command("helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultReleaseName, "--namespace", Namespace) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultReleaseName, "--namespace", Namespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
@@ -195,7 +195,7 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) (waitForObj
 	return utils.IsNamespaceAvailable(ctx, cluster, Namespace)
 }
 
-func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
 	diagnostics := make(map[string][]byte)
 	return diagnostics, nil
 }

@@ -104,7 +104,7 @@ func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace stri
 // CreateNamespace creates a new namespace in the given cluster provided a name.
 func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) error {
 	nsName := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
-	_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
+	_, err := cluster.Client().CoreV1().Namespaces().Create(ctx, nsName, metav1.CreateOptions{})
 	if err != nil {
 		if !errors.IsAlreadyExists(err) {
 			return err

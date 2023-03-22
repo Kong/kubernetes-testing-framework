@@ -27,3 +27,5 @@ jobs:
 
     - name: Run golangci-lint
       uses: golangci/golangci-lint-action@v3.4.0
+      with:
+        skip-cache: true # actions/setup-go from v4 handles caching for us

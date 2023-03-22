@@ -185,7 +185,7 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	return nil, true, nil
 }
 
-func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (map[string][]byte, error) {
+func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
 	diagnostics := make(map[string][]byte)
 	return diagnostics, nil
 }
