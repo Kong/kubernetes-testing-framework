@@ -1,8 +1,8 @@
 # Changelog
 
-## Unreleased
+## v0.28.2
 
-- Fix calico manifests URL
+- Backport: fix calico manifests URL
   [#555](https://github.com/Kong/kubernetes-testing-framework/pull/555)
 
 ## v0.28.1
