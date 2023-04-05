@@ -48,14 +48,23 @@ jobs:
     - name: run unit tests
       run: make test.unit
 
+    # We're using a retry mechanism for codecov to ensure we do get the reports
+    # uploaded. The alternative is to use fail_ci_if_error: false, but that
+    # somewhat defeats the purpose of uploading those reports. Why bother uploading
+    # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
-      uses: codecov/codecov-action@v3
+      if: steps.detect_if_should_run.outputs.result == 'true'
+      uses: Wandalen/wretry.action@v1.0.36
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
-        flags: unit-test
-        files: unit.coverage.out
-        verbose: true
+        action: codecov/codecov-action@v3
+        with: |
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          flags: unit-test
+          files: unit.coverage.out
+          verbose: true
+        attempt_limit: 3
+        attempt_delay: 30000
 
   setup-integration-tests:
     runs-on: ubuntu-latest
@@ -120,15 +129,23 @@ jobs:
         TEST_RUN: ${{ matrix.test }}
         NCPU: 1
 
+    # We're using a retry mechanism for codecov to ensure we do get the reports
+    # uploaded. The alternative is to use fail_ci_if_error: false, but that
+    # somewhat defeats the purpose of uploading those reports. Why bother uploading
+    # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
       if: steps.detect_if_should_run.outputs.result == 'true'
-      uses: codecov/codecov-action@v3
+      uses: Wandalen/wretry.action@v1.0.36
       with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        fail_ci_if_error: true
-        flags: integration-test
-        files: integration.coverage.out
-        verbose: true
+        action: codecov/codecov-action@v3
+        with: |
+          token: ${{ secrets.CODECOV_TOKEN }}
+          fail_ci_if_error: true
+          flags: integration-test
+          files: integration.coverage.out
+          verbose: true
+        attempt_limit: 3
+        attempt_delay: 30000
 
   integration-tests-passed:
     needs: integration-tests
