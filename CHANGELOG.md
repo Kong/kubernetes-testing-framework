@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.30.1
+
+- Upgrade `metallb` addon to `v0.13.9`
+  [#602](https://github.com/Kong/kubernetes-testing-framework/pull/602)
+
 ## v0.30.0
 
 - Bump Kong Gateway Enterprise default image to 3.1.1.3
@@ -51,7 +56,7 @@
 - GKE cluster is able to wait for its cleanup synchronously. 
   [#491](https://github.com/Kong/kubernetes-testing-framework/pull/491)
 - MetalLB addon will use an extended timeout when fetching manifests from GH which
-  should improve its stability. 
+  should improve its stability.
   [#492](https://github.com/Kong/kubernetes-testing-framework/pull/492)
 
 ## v0.24.1
