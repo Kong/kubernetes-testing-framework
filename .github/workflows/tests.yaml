@@ -63,7 +63,7 @@ jobs:
           flags: unit-test
           files: unit.coverage.out
           verbose: true
-        attempt_limit: 3
+        attempt_limit: 10
         attempt_delay: 30000
 
   setup-integration-tests:
@@ -144,7 +144,7 @@ jobs:
           flags: integration-test
           files: integration.coverage.out
           verbose: true
-        attempt_limit: 3
+        attempt_limit: 10
         attempt_delay: 30000
 
   integration-tests-passed:
