@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.15.0
+	cloud.google.com/go/container v1.16.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/google/go-github/v48 v48.2.0
