@@ -59,7 +59,7 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 		}
 	}
 
-	err := DumpKubectlGetAllAndDescribeAll(ctx, c, meta, outDir)
+	err := DumpKubectlGetAllAndDescribeAll(ctx, c, outDir)
 	// write errors if we failed to dump results of `kubectl get all` or `kubectl describe all`.
 	// in cases where kubernetes cluster may not be correctly created.
 	if err != nil {
@@ -90,7 +90,7 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 
 // dump results of `kubectl get all` and `kubectl describe all`.
 // TODO: split results into one file per resource kind.
-func DumpKubectlGetAllAndDescribeAll(ctx context.Context, c Cluster, meta string, outDir string) error {
+func DumpKubectlGetAllAndDescribeAll(ctx context.Context, c Cluster, outDir string) error {
 	kubeconfig, err := TempKubeconfig(c)
 	if err != nil {
 		return err
