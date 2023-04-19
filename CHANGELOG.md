@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Dump pod logs by `kind export logs` in kind clusters. This will also dump
+  logs of kubernetes components not running in pods, including kubelet, 
+  containerd, etc.
+  [#630](https://github.com/Kong/kubernetes-testing-framework/pull/630)
+  [#591](https://github.com/Kong/kubernetes-testing-framework/pull/591)
+
 ## v0.30.1
 
 - Upgrade `metallb` addon to `v0.13.9`
