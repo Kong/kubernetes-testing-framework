@@ -155,5 +155,7 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		return "", err
 	}
 
+	// dump diagnostics of addons anf objects with attached events
+	// (`kubectl get all` and `kubectl describe all`) in `clusters.DumpDiagnostics`.
 	return clusters.DumpDiagnostics(ctx, c, meta, outDir)
 }

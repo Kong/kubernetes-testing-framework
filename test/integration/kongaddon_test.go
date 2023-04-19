@@ -182,9 +182,20 @@ func TestKongAddonDiagnostics(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, len(root))
 
-	logsPath, _ := filepath.Glob(filepath.Join(output, "pod_logs", "kong-system_ingress-controller-kong-*"))
+	// kind uses <cluster name>-control-plane/pods/kong-system_ingress-controller-kong-*/proxy/0.log as containter log path
+	// when we use kind export to dump logs.
+	podLogDir := "pod_logs"
+	if cluster.Type() == "kind" {
+		podLogDir = cluster.Name() + "-control-plane/pods"
+	}
+	logsPath, _ := filepath.Glob(filepath.Join(output, podLogDir, "kong-system_ingress-controller-kong-*"))
 	require.NotZero(t, len(logsPath))
-	logs, err := os.ReadFile(logsPath[0])
+
+	proxyLogPath := logsPath[0]
+	if cluster.Type() == "kind" {
+		proxyLogPath = proxyLogPath + "/proxy/0.log"
+	}
+	logs, err := os.ReadFile(proxyLogPath)
 	require.NoError(t, err)
 	require.NotZero(t, len(logs))
 
