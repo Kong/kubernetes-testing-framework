@@ -182,9 +182,10 @@ func TestKongAddonDiagnostics(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, len(root))
 
-	logsPath, _ := filepath.Glob(filepath.Join(output, "pod_logs", "kong-system_ingress-controller-kong-*"))
+	logsPath, _ := filepath.Glob(filepath.Join(output, fmt.Sprintf("%s-control-plane",cluster.Name()), "containers", "ingress-controller-kong-*"))
 	require.NotZero(t, len(logsPath))
-	logs, err := os.ReadFile(logsPath[0])
+	// First log file is for "clear-stale-pid" container which is in fact empty, use second one.
+	logs, err := os.ReadFile(logsPath[1])
 	require.NoError(t, err)
 	require.NotZero(t, len(logs))
 
