@@ -96,9 +96,14 @@ jobs:
     steps:
     # This step is needed to avoid running the integration tests requiring an enterprise license
     # if the secrets are not available.
-    - name: Detect if we should run and set env to enable tests requring a license (have required secrets)
+    - name: Detect if we should run test cases requring an enterprise license (have required secrets)
       id: detect_if_should_run_enterprise
-      run: echo "result=${{ secrets.PULP_PASSWORD != '' }}" >> $GITHUB_OUTPUT && echo "KTF_TEST_RUN_ENTERPRISE_CASES=true" >> $GITHUB_ENV
+      run: echo "result=${{ secrets.PULP_PASSWORD != '' }}" >> $GITHUB_OUTPUT
+
+    - name: Set environment variable to enable test cases requiring an enterprise license
+      if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
+      id: set_run_enterprise_env
+      run: echo "KTF_TEST_RUN_ENTERPRISE_CASES=true" >> $GITHUB_ENV
 
     - name: checkout repository
       uses: actions/checkout@v3
