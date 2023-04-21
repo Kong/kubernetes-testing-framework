@@ -25,6 +25,7 @@ import (
 )
 
 func TestKongEnterprisePostgres(t *testing.T) {
+	SkipEnterpriseTestIfNoEnv(t)
 	t.Parallel()
 
 	t.Log("preparing kong enterprise secrets")

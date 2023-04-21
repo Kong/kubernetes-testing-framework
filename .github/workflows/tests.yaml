@@ -94,12 +94,16 @@ jobs:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     runs-on: ubuntu-latest
     steps:
-    # This step is needed to avoid running the integration tests if the secrets are not available.
-    # TODO: remove this step once we have a way to run integration tests on forks.
-    # https://github.com/Kong/kubernetes-testing-framework/issues/596
-    - name: Detect if we should run (have required secrets)
-      id: detect_if_should_run
+    # This step is needed to avoid running the integration tests requiring an enterprise license
+    # if the secrets are not available.
+    - name: Detect if we should run test cases requring an enterprise license (have required secrets)
+      id: detect_if_should_run_enterprise
       run: echo "result=${{ secrets.PULP_PASSWORD != '' }}" >> $GITHUB_OUTPUT
+
+    - name: Set environment variable to enable test cases requiring an enterprise license
+      if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
+      id: set_run_enterprise_env
+      run: echo "KTF_TEST_RUN_ENTERPRISE_CASES=true" >> $GITHUB_ENV
 
     - name: checkout repository
       uses: actions/checkout@v3
@@ -107,19 +111,17 @@ jobs:
         fetch-depth: 0
 
     - uses: Kong/kong-license@master
-      if: steps.detect_if_should_run.outputs.result == 'true'
+      if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
         password: ${{ secrets.PULP_PASSWORD }}
 
     - name: setup golang
-      if: steps.detect_if_should_run.outputs.result == 'true'
       uses: actions/setup-go@v4
       with:
         go-version: '^1.19'
 
     - name: run integration test ${{ matrix.test }}
-      if: steps.detect_if_should_run.outputs.result == 'true'
       run: make test.integration
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -134,7 +136,6 @@ jobs:
     # somewhat defeats the purpose of uploading those reports. Why bother uploading
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
-      if: steps.detect_if_should_run.outputs.result == 'true'
       uses: Wandalen/wretry.action@v1.0.36
       with:
         action: codecov/codecov-action@v3
