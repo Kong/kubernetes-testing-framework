@@ -26,6 +26,7 @@ import (
 
 func TestKongEnterprisePostgres(t *testing.T) {
 	t.Parallel()
+	SkipEnterpriseTestIfNoEnv(t)
 
 	t.Log("preparing kong enterprise secrets")
 	licenseJSON, err := kong.GetLicenseJSONFromEnv()
