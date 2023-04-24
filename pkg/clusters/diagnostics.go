@@ -10,6 +10,10 @@ import (
 	"strings"
 )
 
+// DumpAllDescribeAll gathers diagnostic information from the cluster.  Specifically
+// it runs "kubectl get all" and "kubectl describe all" for all resources and stores
+// the output into two respective yaml files (kubectl_get_all.yaml and
+// kubectl_describe_all.yaml).
 func DumpAllDescribeAll(ctx context.Context, c Cluster, output string) error {
 	// Obtain a kubeconfig
 	kubeconfig, err := TempKubeconfig(c)

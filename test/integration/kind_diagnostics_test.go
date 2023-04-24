@@ -25,10 +25,10 @@ func TestKindDiagnosticDump(t *testing.T) {
 	require.NoError(t, err)
 
 	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
-	defer func() {
+	t.Cleanup(func() {
 		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
 		require.NoError(t, env.Cleanup(ctx))
-	}()
+	})
 
 	t.Log("waiting for the test environment to be ready for use")
 	require.NoError(t, <-env.WaitForReady(ctx))
@@ -41,14 +41,14 @@ func TestKindDiagnosticDump(t *testing.T) {
 
 	cluster := env.Cluster()
 
-	t.Log("verifying that DumpDiagnostics Functions as expected")
-	output, err :=  cluster.DumpDiagnostics(ctx, t.Name())
+	t.Log("verifying that DumpDiagnostics functions as expected")
+	output, err := cluster.DumpDiagnostics(ctx, t.Name())
 	require.NoError(t, err)
 	defer func() {
 		require.NoError(t, os.RemoveAll(output))
 	}()
 
-	logsPath, _ := filepath.Glob(filepath.Join(output, fmt.Sprintf("%s-control-plane",cluster.Name()), "containers", "kindnet-*"))
+	logsPath, _ := filepath.Glob(filepath.Join(output, fmt.Sprintf("%s-control-plane", cluster.Name()), "containers", "kindnet-*"))
 	require.NotZero(t, len(logsPath))
 	logs, err := os.ReadFile(logsPath[0])
 	require.NoError(t, err)
