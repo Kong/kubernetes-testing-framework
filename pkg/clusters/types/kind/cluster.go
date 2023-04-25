@@ -155,5 +155,6 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		return "", err
 	}
 
-	return clusters.DumpDiagnostics(ctx, c, meta, outDir)
+	err = clusters.DumpDiagnostics(ctx, c, meta, outDir)
+	return outDir, err
 }

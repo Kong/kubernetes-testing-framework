@@ -10,11 +10,11 @@ import (
 	"strings"
 )
 
-// DumpAllDescribeAll gathers diagnostic information from the cluster.  Specifically
-// it runs "kubectl get all" and "kubectl describe all" for all resources and stores
-// the output into two respective yaml files (kubectl_get_all.yaml and
-// kubectl_describe_all.yaml).
-func DumpAllDescribeAll(ctx context.Context, c Cluster, output string) error {
+// DumpAllDescribeAll gathers diagnostic information from the cluster.
+// Specifically it runs "kubectl get all" and "kubectl describe all" for
+// all resources and stores the output into two respective yaml files
+// (kubectl_get_all.yaml and kubectl_describe_all.yaml).
+func DumpAllDescribeAll(ctx context.Context, c Cluster, outDir string) error {
 	// Obtain a kubeconfig
 	kubeconfig, err := TempKubeconfig(c)
 	if err != nil {
@@ -25,12 +25,12 @@ func DumpAllDescribeAll(ctx context.Context, c Cluster, output string) error {
 	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
 	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
 	// aka "kubectl get all" and "kubectl describe all", but also gets CRs and cluster-scoped resouces
-	getAllOut, err := os.OpenFile(filepath.Join(output, "kubectl_get_all.yaml"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+	getAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_get_all.yaml"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
 	if err != nil {
 		return err
 	}
 	defer getAllOut.Close()
-	describeAllOut, err := os.OpenFile(filepath.Join(output, "kubectl_describe_all.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+	describeAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_describe_all.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func DumpAllDescribeAll(ctx context.Context, c Cluster, output string) error {
 // to provide a snapshot of it at a given time for offline debugging.
 // It uses the provided context and writes the meta string to meta.txt to identify the result set.
 // It returns the name of the directory that contains all the produced diagnostics data.
-func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string) (string, error) {
+func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string) error {
 	// for each Addon, run the addon diagnostic function
 	failedAddons := make(map[string]error)
 	for _, addon := range c.ListAddons() {
@@ -113,13 +113,13 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 	if len(failedAddons) > 0 {
 		failedAddonOut, err := os.Create(filepath.Join(outDir, "addon_failures.txt"))
 		if err != nil {
-			return outDir, err
+			return err
 		}
 		defer failedAddonOut.Close()
 		for failed, reason := range failedAddons {
 			_, err = failedAddonOut.WriteString(fmt.Sprintf("%s: %v\n", failed, reason))
 			if err != nil {
-				return outDir, err
+				return err
 			}
 		}
 	}
@@ -127,12 +127,12 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 	// write the diagnostic metadata
 	metaOut, err := os.Create(filepath.Join(outDir, "meta.txt"))
 	if err != nil {
-		return outDir, err
+		return err
 	}
 	defer metaOut.Close()
 	_, err = metaOut.WriteString(meta)
 	if err != nil {
-		return outDir, err
+		return err
 	}
 
 	err = DumpAllDescribeAll(ctx, c, outDir)
@@ -141,14 +141,14 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 	if err != nil {
 		kubectlErrorOut, openErr := os.OpenFile(filepath.Join(outDir, "kubectl_dump_error.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
 		if openErr != nil {
-			return outDir, openErr
+			return openErr
 		}
 		defer kubectlErrorOut.Close()
 		_, writeErr := kubectlErrorOut.WriteString(err.Error())
 		if writeErr != nil {
-			return outDir, writeErr
+			return writeErr
 		}
 	}
 
-	return outDir, nil
+	return nil
 }

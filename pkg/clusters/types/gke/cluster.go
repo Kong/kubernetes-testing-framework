@@ -230,7 +230,7 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 	defer os.Remove(kubeconfig.Name())
 
 	// create a tempdir
-	output, err := os.MkdirTemp(os.TempDir(), "ktf-diag-")
+	outDir, err := os.MkdirTemp(os.TempDir(), "ktf-diag-")
 	if err != nil {
 		return "", err
 	}
@@ -238,12 +238,12 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 	// for each Pod, run kubectl logs
 	pods, err := c.Client().CoreV1().Pods("").List(ctx, metav1.ListOptions{})
 	if err != nil {
-		return output, err
+		return outDir, err
 	}
-	logsDir := filepath.Join(output, "pod_logs")
+	logsDir := filepath.Join(outDir, "pod_logs")
 	err = os.Mkdir(logsDir, 0o750) //nolint:gomnd
 	if err != nil {
-		return output, err
+		return outDir, err
 	}
 	failedPods := make(map[string]error)
 	for _, pod := range pods.Items {
@@ -261,18 +261,20 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		defer podLogOut.Close()
 	}
 	if len(failedPods) > 0 {
-		failedPodOut, err := os.Create(filepath.Join(output, "pod_logs_failures.txt"))
+		failedPodOut, err := os.Create(filepath.Join(outDir, "pod_logs_failures.txt"))
 		if err != nil {
-			return output, err
+			return outDir, err
 		}
 		defer failedPodOut.Close()
 		for failed, reason := range failedPods {
 			_, err = failedPodOut.WriteString(fmt.Sprintf("%s: %v\n", failed, reason))
 			if err != nil {
-				return output, err
+				return outDir, err
 			}
 		}
 	}
 
-	return clusters.DumpDiagnostics(ctx, c, meta, output)
+	err = clusters.DumpDiagnostics(ctx, c, meta, outDir)
+
+	return outDir, err
 }
