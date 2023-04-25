@@ -9,7 +9,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
 	github.com/jetstack/cert-manager v1.7.2
-	github.com/kong/deck v1.19.1
+	github.com/kong/deck v1.20.0
 	github.com/kong/go-kong v0.40.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.38.1
@@ -36,7 +36,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0
 )
 
-require github.com/google/s2a-go v0.1.2 // indirect
+require (
+	github.com/google/s2a-go v0.1.2 // indirect
+	github.com/shoenig/go-m1cpu v0.1.4 // indirect
+)
 
 require (
 	cloud.google.com/go/compute v1.19.0 // indirect
@@ -55,7 +58,7 @@ require (
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
-	github.com/fatih/color v1.14.1 // indirect
+	github.com/fatih/color v1.15.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
@@ -83,7 +86,7 @@ require (
 	github.com/hashicorp/go-uuid v1.0.1 // indirect
 	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
-	github.com/imdario/mergo v0.3.14 // indirect
+	github.com/imdario/mergo v0.3.15 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -112,7 +115,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
-	github.com/shirou/gopsutil/v3 v3.23.2 // indirect
+	github.com/shirou/gopsutil/v3 v3.23.3 // indirect
 	github.com/spf13/afero v1.9.3 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
