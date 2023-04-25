@@ -144,5 +144,17 @@ func (c *Cluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
 // for diagnostics identification.
 // It returns the path to directory containing all the diagnostic files and an error.
 func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, error) {
-	return clusters.DumpDiagnostics(ctx, c, meta)
+	// create a tempdir
+	outDir, err := os.MkdirTemp(os.TempDir(), "ktf-diag-")
+	if err != nil {
+		return "", err
+	}
+
+	err = exportLogs(ctx, c.Name(), outDir)
+	if err != nil {
+		return "", err
+	}
+
+	err = clusters.DumpDiagnostics(ctx, c, meta, outDir)
+	return outDir, err
 }

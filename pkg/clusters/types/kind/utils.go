@@ -155,3 +155,17 @@ func (b *Builder) disableDefaultCNI() error {
 	}
 	return nil
 }
+
+// exportLogs dumps a kind cluster logs to the specified directory
+func exportLogs(ctx context.Context, name string, outDir string) error {
+	args := []string{"export", "logs", outDir, "--name", name}
+
+	stderr := new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kind", args...)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("%s: %w", stderr.String(), err)
+	}
+	return nil
+}
