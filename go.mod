@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.19
 
 require (
-	cloud.google.com/go/container v1.16.0
+	cloud.google.com/go/container v1.17.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/docker/docker v20.10.24+incompatible
 	github.com/google/go-github/v48 v48.2.0
@@ -134,7 +134,7 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/crypto v0.2.0 // indirect
+	golang.org/x/crypto v0.7.0 // indirect
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4 // indirect
 	golang.org/x/net v0.9.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
