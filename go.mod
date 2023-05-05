@@ -2,6 +2,21 @@ module github.com/kong/kubernetes-testing-framework
 
 go 1.19
 
+exclude (
+	// NOTE: excluded until https://github.com/kubernetes-sigs/controller-runtime/pull/2189
+	// and https://github.com/kubernetes-sigs/controller-runtime/issues/2297 get resolved.
+	// Hencee bump it to the latest version, when v0.15.0 for sigs.k8s.io/controller-runtime
+	// will be available and used in KIC (otherwise it breaks KIC build).
+	k8s.io/api v0.27.0
+	k8s.io/api v0.27.1
+	k8s.io/apiextensions-apiserver v0.27.0
+	k8s.io/apiextensions-apiserver v0.27.1
+	k8s.io/client-go v0.27.0
+	k8s.io/client-go v0.27.1
+	k8s.io/kubectl v0.27.0
+	k8s.io/kubectl v0.27.1
+)
+
 require (
 	cloud.google.com/go/container v1.18.0
 	github.com/blang/semver/v4 v4.0.0
@@ -21,12 +36,12 @@ require (
 	golang.org/x/oauth2 v0.7.0
 	golang.org/x/sync v0.2.0
 	google.golang.org/api v0.120.0
-	k8s.io/api v0.27.1
-	k8s.io/apiextensions-apiserver v0.27.1
+	k8s.io/api v0.26.3
+	k8s.io/apiextensions-apiserver v0.26.3
 	k8s.io/apimachinery v0.27.1
-	k8s.io/cli-runtime v0.27.1
-	k8s.io/client-go v0.27.1
-	k8s.io/kubectl v0.27.1
+	k8s.io/cli-runtime v0.26.3
+	k8s.io/client-go v0.26.3
+	k8s.io/kubectl v0.26.3
 	k8s.io/utils v0.0.0-20230209194617-a36077c30491
 	sigs.k8s.io/controller-runtime v0.14.6
 	sigs.k8s.io/gateway-api v0.6.2

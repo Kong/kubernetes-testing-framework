@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.30.2
+
+- Convert dumpDiag to use kind export logs
+  [#591](https://github.com/Kong/kubernetes-testing-framework/pull/591)
+- Upgrade and pin some dependencies
+
 ## v0.30.1
 
 - Upgrade `metallb` addon to `v0.13.9`
