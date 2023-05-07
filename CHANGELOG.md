@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.31.0
+
+- Convert dumpDiag to use kind export logs
+  [#591](https://github.com/Kong/kubernetes-testing-framework/pull/591)
+- Switch from `CoreV1 Endpoints` to `DiscoveryV1 EndpointSlice`
+  [#643](https://github.com/Kong/kubernetes-testing-framework/pull/643)
+
 ## v0.30.1
 
 - Upgrade `metallb` addon to `v0.13.9`

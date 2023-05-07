@@ -7,6 +7,7 @@ import (
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -17,7 +18,7 @@ import (
 // address. This function will throw an error if the service gets provisioned
 // more than a single address, that is not supported. The context provided
 // should have a timeout associated with it or you're going to have a bad time.
-func WaitForServiceLoadBalancerAddress(ctx context.Context, c *kubernetes.Clientset, namespace, name string) (string, bool, error) {
+func WaitForServiceLoadBalancerAddress(ctx context.Context, c kubernetes.Interface, namespace, name string) (string, bool, error) {
 	for {
 		select {
 		case <-ctx.Done():
@@ -54,57 +55,66 @@ func WaitForServiceLoadBalancerAddress(ctx context.Context, c *kubernetes.Client
 // to a service (provided by namespace/name). This will temporarily create a LoadBalancer
 // type Service to allow connections to the Service and port from outside the cluster while
 // the connection attempts are made using the LoadBalancer public address.
-func WaitForConnectionOnServicePort(ctx context.Context, c *kubernetes.Clientset, namespace, name string, port int, dialTimeout time.Duration) error {
+func WaitForConnectionOnServicePort(ctx context.Context, c kubernetes.Interface, namespace, name string, port int, dialTimeout time.Duration) error {
 	service, err := c.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	if err != nil {
 		return err
 	}
-
+	const correspondingSvcNameLabel = "corresponding-service"
 	lbServiceName := "templb-" + name
 	tempLoadBalancer := &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Namespace: namespace,
 			Name:      lbServiceName,
 			Labels: map[string]string{
-				"corresponding-service": name,
+				correspondingSvcNameLabel: name,
 			},
 		},
 		Spec: corev1.ServiceSpec{
 			Type: corev1.ServiceTypeLoadBalancer,
-			// copy the selector and ports of the service to check.
+			// Copy the selector and ports of the service to check.
 			Selector: service.Spec.Selector,
 			Ports:    service.Spec.Ports,
 		},
 	}
 
-	// empty selector, we should create the endpoints separately.
-	// if the target service does not have a selector, it usually means that
+	// Empty selector, we should create the endpoints separately.
+	// If the target service does not have a selector, it usually means that
 	// the endpoints of the target server is manually created, but not chosen from pods by labels in selector.
 	// so we need to manually create the same endpoints as the target service has here.
-	if service.Spec.Selector == nil || len(service.Spec.Selector) == 0 {
-		endpoints, err := c.CoreV1().Endpoints(namespace).Get(ctx, name, metav1.GetOptions{})
-		if err != nil {
-			return err
-		}
-		// copy the endpoints for the lb service, and set metadata.
-		tempEndpoints := endpoints.DeepCopy()
-		tempEndpoints.ObjectMeta = metav1.ObjectMeta{
-			Namespace: namespace,
-			Name:      lbServiceName,
-			Labels: map[string]string{
-				"corresponding-service": name,
-			},
-		}
-		_, err = c.CoreV1().Endpoints(namespace).Create(ctx, tempEndpoints, metav1.CreateOptions{})
+	if len(service.Spec.Selector) == 0 {
+		endpointSlices, err := c.DiscoveryV1().EndpointSlices(namespace).List(
+			ctx, metav1.ListOptions{LabelSelector: discoveryv1.LabelServiceName + "=" + name},
+		)
 		if err != nil {
 			return err
 		}
 
+		// Recreate EndpointSlices for the lb service with proper metadata.
+		tempEndpointSlices := endpointSlices.DeepCopy().Items
+		for i := range tempEndpointSlices {
+			tempEndpointSlices[i].ObjectMeta = metav1.ObjectMeta{
+				Namespace: namespace,
+				Name:      fmt.Sprintf("%s-%d", lbServiceName, i),
+				Labels: map[string]string{
+					discoveryv1.LabelServiceName: lbServiceName, // Maps EndpointSlice to Service.
+					correspondingSvcNameLabel:    name,
+				},
+			}
+			_, err = c.DiscoveryV1().EndpointSlices(namespace).Create(ctx, &tempEndpointSlices[i], metav1.CreateOptions{})
+			if err != nil {
+				return err
+			}
+		}
+
 		defer func() {
-			err := c.CoreV1().Endpoints(namespace).Delete(ctx, lbServiceName, metav1.DeleteOptions{})
-			if err != nil && !errors.IsNotFound(err) {
-				fmt.Printf("failed to delete endpoints %s/%s after testing, error %v\n",
-					namespace, lbServiceName, err)
+			for _, eps := range tempEndpointSlices {
+				err := c.DiscoveryV1().EndpointSlices(namespace).Delete(ctx, eps.Name, metav1.DeleteOptions{})
+				if err != nil && !errors.IsNotFound(err) {
+					fmt.Printf("failed to delete endpoints %s/%s after testing, error %v\n",
+						namespace, eps.Name, err,
+					)
+				}
 			}
 		}()
 	}
