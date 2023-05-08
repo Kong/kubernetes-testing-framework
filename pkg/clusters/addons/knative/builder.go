@@ -14,7 +14,7 @@ func NewBuilder() *Builder {
 	return &Builder{version: DefaultVersion}
 }
 
-// WithVersion sets the addon version
+// WithVersion sets the Knative version to deploy. The version must be a valid Knative git tag (e.g. `knative-v1.10.0`).
 func (b *Builder) WithVersion(version string) (*Builder, error) {
 	if len(version) == 0 {
 		return nil, errors.New("no version provided")
