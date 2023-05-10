@@ -140,10 +140,10 @@ func WaitForConnectionOnServicePort(ctx context.Context, c kubernetes.Interface,
 	for {
 		select {
 		case <-ctx.Done():
-			return fmt.Errorf("context completed while waiting for %s:%d to be connected", ip, port)
+			return fmt.Errorf("context completed or dialTimeout reached while waiting for %s:%d to be connected", ip, port)
 		case <-ticker.C:
 			dialer := &net.Dialer{Timeout: dialTimeout}
-			if _, err := dialer.Dial("tcp", address); err == nil {
+			if _, err := dialer.DialContext(ctx, "tcp", address); err == nil {
 				return nil
 			}
 		}
