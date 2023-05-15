@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/jetstack/cert-manager v1.7.2
 	github.com/kong/deck v1.20.0
-	github.com/kong/go-kong v0.41.0
+	github.com/kong/go-kong v0.42.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.38.1
 	github.com/sethvargo/go-password v0.2.0
