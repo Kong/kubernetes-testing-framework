@@ -5,7 +5,7 @@ go 1.19
 require (
 	cloud.google.com/go/container v1.18.1
 	github.com/blang/semver/v4 v4.0.0
-	github.com/docker/docker v20.10.25+incompatible
+	github.com/docker/docker v24.0.0+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
 	github.com/jetstack/cert-manager v1.7.2
