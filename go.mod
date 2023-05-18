@@ -2,12 +2,10 @@ module github.com/kong/kubernetes-testing-framework
 
 go 1.19
 
-exclude (
-	// TODO: remove this when
-	// https://github.com/Kong/kubernetes-testing-framework/issues/670
-	// is solved.
-	github.com/docker/docker v24.0.0+incompatible
-)
+// TODO: remove this when
+// https://github.com/Kong/kubernetes-testing-framework/issues/670
+// is solved.
+exclude github.com/docker/docker v24.0.0+incompatible
 
 require (
 	cloud.google.com/go/container v1.18.1
@@ -21,7 +19,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.38.1
 	github.com/sethvargo/go-password v0.2.0
-	github.com/sirupsen/logrus v1.9.1
+	github.com/sirupsen/logrus v1.9.2
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.15.0
 	github.com/stretchr/testify v1.8.2
