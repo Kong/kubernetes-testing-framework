@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.32.0
+
+- Migrate from github.com/jetstack/cert-manager to github.com/cert-manager/cert-manager
+  [#669](https://github.com/Kong/kubernetes-testing-framework/pull/669)
+
 ## v0.31.0
 
 - Convert dumpDiag to use kind export logs

@@ -6,9 +6,9 @@ import (
 	"fmt"
 
 	"github.com/blang/semver/v4"
-	certmanagerv1 "github.com/jetstack/cert-manager/pkg/apis/certmanager/v1"
-	cmmeta "github.com/jetstack/cert-manager/pkg/apis/meta/v1"
-	certmanagerclient "github.com/jetstack/cert-manager/pkg/client/clientset/versioned"
+	certmanagerv1 "github.com/cert-manager/cert-manager/pkg/apis/certmanager/v1"
+	cmmeta "github.com/cert-manager/cert-manager/pkg/apis/meta/v1"
+	certmanagerclient "github.com/cert-manager/cert-manager/pkg/client/clientset/versioned"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -358,7 +358,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// write the certificate to a tar archive, as needed for the docker client when
 	// copying files to containers.
 	containerID := dockerutils.GetKindContainerID(cluster.Name())
-	if err := dockerutils.WriteFileToContainer(ctx, containerID, registryCertPath, 0644, crtPEM); err != nil { //nolint:gomnd
+	if err := dockerutils.WriteFileToContainer(ctx, containerID, registryCertPath, 0o644, crtPEM); err != nil { //nolint:gomnd
 		return fmt.Errorf("failed to copy certificate to kind container: %w", err)
 	}
 
@@ -384,7 +384,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// create a new tar archive for the file contents, as required by the docker
 	// client api.
-	if err := dockerutils.WriteFileToContainer(ctx, containerID, containerdConfigPath, 0644, containerdConfig.Bytes()); err != nil { //nolint:gomnd
+	if err := dockerutils.WriteFileToContainer(ctx, containerID, containerdConfigPath, 0o644, containerdConfig.Bytes()); err != nil { //nolint:gomnd
 		return fmt.Errorf("could not write updated containerd configuration to kind container: %w", err)
 	}
 
