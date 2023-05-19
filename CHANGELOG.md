@@ -4,6 +4,8 @@
 
 - Migrate from github.com/jetstack/cert-manager to github.com/cert-manager/cert-manager
   [#669](https://github.com/Kong/kubernetes-testing-framework/pull/669)
+- Allow setting stdin, stdout, stderr in `retry.Command`
+  [#676](https://github.com/Kong/kubernetes-testing-framework/pull/676)
 
 ## v0.31.0
 

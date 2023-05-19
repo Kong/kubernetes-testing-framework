@@ -40,3 +40,33 @@ func TestDoWithErrorHandling(t *testing.T) {
 		require.True(t, wasCalled, "expected errorFunc to be called because the command has failed")
 	})
 }
+
+func TestDo(t *testing.T) {
+	t.Run("passing stdout works", func(t *testing.T) {
+		stdout := &bytes.Buffer{}
+		cmd := retry.Command("echo", "hello").WithStdout(stdout)
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		err := cmd.Do(ctx)
+		require.NoError(t, err)
+		require.Equal(t, "hello\n", stdout.String())
+	})
+
+	t.Run("passing stdin works", func(t *testing.T) {
+		stdin := bytes.NewBufferString("hello")
+		cmd := retry.Command("cat").WithStdin(stdin)
+
+		ctx, cancel := context.WithTimeout(context.Background(), time.Second)
+		defer cancel()
+
+		err := cmd.Do(ctx)
+		require.NoError(t, err)
+	})
+
+	// Testing stderr might not be reliable because it's not guaranteed that
+	// the command will fail in the time we allow it to run.
+	// Alternative would be to wait long enough so that we're it ran but that
+	// would unnecessarily make the tests longer.
+}
