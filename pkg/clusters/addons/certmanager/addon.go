@@ -195,7 +195,7 @@ func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 // -----------------------------------------------------------------------------
 
 const (
-	manifestFormatter        = "https://github.com/jetstack/cert-manager/releases/download/v%s/cert-manager.yaml"
+	manifestFormatter        = "https://github.com/cert-manager/cert-manager/releases/download/v%s/cert-manager.yaml"
 	defaultIssuerWaitSeconds = 60
 )
 
