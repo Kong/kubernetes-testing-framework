@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"io"
 	"os/exec"
 	"time"
 
@@ -23,24 +24,42 @@ type Doer interface {
 
 type ErrorFunc func(error, *bytes.Buffer, *bytes.Buffer) error
 
-type commandDoer struct {
-	cmd  string
-	args []string
+type CommandDoer struct {
+	stdin  io.Reader
+	stdout io.Writer
+	stderr io.Writer
+	cmd    string
+	args   []string
 }
 
-func Command(cmd string, args ...string) Doer {
-	return commandDoer{
+func Command(cmd string, args ...string) CommandDoer {
+	return CommandDoer{
 		cmd:  cmd,
 		args: args,
 	}
 }
 
-func (c commandDoer) Do(ctx context.Context) error {
+func (c CommandDoer) WithStdin(r io.Reader) CommandDoer {
+	c.stdin = r
+	return c
+}
+
+func (c CommandDoer) WithStdout(w io.Writer) CommandDoer {
+	c.stdout = w
+	return c
+}
+
+func (c CommandDoer) WithStderr(w io.Writer) CommandDoer {
+	c.stderr = w
+	return c
+}
+
+func (c CommandDoer) Do(ctx context.Context) error {
 	return retry.Do(func() error {
 		cmd, stdout, stderr := c.createCmd(ctx)
 		err := cmd.Run()
 		if err != nil {
-			return fmt.Errorf("command %q with args [%v] failed STDOUT=(%s) STDERR=(%s): %w",
+			return fmt.Errorf("command %q with args %v failed STDOUT=(%s) STDERR=(%s): %w",
 				c.cmd, c.args, stdout.String(), stderr.String(), err,
 			)
 		}
@@ -52,7 +71,7 @@ func (c commandDoer) Do(ctx context.Context) error {
 
 // DoWithErrorHandling executes the command and runs errorFunc passing a resulting err, stdout and stderr to be handled
 // by the caller. The errorFunc is going to be called only when the resulting err != nil.
-func (c commandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFunc) error {
+func (c CommandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFunc) error {
 	return retry.Do(func() error {
 		cmd, stdout, stderr := c.createCmd(ctx)
 		err := cmd.Run()
@@ -65,16 +84,30 @@ func (c commandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFun
 	)
 }
 
-func (c commandDoer) createCmd(ctx context.Context) (*exec.Cmd, *bytes.Buffer, *bytes.Buffer) {
+func (c CommandDoer) createCmd(ctx context.Context) (*exec.Cmd, *bytes.Buffer, *bytes.Buffer) {
 	stdout := new(bytes.Buffer)
+	if c.stdout == nil {
+		c.stdout = stdout
+	} else {
+		c.stdout = io.MultiWriter(c.stdout, stdout)
+	}
+
 	stderr := new(bytes.Buffer)
+	if c.stderr == nil {
+		c.stderr = stderr
+	} else {
+		c.stderr = io.MultiWriter(c.stderr, stderr)
+	}
+
 	cmd := exec.CommandContext(ctx, c.cmd, c.args...) //nolint:gosec
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
+	cmd.Stdin = c.stdin
+	cmd.Stdout = c.stdout
+	cmd.Stderr = c.stderr
+
 	return cmd, stdout, stderr
 }
 
-func (c commandDoer) createOpts(ctx context.Context) []retry.Option {
+func (c CommandDoer) createOpts(ctx context.Context) []retry.Option {
 	return []retry.Option{
 		retry.Context(ctx),
 		retry.Delay(retryWait),

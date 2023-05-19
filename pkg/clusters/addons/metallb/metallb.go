@@ -1,7 +1,6 @@
 package metallb
 
 import (
-	"bytes"
 	"context"
 	"crypto/rand"
 	"encoding/base64"
@@ -9,7 +8,6 @@ import (
 	"io"
 	"net"
 	"os"
-	"os/exec"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
@@ -23,6 +21,7 @@ import (
 	kustomize "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 
+	"github.com/kong/kubernetes-testing-framework/internal/retry"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
@@ -112,7 +111,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
-	return metallbDeleteHack(kubeconfig)
+	return metallbDeleteHack(ctx, kubeconfig)
 }
 
 func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
@@ -164,7 +163,7 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 
 	// create the metallb deployment and related resources (do this first so that
 	// we can create the IPAddressPool below with its CRD already in place).
-	if err := metallbDeployHack(cluster); err != nil {
+	if err := metallbDeployHack(ctx, cluster); err != nil {
 		return fmt.Errorf("failed to deploy metallb: %w", err)
 	}
 
@@ -346,7 +345,7 @@ func getManifest() (io.Reader, error) {
 	})
 }
 
-func metallbDeployHack(cluster clusters.Cluster) error {
+func metallbDeployHack(ctx context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using kubectl
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
@@ -365,20 +364,14 @@ func metallbDeployHack(cluster clusters.Cluster) error {
 		return fmt.Errorf("could not deploy metallb: %w", err)
 	}
 
-	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kubectl", deployArgs...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	cmd.Stdin = manifest
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
-	}
-
-	return nil
+	// ensure the repo exists
+	return retry.Command("kubectl", deployArgs...).
+		WithStdin(manifest).
+		WithStdout(io.Discard).
+		Do(ctx)
 }
 
-func metallbDeleteHack(kubeconfig *os.File) error {
+func metallbDeleteHack(ctx context.Context, kubeconfig *os.File) error {
 	deployArgs := []string{
 		"--kubeconfig", kubeconfig.Name(),
 		"delete", "-f", "-",
@@ -389,15 +382,8 @@ func metallbDeleteHack(kubeconfig *os.File) error {
 		return fmt.Errorf("could not delete metallb: %w", err)
 	}
 
-	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kubectl", deployArgs...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	cmd.Stdin = manifest
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
-	}
-
-	return nil
+	return retry.Command("kubectl", deployArgs...).
+		WithStdin(manifest).
+		WithStdout(io.Discard).
+		Do(ctx)
 }
