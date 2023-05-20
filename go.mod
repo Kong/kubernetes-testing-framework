@@ -10,7 +10,7 @@ exclude github.com/docker/docker v24.0.0+incompatible
 require (
 	cloud.google.com/go/container v1.18.1
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.11.2
+	github.com/cert-manager/cert-manager v1.12.0
 	github.com/docker/docker v20.10.25+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
@@ -32,8 +32,8 @@ require (
 	k8s.io/cli-runtime v0.27.2
 	k8s.io/client-go v0.27.2
 	k8s.io/kubectl v0.27.2
-	k8s.io/utils v0.0.0-20230209194617-a36077c30491
-	sigs.k8s.io/controller-runtime v0.14.6
+	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
+	sigs.k8s.io/controller-runtime v0.15.0-alpha.0.0.20230511044310-c2e3d6d6350e
 	sigs.k8s.io/gateway-api v0.6.2
 	sigs.k8s.io/kind v0.19.0
 	sigs.k8s.io/kustomize/api v0.13.4
@@ -43,9 +43,10 @@ require (
 
 require (
 	github.com/google/s2a-go v0.1.3 // indirect
+	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.4 // indirect
-	golang.org/x/mod v0.9.0 // indirect
-	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/mod v0.10.0 // indirect
+	golang.org/x/tools v0.8.0 // indirect
 )
 
 require (
@@ -69,7 +70,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fvbommel/sortorder v1.0.1 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
-	github.com/go-logr/logr v1.2.3 // indirect
+	github.com/go-logr/logr v1.2.4 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.1 // indirect
