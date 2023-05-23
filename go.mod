@@ -33,7 +33,7 @@ require (
 	k8s.io/client-go v0.27.2
 	k8s.io/kubectl v0.27.2
 	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
-	sigs.k8s.io/controller-runtime v0.15.0-alpha.0.0.20230511044310-c2e3d6d6350e
+	sigs.k8s.io/controller-runtime v0.15.0-beta.0
 	sigs.k8s.io/gateway-api v0.7.0
 	sigs.k8s.io/kind v0.19.0
 	sigs.k8s.io/kustomize/api v0.13.4
@@ -46,7 +46,7 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.4 // indirect
 	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/tools v0.8.0 // indirect
+	golang.org/x/tools v0.9.1 // indirect
 )
 
 require (
