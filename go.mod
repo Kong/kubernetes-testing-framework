@@ -25,7 +25,7 @@ require (
 	github.com/stretchr/testify v1.8.3
 	golang.org/x/oauth2 v0.8.0
 	golang.org/x/sync v0.2.0
-	google.golang.org/api v0.123.0
+	google.golang.org/api v0.124.0
 	k8s.io/api v0.27.2
 	k8s.io/apiextensions-apiserver v0.27.2
 	k8s.io/apimachinery v0.27.2
@@ -42,7 +42,7 @@ require (
 )
 
 require (
-	github.com/google/s2a-go v0.1.3 // indirect
+	github.com/google/s2a-go v0.1.4 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.4 // indirect
 	golang.org/x/mod v0.10.0 // indirect
