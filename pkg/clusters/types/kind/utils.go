@@ -49,21 +49,6 @@ const (
 // Private Functions - Cluster Management
 // -----------------------------------------------------------------------------
 
-// createCluster creates a new cluster using Kubernetes in Docker (KIND).
-func createCluster(ctx context.Context, name string, extraArgs ...string) error {
-	args := []string{"create", "cluster", "--name", name}
-	args = append(args, extraArgs...)
-
-	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "kind", args...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
-	}
-	return nil
-}
-
 // deleteKindCluster deletes an existing KIND cluster.
 func deleteKindCluster(ctx context.Context, name string) error {
 	stderr := new(bytes.Buffer)

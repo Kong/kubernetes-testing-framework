@@ -6,17 +6,24 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/blang/semver/v4"
+	"github.com/samber/lo"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	corev1 "k8s.io/api/core/v1"
+	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
@@ -87,6 +94,61 @@ func TestKindClusterBasics(t *testing.T) {
 	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
 	httpbinURL := fmt.Sprintf("%s/%s/status/418", proxyURL.String(), httpbinAddon.Path())
 	require.NoError(t, <-networking.WaitForHTTP(ctx, httpbinURL, 418))
+}
+
+func TestKindClusterCustomConfigReader(t *testing.T) {
+	t.Parallel()
+
+	t.Log("configuring the testing environment with custom configuration - max-endpoints-per-slice=2")
+	// Be cautious to not include tabs in the YAML.
+	cfg := strings.NewReader(`
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+kubeadmConfigPatches:
+- |
+  apiVersion: kubeadm.k8s.io/v1beta3
+  kind: ClusterConfiguration
+  controllerManager:
+    extraArgs:
+      max-endpoints-per-slice: "2"`)
+
+	env, err := environment.
+		NewBuilder().
+		WithClusterBuilder(kind.NewBuilder().WithConfigReader(cfg)).
+		Build(ctx)
+	require.NoError(t, err)
+
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("waiting for the test environment to be ready for use")
+	require.NoError(t, <-env.WaitForReady(ctx))
+
+	t.Log("deploying deployment with 3 replicas to test EndpointSlices custom configuration")
+	const svcName = "httpbin"
+	container := generators.NewContainer(svcName, httpbin.Image, httpbin.DefaultPort)
+	deployment := generators.NewDeploymentForContainer(container)
+	deployment.Spec.Replicas = lo.ToPtr[int32](3)
+	deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Create(ctx, deployment, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	service := generators.NewServiceForDeployment(deployment, corev1.ServiceTypeClusterIP)
+	_, err = env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Create(ctx, service, metav1.CreateOptions{})
+	require.NoError(t, err)
+
+	require.EventuallyWithT(t, func(c *assert.CollectT) {
+		eps, err := env.Cluster().Client().DiscoveryV1().EndpointSlices(corev1.NamespaceDefault).List(ctx, metav1.ListOptions{
+			LabelSelector: fmt.Sprintf("%s=%s", discoveryv1.LabelServiceName, svcName),
+		})
+		assert.NoErrorf(c, err, "failed to list EndpointSlices for service %s", svcName)
+		// For each Pod endpoint entry will be created in EndpointSlice, thus for 3 replicas we expect 2 EndpointSlices.
+		assert.Lenf(c, eps.Items, 2, "number of expected EndpointSlices does not match")
+	},
+		3*time.Minute, time.Second,
+	)
 }
 
 func TestKindClusterProxyOnly(t *testing.T) {

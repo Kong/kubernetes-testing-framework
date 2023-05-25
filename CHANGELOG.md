@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.33.0
+
+- Allow passing config for Kind clusters with io.Reader - introduce method
+  `WithConfigReader(cfg io.Reader)`
+  [#683](https://github.com/Kong/kubernetes-testing-framework/pull/683)
+
 ## v0.32.0
 
 - Migrate from github.com/jetstack/cert-manager to github.com/cert-manager/cert-manager
