@@ -1,20 +1,14 @@
 # Changelog
 
-## v0.33.0
+## v0.31.0
 
 - Allow passing config for Kind clusters with io.Reader - introduce method
   `WithConfigReader(cfg io.Reader)`
   [#683](https://github.com/Kong/kubernetes-testing-framework/pull/683)
-
-## v0.32.0
-
 - Migrate from github.com/jetstack/cert-manager to github.com/cert-manager/cert-manager
   [#669](https://github.com/Kong/kubernetes-testing-framework/pull/669)
 - Allow setting stdin, stdout, stderr in `retry.Command`
   [#676](https://github.com/Kong/kubernetes-testing-framework/pull/676)
-
-## v0.31.0
-
 - Convert dumpDiag to use kind export logs
   [#591](https://github.com/Kong/kubernetes-testing-framework/pull/591)
 - Switch from `CoreV1 Endpoints` to `DiscoveryV1 EndpointSlice`
