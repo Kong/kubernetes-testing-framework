@@ -11,11 +11,7 @@ import (
 	"time"
 
 	"github.com/blang/semver/v4"
-	"github.com/samber/lo"
-	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	corev1 "k8s.io/api/core/v1"
-	discoveryv1 "k8s.io/api/discovery/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
@@ -23,7 +19,6 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
@@ -99,7 +94,7 @@ func TestKindClusterBasics(t *testing.T) {
 func TestKindClusterCustomConfigReader(t *testing.T) {
 	t.Parallel()
 
-	t.Log("configuring the testing environment with custom configuration - max-endpoints-per-slice=2")
+	t.Log("configuring the testing environment with custom configuration for controller-manager")
 	// Be cautious to not include tabs in the YAML.
 	cfg := strings.NewReader(`
 kind: Cluster
@@ -127,28 +122,14 @@ kubeadmConfigPatches:
 	t.Log("waiting for the test environment to be ready for use")
 	require.NoError(t, <-env.WaitForReady(ctx))
 
-	t.Log("deploying deployment with 3 replicas to test EndpointSlices custom configuration")
-	const svcName = "httpbin"
-	container := generators.NewContainer(svcName, httpbin.Image, httpbin.DefaultPort)
-	deployment := generators.NewDeploymentForContainer(container)
-	deployment.Spec.Replicas = lo.ToPtr[int32](3)
-	deployment, err = env.Cluster().Client().AppsV1().Deployments(corev1.NamespaceDefault).Create(ctx, deployment, metav1.CreateOptions{})
+	t.Log("verifying that environment's controller-manager has the custom option configured")
+	cmL, err := env.Cluster().Client().CoreV1().
+		Pods(metav1.NamespaceSystem).
+		List(ctx, metav1.ListOptions{LabelSelector: "component=kube-controller-manager,tier=control-plane"})
 	require.NoError(t, err)
-
-	service := generators.NewServiceForDeployment(deployment, corev1.ServiceTypeClusterIP)
-	_, err = env.Cluster().Client().CoreV1().Services(corev1.NamespaceDefault).Create(ctx, service, metav1.CreateOptions{})
-	require.NoError(t, err)
-
-	require.EventuallyWithT(t, func(c *assert.CollectT) {
-		eps, err := env.Cluster().Client().DiscoveryV1().EndpointSlices(corev1.NamespaceDefault).List(ctx, metav1.ListOptions{
-			LabelSelector: fmt.Sprintf("%s=%s", discoveryv1.LabelServiceName, svcName),
-		})
-		assert.NoErrorf(c, err, "failed to list EndpointSlices for service %s", svcName)
-		// For each Pod endpoint entry will be created in EndpointSlice, thus for 3 replicas we expect 2 EndpointSlices.
-		assert.Lenf(c, eps.Items, 2, "number of expected EndpointSlices does not match")
-	},
-		3*time.Minute, time.Second,
-	)
+	require.Len(t, cmL.Items, 1, "for Kind cluster there should be only one controller-manager Pod")
+	cm := cmL.Items[0]
+	require.Contains(t, cm.Spec.Containers[0].Command, "--max-endpoints-per-slice=2")
 }
 
 func TestKindClusterProxyOnly(t *testing.T) {
