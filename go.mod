@@ -10,7 +10,7 @@ exclude github.com/docker/docker v24.0.0+incompatible
 require (
 	cloud.google.com/go/container v1.18.1
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.12.0
+	github.com/cert-manager/cert-manager v1.12.1
 	github.com/docker/docker v20.10.25+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
@@ -32,7 +32,7 @@ require (
 	k8s.io/cli-runtime v0.27.2
 	k8s.io/client-go v0.27.2
 	k8s.io/kubectl v0.27.2
-	k8s.io/utils v0.0.0-20230406110748-d93618cff8a2
+	k8s.io/utils v0.0.0-20230505201702-9f6742963106
 	sigs.k8s.io/controller-runtime v0.15.0
 	sigs.k8s.io/gateway-api v0.7.0
 	sigs.k8s.io/kind v0.19.0
@@ -157,7 +157,7 @@ require (
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/component-base v0.27.2 // indirect
 	k8s.io/klog/v2 v2.100.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20230501164219-8b0f38b5fd1f // indirect
+	k8s.io/kube-openapi v0.0.0-20230515203736-54b630e78af5 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.3 // indirect
 )
