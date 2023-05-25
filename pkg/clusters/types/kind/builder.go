@@ -50,7 +50,7 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 
 // WithConfig sets a filename containing a KIND config
 // See: https://kind.sigs.k8s.io/docs/user/configuration
-// This will override any config set previously with WithConfigReader.
+// This will override any config set previously.
 func (b *Builder) WithConfig(filename string) *Builder {
 	b.configPath = &filename
 	b.configReader = nil
@@ -59,7 +59,7 @@ func (b *Builder) WithConfig(filename string) *Builder {
 
 // WithConfigReader sets a reader containing a KIND config
 // See: https://kind.sigs.k8s.io/docs/user/configuration
-// This will override any config set previously with WithConfig.
+// This will override any config set previously.
 func (b *Builder) WithConfigReader(cfg io.Reader) *Builder {
 	b.configReader = cfg
 	b.configPath = nil
