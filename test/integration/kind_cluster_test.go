@@ -6,6 +6,7 @@ package integration
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	environment "github.com/kong/kubernetes-testing-framework/pkg/environments"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
@@ -87,6 +89,47 @@ func TestKindClusterBasics(t *testing.T) {
 	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
 	httpbinURL := fmt.Sprintf("%s/%s/status/418", proxyURL.String(), httpbinAddon.Path())
 	require.NoError(t, <-networking.WaitForHTTP(ctx, httpbinURL, 418))
+}
+
+func TestKindClusterCustomConfigReader(t *testing.T) {
+	t.Parallel()
+
+	t.Log("configuring the testing environment with custom configuration for controller-manager")
+	// Be cautious to not include tabs in the YAML.
+	cfg := strings.NewReader(`
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+kubeadmConfigPatches:
+- |
+  apiVersion: kubeadm.k8s.io/v1beta3
+  kind: ClusterConfiguration
+  controllerManager:
+    extraArgs:
+      max-endpoints-per-slice: "2"`)
+
+	env, err := environment.
+		NewBuilder().
+		WithClusterBuilder(kind.NewBuilder().WithConfigReader(cfg)).
+		Build(ctx)
+	require.NoError(t, err)
+
+	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
+	defer func() {
+		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
+		require.NoError(t, env.Cleanup(ctx))
+	}()
+
+	t.Log("waiting for the test environment to be ready for use")
+	require.NoError(t, <-env.WaitForReady(ctx))
+
+	t.Log("verifying that environment's controller-manager has the custom option configured")
+	cmL, err := env.Cluster().Client().CoreV1().
+		Pods(metav1.NamespaceSystem).
+		List(ctx, metav1.ListOptions{LabelSelector: "component=kube-controller-manager,tier=control-plane"})
+	require.NoError(t, err)
+	require.Len(t, cmL.Items, 1, "for Kind cluster there should be only one controller-manager Pod")
+	cm := cmL.Items[0]
+	require.Contains(t, cm.Spec.Containers[0].Command, "--max-endpoints-per-slice=2")
 }
 
 func TestKindClusterProxyOnly(t *testing.T) {

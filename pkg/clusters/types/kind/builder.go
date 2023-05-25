@@ -1,8 +1,11 @@
 package kind
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"io"
+	"os/exec"
 	"sync"
 
 	"github.com/blang/semver/v4"
@@ -20,6 +23,7 @@ type Builder struct {
 	addons         clusters.Addons
 	clusterVersion *semver.Version
 	configPath     *string
+	configReader   io.Reader
 	calicoCNI      bool
 }
 
@@ -45,9 +49,20 @@ func (b *Builder) WithClusterVersion(version semver.Version) *Builder {
 }
 
 // WithConfig sets a filename containing a KIND config
-// See: https://kind.sigs.k8s.io/docs/user/configuration/
+// See: https://kind.sigs.k8s.io/docs/user/configuration
+// This will override any config set previously.
 func (b *Builder) WithConfig(filename string) *Builder {
 	b.configPath = &filename
+	b.configReader = nil
+	return b
+}
+
+// WithConfigReader sets a reader containing a KIND config
+// See: https://kind.sigs.k8s.io/docs/user/configuration
+// This will override any config set previously.
+func (b *Builder) WithConfigReader(cfg io.Reader) *Builder {
+	b.configReader = cfg
+	b.configPath = nil
 	return b
 }
 
@@ -77,12 +92,23 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		deployArgs = append(deployArgs, "--wait", "1s")
 	}
 
+	var stdin io.Reader
 	if b.configPath != nil {
 		deployArgs = append(deployArgs, "--config", *b.configPath)
+	} else if b.configReader != nil {
+		deployArgs = append(deployArgs, "--config", "-")
+		stdin = b.configReader
 	}
 
-	if err := createCluster(ctx, b.Name, deployArgs...); err != nil {
-		return nil, fmt.Errorf("failed to create cluster %s: %w", b.Name, err)
+	args := append([]string{"create", "cluster", "--name", b.Name}, deployArgs...)
+	stderr := new(bytes.Buffer)
+	cmd := exec.CommandContext(ctx, "kind", args...)
+	cmd.Stdout = io.Discard
+	cmd.Stderr = stderr
+	cmd.Stdin = stdin
+
+	if err := cmd.Run(); err != nil {
+		return nil, fmt.Errorf("failed to create cluster %s: %s: %w", b.Name, stderr.String(), err)
 	}
 
 	cfg, kc, err := clientForCluster(b.Name)
