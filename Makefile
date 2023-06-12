@@ -55,4 +55,9 @@ test.integration:
 
 .PHONY: test.e2e
 test.e2e:
-	@GOFLAGS="-tags=e2e_tests" go test -timeout 45m -race -v ./test/e2e/...
+	@GOFLAGS="-tags=e2e_tests" go test \
+		-timeout 45m \
+		-run $(TEST_RUN) \
+		-race \
+		-v \
+		./test/e2e/...
