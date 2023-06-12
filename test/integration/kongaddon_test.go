@@ -4,8 +4,8 @@
 package integration
 
 import (
+	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -182,7 +182,7 @@ func TestKongAddonDiagnostics(t *testing.T) {
 	require.NoError(t, err)
 	require.NotZero(t, len(root))
 
-	logsPath, _ := filepath.Glob(filepath.Join(output, fmt.Sprintf("%s-control-plane",cluster.Name()), "containers", "ingress-controller-kong-*"))
+	logsPath, _ := filepath.Glob(filepath.Join(output, fmt.Sprintf("%s-control-plane", cluster.Name()), "containers", "ingress-controller-kong-*"))
 	require.NotZero(t, len(logsPath))
 	// First log file is for "clear-stale-pid" container which is in fact empty, use second one.
 	logs, err := os.ReadFile(logsPath[1])
@@ -253,29 +253,38 @@ func TestKongWithNodePort(t *testing.T) {
 	require.NoError(t, err)
 	defer func() { assert.NoError(t, env.Cleanup(ctx)) }()
 
-	t.Log("verifying the proxy is responding on NodePort")
 	proxyIP, err := docker.GetKindContainerIP(env.Cluster().Name())
 	require.NoError(t, err)
 	proxyURL := fmt.Sprintf("http://%s:%d", proxyIP, kong.DefaultProxyNodePort)
 	httpc := http.Client{Timeout: time.Second * 10}
+	t.Logf("verifying the proxy is responding on NodePort (at %s)", proxyURL)
 	require.Eventually(t, func() bool {
 		resp, err := httpc.Get(proxyURL)
 		if err != nil {
+			t.Logf("WARNING: error issuing HTTP GET %q: %v", proxyURL, err)
 			return false
 		}
 		defer resp.Body.Close()
 
-		if resp.StatusCode == http.StatusNotFound {
-			b, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Logf("WARNING: error while reading response body: %s", err.Error())
-				return false
-			}
-
-			return string(b) == `{"message":"no Route matched with those values"}`
+		if resp.StatusCode != http.StatusNotFound {
+			t.Logf("WARNING: unexpected HTTP status code :%v", resp.StatusCode)
+			return false
 		}
 
-		return false
+		var proxyResponse struct {
+			Message string `json:"message"`
+		}
+		if err := json.NewDecoder(resp.Body).Decode(&proxyResponse); err != nil {
+			t.Logf("WARNING: error decoding response body: %v", err)
+			return false
+		}
+
+		if proxyResponse.Message != "no Route matched with those values" {
+			t.Logf("WARNING: unexpected HTTP response body: %s", proxyResponse.Message)
+			return false
+		}
+
+		return true
 	}, time.Minute*3, time.Second)
 }
 
