@@ -35,14 +35,12 @@ var (
 	gkeLocation = os.Getenv(gke.GKELocationVar)
 )
 
-func TestGKECluster(t *testing.T) {
-	t.Run("create subnet", func(t *testing.T) {
-		testGKECluster(t, true)
-	})
+func TestGKECluster_create_subnet(t *testing.T) {
+	testGKECluster(t, true)
+}
 
-	t.Run("use default subnet", func(t *testing.T) {
-		testGKECluster(t, false)
-	})
+func TestGKECluster_default_subnet(t *testing.T) {
+	testGKECluster(t, false)
 }
 
 func testGKECluster(t *testing.T, createSubnet bool) {
@@ -64,7 +62,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
 	builder.WithClusterMinorVersion(1, 23)
-	builder.WithWaitForTeardown(true)
+	builder.WithWaitForTeardown(false)
 	builder.WithCreateSubnet(createSubnet)
 	builder.WithLabels(map[string]string{"test-cluster": "true"})
 
