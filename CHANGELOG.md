@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.31.1
+
+- Upgrade `metallb` addon to `v0.13.10`
+  [#703](https://github.com/Kong/kubernetes-testing-framework/pull/703)
+
 ## v0.31.0
 
 - Allow passing config for Kind clusters with io.Reader - introduce method
