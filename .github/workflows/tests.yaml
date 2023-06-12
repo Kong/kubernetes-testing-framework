@@ -150,7 +150,7 @@ jobs:
 
   integration-tests-passed:
     needs: integration-tests
-    if: ${{ always() }}
+    if: always() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     steps:
     - name: integrations tests pased
