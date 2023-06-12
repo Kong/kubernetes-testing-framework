@@ -143,7 +143,7 @@ func (a *addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 var (
 	defaultStartIP = net.ParseIP("0.0.0.100")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
-	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.9&timeout=2m"
+	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.10&timeout=2m"
 	secretKeyLen   = 128
 )
 
