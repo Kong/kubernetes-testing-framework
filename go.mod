@@ -10,7 +10,7 @@ exclude github.com/docker/docker v24.0.0+incompatible
 require (
 	cloud.google.com/go/container v1.22.0
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.12.1
+	github.com/cert-manager/cert-manager v1.12.2
 	github.com/docker/docker v20.10.25+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
