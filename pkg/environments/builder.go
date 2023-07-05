@@ -2,6 +2,7 @@ package environments
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -80,7 +81,7 @@ func (b *Builder) WithCalicoCNI() *Builder {
 // Build is a blocking call to construct the configured Environment and it's
 // underlying Kubernetes cluster. The amount of time that it blocks depends
 // entirely on the underlying clusters.Cluster implementation that was requested.
-func (b *Builder) Build(ctx context.Context) (Environment, error) {
+func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 	var cluster clusters.Cluster
 
 	if b.calicoCNI && b.existingCluster != nil {
@@ -92,7 +93,6 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 	}
 
 	// determine if an existing cluster has been configured for deployment
-	var err error
 	if b.existingCluster != nil {
 		if b.kubernetesVersion != nil {
 			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
@@ -119,6 +119,14 @@ func (b *Builder) Build(ctx context.Context) (Environment, error) {
 			return nil, err
 		}
 	}
+	// Ensure that whole cluster is cleaned up if error is returned somewhere from this method.
+	defer func() {
+		if b.existingCluster == nil && err != nil {
+			if errCleanup := cluster.Cleanup(ctx); err != nil {
+				err = errors.Join(err, errCleanup)
+			}
+		}
+	}()
 
 	// determine the addon dependencies of the cluster before building
 	requiredAddons := make(map[string][]string)
