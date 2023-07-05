@@ -14,7 +14,7 @@ require (
 	github.com/sirupsen/logrus v1.8.1
 	github.com/spf13/cobra v1.5.0
 	github.com/spf13/viper v1.12.0
-	github.com/stretchr/testify v1.8.0
+	github.com/stretchr/testify v1.8.2
 	golang.org/x/net v0.0.0-20220624214902-1bab6f366d9e // indirect
 	golang.org/x/oauth2 v0.0.0-20220622183110-fd043fe589d2
 	golang.org/x/text v0.3.7 // indirect
@@ -34,7 +34,12 @@ require (
 
 require github.com/docker/go-connections v0.4.0 // indirect
 
-require sigs.k8s.io/controller-runtime v0.12.2
+require (
+	github.com/avast/retry-go/v4 v4.3.4
+	sigs.k8s.io/controller-runtime v0.12.2
+	sigs.k8s.io/kustomize/api v0.10.1
+	sigs.k8s.io/kustomize/kyaml v0.13.0
+)
 
 require (
 	cloud.google.com/go/compute v1.7.0 // indirect
@@ -47,6 +52,7 @@ require (
 	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/evanphx/json-patch v4.12.0+incompatible // indirect
 	github.com/fsnotify/fsnotify v1.5.4 // indirect
+	github.com/go-errors/errors v1.0.1 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.5 // indirect
@@ -58,6 +64,7 @@ require (
 	github.com/google/go-cmp v0.5.8 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/enterprise-certificate-proxy v0.1.0 // indirect
 	github.com/googleapis/gax-go/v2 v2.4.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
@@ -70,6 +77,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
+	github.com/monochromegane/go-gitignore v0.0.0-20200626010858-205db1a8cc00 // indirect
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
@@ -85,7 +93,9 @@ require (
 	github.com/tidwall/gjson v1.14.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
+	github.com/xlab/treeprint v0.0.0-20181112141820-a009c3971eca // indirect
 	go.opencensus.io v0.23.0 // indirect
+	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
 	golang.org/x/crypto v0.0.0-20220411220226-7b82a4e95df4 // indirect
 	golang.org/x/sys v0.0.0-20220624220833-87e55d714810 // indirect
 	golang.org/x/term v0.0.0-20210927222741-03fcf44c2211 // indirect

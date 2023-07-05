@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.15.2
+
+- Upgraded the metallb implementation to match the implementation from
+  0.31.
+
 ## v0.15.1
 
 - Added missing Kuma addon CLI entry.
