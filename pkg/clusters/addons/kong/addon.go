@@ -48,7 +48,7 @@ const (
 	DefaultEnterpriseImageRepo = "kong/kong-gateway"
 
 	// DefaultEnterpriseImageTag latest kong enterprise image tag
-	DefaultEnterpriseImageTag = "3.1.1.3-alpine"
+	DefaultEnterpriseImageTag = "3.3-alpine"
 
 	// DefaultEnterpriseLicenseSecretName is the name that will be used by default for the
 	// Kubernetes secret containing the Kong enterprise license that will be

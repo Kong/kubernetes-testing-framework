@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.31.2
+
+- Bump Kong Gateway Enterprise default image to 3.3
+  [#734](https://github.com/Kong/kubernetes-testing-framework/pull/734)
+
 ## v0.31.1
 
 - Upgrade `metallb` addon to `v0.13.10`
