@@ -10,6 +10,9 @@ import (
 	"strings"
 )
 
+// DiagnosticOutDirectoryPrefix is the tmpdir prefix used for diagnostic dumps.
+const DiagnosticOutDirectoryPrefix = "ktf-diag-"
+
 // DumpAllDescribeAll gathers diagnostic information from the cluster.
 // Specifically it runs "kubectl get all" and "kubectl describe all" for
 // all resources and stores the output into two respective yaml files
