@@ -40,7 +40,7 @@ func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.A
 	return nil
 }
 
-func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Deploy(_ context.Context, cluster clusters.Cluster) error {
 	switch ctype := cluster.Type(); ctype {
 	case kind.KindClusterType:
 		if err := a.loadIntoKind(cluster); err != nil {
@@ -53,7 +53,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	return nil
 }
 
-func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Delete(_ context.Context, cluster clusters.Cluster) error {
 	switch ctype := cluster.Type(); ctype {
 	case kind.KindClusterType:
 		// per https://github.com/kubernetes-sigs/kind/issues/658 this is basically impossible
@@ -66,7 +66,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	}
 }
 
-func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
+func (a *Addon) Ready(_ context.Context, _ clusters.Cluster) ([]runtime.Object, bool, error) {
 	// no way to verify this, we rely on Deploy's cmd.Run() not failing
 	return nil, a.loaded, nil
 }

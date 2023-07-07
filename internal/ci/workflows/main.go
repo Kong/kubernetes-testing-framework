@@ -1,26 +1,25 @@
 // Package main is a tool to trigger Github actions workflows
 //
-//
-// Examples
+// # Examples
+// # Examples
 //
 // Trigger an integration test workflow for a custom branch:
 //
-//   $ go run internal/ci/release/main.go tests.yaml batman
-//   SUCCESS: the test.yaml workflow has been triggered for batman
+//	$ go run internal/ci/release/main.go tests.yaml batman
+//	SUCCESS: the test.yaml workflow has been triggered for batman
 //
 // Trigger a release testing workflow:
 //
-//   $ go run internal/ci/release/main.go release-testing.yaml <ref> <tag>
-//   SUCCESS: the release-testing.yaml workflow has been triggered for <ref>
+//	$ go run internal/ci/release/main.go release-testing.yaml <ref> <tag>
+//	SUCCESS: the release-testing.yaml workflow has been triggered for <ref>
 //
 // Tag in this case is the tag that you want the release-testing.yaml workflow
 // to create and push to the remote upon success (e.g. `v0.8.3`).
 //
 // Trigger a release workflow:
 //
-//   $ go run internal/ci/release/main.go release.yaml <ref>
-//   SUCCESS: the release.yaml workflow has been triggered for <ref>
-//
+//	$ go run internal/ci/release/main.go release.yaml <ref>
+//	SUCCESS: the release.yaml workflow has been triggered for <ref>
 package main
 
 import (
