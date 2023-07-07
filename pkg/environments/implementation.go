@@ -16,7 +16,13 @@ import (
 // Test Environment - Implementation
 // -----------------------------------------------------------------------------
 
-const objectWaitSleepTime = time.Millisecond * 200
+const (
+	objectWaitSleepTime = time.Millisecond * 200
+
+	readyHungDuration = time.Minute * 20
+
+	readyDiagnosticMeta = "WaitForReady"
+)
 
 // environment is the default KTF Environment used for testing Kubernetes ingress.
 type environment struct {
@@ -81,11 +87,28 @@ func (env *environment) WaitForReady(ctx context.Context) chan error {
 	errs := make(chan error)
 
 	go func() {
+		// if the cluster fails to become ready after N minutes, assume it's likely stuck and dump a diagnostic bundle.
+		// this uses its own timer since we can't catch "go test" timeouts via the ctx.
+		hung := time.AfterFunc(readyHungDuration, func() {
+			loc, err := env.Cluster().DumpDiagnostics(ctx, readyDiagnosticMeta)
+			if err != nil {
+				errs <- err
+				return
+			}
+			fmt.Printf("cluster not ready after %s, dumped diag to %s\n", readyHungDuration.String(), loc)
+		})
 		waitForObjects := make([]runtime.Object, 0)
 		for {
 			select {
 			case <-ctx.Done():
 				errs <- fmt.Errorf("context done before environment was ready (remaining objects %+v): %w", waitForObjects, ctx.Err())
+				hung.Stop()
+				loc, err := env.Cluster().DumpDiagnostics(ctx, readyDiagnosticMeta)
+				if err != nil {
+					errs <- err
+					return
+				}
+				fmt.Printf("cluster not ready before context completed, dumped diag to %s\n", loc)
 				return
 			default:
 				var ready bool
@@ -97,6 +120,7 @@ func (env *environment) WaitForReady(ctx context.Context) chan error {
 				}
 				if ready {
 					errs <- nil
+					hung.Stop()
 					return
 				}
 				time.Sleep(objectWaitSleepTime)

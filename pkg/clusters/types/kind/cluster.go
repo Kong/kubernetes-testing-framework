@@ -145,7 +145,7 @@ func (c *Cluster) DeleteAddon(ctx context.Context, addon clusters.Addon) error {
 // It returns the path to directory containing all the diagnostic files and an error.
 func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, error) {
 	// create a tempdir
-	outDir, err := os.MkdirTemp(os.TempDir(), "ktf-diag-")
+	outDir, err := os.MkdirTemp(os.TempDir(), clusters.DiagnosticOutDirectoryPrefix)
 	if err != nil {
 		return "", err
 	}

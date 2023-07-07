@@ -230,7 +230,7 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 	defer os.Remove(kubeconfig.Name())
 
 	// create a tempdir
-	outDir, err := os.MkdirTemp(os.TempDir(), "ktf-diag-")
+	outDir, err := os.MkdirTemp(os.TempDir(), clusters.DiagnosticOutDirectoryPrefix)
 	if err != nil {
 		return "", err
 	}
