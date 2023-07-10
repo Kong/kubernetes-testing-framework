@@ -11,7 +11,7 @@ require (
 	cloud.google.com/go/container v1.22.1
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.12.2
-	github.com/docker/docker v20.10.25+incompatible
+	github.com/docker/docker v24.0.4+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.0
 	github.com/kong/deck v1.23.0
