@@ -148,7 +148,7 @@ func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
-func (a *Addon) Dependencies(ctx context.Context, cluster clusters.Cluster) []clusters.AddonName {
+func (a *Addon) Dependencies(_ context.Context, cluster clusters.Cluster) []clusters.AddonName {
 	if _, ok := cluster.(*kind.Cluster); ok {
 		if a.proxyAdminServiceTypeLoadBalancer {
 			return []clusters.AddonName{
@@ -291,7 +291,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	return runUDPServiceHack(ctx, cluster, DefaultNamespace)
 }
 
-func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Delete(_ context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using the helm CLI
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
@@ -394,7 +394,8 @@ func exposePortsDefault() []string {
 }
 
 // TODO: this is a hack in place to workaround problems in the Kong helm chart when UDP ports are in use:
-//       See: https://github.com/Kong/charts/issues/329
+//
+//	See: https://github.com/Kong/charts/issues/329
 func runUDPServiceHack(ctx context.Context, cluster clusters.Cluster, namespace string) error {
 	udpServicePorts := []corev1.ServicePort{{
 		Name:     DefaultUDPServiceName,

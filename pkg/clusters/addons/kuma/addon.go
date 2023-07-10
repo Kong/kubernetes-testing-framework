@@ -167,7 +167,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	return nil
 }
 
-func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Delete(_ context.Context, cluster clusters.Cluster) error {
 	// generate a temporary kubeconfig since we're going to be using the helm CLI
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {

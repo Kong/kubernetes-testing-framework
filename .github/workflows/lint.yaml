@@ -4,6 +4,7 @@ on:
   pull_request:
     branches:
       - '*'
+      - 'release/*'
   push:
     branches:
       - 'main'
@@ -15,17 +16,17 @@ jobs:
   golangci-lint:
     runs-on: ubuntu-latest
     steps:
-    - name: setup golang
-      uses: actions/setup-go@v3
-      with:
-        go-version: '^1.18'
-
     - name: checkout repository
       uses: actions/checkout@v3
       with:
         fetch-depth: 0
 
-    - name: Run golangci-lint
-      uses: golangci/golangci-lint-action@v3.2.0
+    - name: setup golang
+      uses: actions/setup-go@v4
       with:
-        version: v1.45.2
+        go-version: '^1.19'
+
+    - name: Run golangci-lint
+      uses: golangci/golangci-lint-action@v3.6.0
+      with:
+        skip-cache: true # actions/setup-go from v4 handles caching for us

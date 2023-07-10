@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 	corev1 "k8s.io/api/core/v1"
 	extv1beta1 "k8s.io/api/extensions/v1beta1"
 	netv1 "k8s.io/api/networking/v1"
@@ -19,6 +18,8 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+
+	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
 // -----------------------------------------------------------------------------
@@ -101,7 +102,7 @@ func GetIngressLoadbalancerStatus(ctx context.Context, c Cluster, namespace stri
 }
 
 // CreateNamespace creates a new namespace in the given cluster provided a name.
-func CreateNamespace(ctx context.Context, cluster Cluster, namespace string) error {
+func CreateNamespace(_ context.Context, cluster Cluster, namespace string) error {
 	nsName := &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: namespace}}
 	_, err := cluster.Client().CoreV1().Namespaces().Create(context.Background(), nsName, metav1.CreateOptions{})
 	if err != nil {

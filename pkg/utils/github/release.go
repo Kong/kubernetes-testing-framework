@@ -15,8 +15,9 @@ const releaseURLFormatter = "https://api.github.com/repos/%s/%s/releases/latest"
 // repository given an Organization and Repository name.
 //
 // NOTE: latest release in this context does not necessarily mean the newest
-//       version: if a repo releases a patch for an older release for instance
-//       the the returned version could be that instead.
+//
+//	version: if a repo releases a patch for an older release for instance
+//	the the returned version could be that instead.
 func FindLatestReleaseForRepo(org, repo string) (*semver.Version, error) {
 	rawTag, err := FindRawLatestReleaseForRepo(org, repo)
 	if err != nil {
