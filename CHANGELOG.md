@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.32.0
+
+- Allow passing additional flags to kubectl kustomize in
+  `KustomizeDeployForCluster` and `KustomizeDeleteForCluster`.
+  [#741](https://github.com/Kong/kubernetes-testing-framework/pull/741)
+
 ## v0.31.2
 
 - Bump Kong Gateway Enterprise default image to 3.3
