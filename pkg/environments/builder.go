@@ -26,6 +26,7 @@ type Builder struct {
 	clusterBuilder    clusters.Builder
 	kubernetesVersion *semver.Version
 	calicoCNI         bool
+	ipv6Only          bool
 }
 
 // NewBuilder generates a new empty Builder for creating Environments.
@@ -78,6 +79,12 @@ func (b *Builder) WithCalicoCNI() *Builder {
 	return b
 }
 
+// WithIPv6Only configures KIND to only use IPv6.
+func (b *Builder) WithIPv6Only() *Builder {
+	b.ipv6Only = true
+	return b
+}
+
 // Build is a blocking call to construct the configured Environment and it's
 // underlying Kubernetes cluster. The amount of time that it blocks depends
 // entirely on the underlying clusters.Cluster implementation that was requested.
@@ -86,6 +93,10 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 
 	if b.calicoCNI && b.existingCluster != nil {
 		return nil, fmt.Errorf("trying to deploy Calico CNI on an existing cluster is not currently supported")
+	}
+
+	if b.ipv6Only && b.existingCluster != nil {
+		return nil, fmt.Errorf("trying to configure IPv6 only on an existing cluster is not currently supported")
 	}
 
 	if b.existingCluster != nil && b.clusterBuilder != nil {
@@ -113,6 +124,9 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 		}
 		if b.calicoCNI {
 			builder.WithCalicoCNI()
+		}
+		if b.ipv6Only {
+			builder.WithIPv6Only()
 		}
 		cluster, err = builder.Build(ctx)
 		if err != nil {

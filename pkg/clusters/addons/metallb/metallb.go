@@ -141,6 +141,8 @@ func (a *addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 // -----------------------------------------------------------------------------
 
 var (
+	// TODO these obviously don't work for a v6-only cluster, but handling that requires more stuff in the cluster
+	// interface to inform about its network stack
 	defaultStartIP = net.ParseIP("0.0.0.100")
 	defaultEndIP   = net.ParseIP("0.0.0.250")
 	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.11&timeout=2m"
