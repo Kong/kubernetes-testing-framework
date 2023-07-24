@@ -1,6 +1,7 @@
 package test
 
 import (
+	"bytes"
 	"io"
 	"net/http"
 	"testing"
@@ -9,25 +10,50 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type checkerOptions struct {
-	bodyChecker func(*testing.T, []byte) bool
+type httpResponseOption struct {
+	bodyChecker       func(*testing.T, []byte) bool
+	statusCodeChecker func(t *testing.T, reqURL string, statusCode int, body []byte) bool
 }
 
-type CheckerOption func(*checkerOptions)
+type HTTPResponseOpt func(*httpResponseOption)
 
-func WithBodyChecker(bodyChecker func(*testing.T, []byte) bool) CheckerOption {
-	return func(opts *checkerOptions) {
+func WithBodyChecker(bodyChecker func(*testing.T, []byte) bool) HTTPResponseOpt {
+	return func(opts *httpResponseOption) {
 		opts.bodyChecker = bodyChecker
 	}
 }
 
+func WithBodyContains(expected string) HTTPResponseOpt {
+	return func(opts *httpResponseOption) {
+		opts.bodyChecker = func(t *testing.T, body []byte) bool {
+			t.Logf("check expected content %s of the response body", expected)
+			return bytes.Contains(body, []byte(expected))
+		}
+	}
+}
+
+func WithStatusCode(expected int) HTTPResponseOpt {
+	return func(opts *httpResponseOption) {
+		opts.statusCodeChecker = func(t *testing.T, reqURL string, statusCode int, body []byte) bool {
+			if statusCode != expected {
+				t.Logf("WARNING: unexpected response %s: %d with body: %s", reqURL, statusCode, body)
+				return false
+			}
+			t.Logf("expected status code %d of the response received", statusCode)
+			return true
+		}
+	}
+}
+
 // EventuallyExpectedStatusCodeAndBody is a helper function that retries the request until
-// it gets the expected status. It also checks the body of the response if a body checker
-// is provided. Default is to retry for 1 minute with 1 second interval.
+// it gets the expected response. For setting expected status code use WithStatusCode
+// option (otherwise it's not checked). For checking content of body use WithBodyContains or
+// WithBodyChecker (for fine-grained control), only one should be passed.
+// Default is to retry for 1 minute with 1 second interval.
 func EventuallyExpectedStatusCodeAndBody(
-	t *testing.T, httpClient *http.Client, req *http.Request, expectedStatusCode int, opts ...CheckerOption,
+	t *testing.T, httpClient *http.Client, req *http.Request, opts ...HTTPResponseOpt,
 ) {
-	var options checkerOptions
+	var options httpResponseOption
 	for _, opt := range opts {
 		if opt != nil {
 			opt(&options)
@@ -47,9 +73,10 @@ func EventuallyExpectedStatusCodeAndBody(
 				t.Logf("WARNING: error cannot read response body %s: %v", req.URL, err)
 				return false
 			}
-			if resp.StatusCode != expectedStatusCode {
-				t.Logf("WARNING: unexpected response %s: %s with body: %s", req.URL, resp.Status, body)
+			if options.statusCodeChecker != nil && !options.statusCodeChecker(t, req.URL.String(), resp.StatusCode, body) {
 				return false
+			} else {
+				t.Log("skipping checking status code of the response")
 			}
 			if options.bodyChecker != nil && !options.bodyChecker(t, body) {
 				t.Logf("WARNING: unexpected content of response body %s: %s", req.URL, body)

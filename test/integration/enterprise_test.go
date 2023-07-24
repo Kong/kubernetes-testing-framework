@@ -3,7 +3,6 @@
 package integration
 
 import (
-	"bytes"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -82,7 +81,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	}
 	t.Log("verifying the admin api version is enterprise")
 	httpClient := &http.Client{Timeout: time.Second * 10}
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, test.WithBodyChecker(
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyChecker(
 		func(t *testing.T, body []byte) bool {
 			t.Log("check expected enterprise version")
 			adminOutput := struct {
@@ -118,13 +117,9 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		nil,
 	)
 	require.NoError(t, err)
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, test.WithBodyChecker(
-		func(t *testing.T, body []byte) bool {
-			const expectedBody = "<title>httpbin.org</title>"
-			t.Logf("check expected content %s of the response body", expectedBody)
-			return bytes.Contains(body, []byte(expectedBody))
-		},
-	))
+	test.EventuallyExpectedStatusCodeAndBody(
+		t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyContains("<title>httpbin.org</title>"),
+	)
 
 	const workspaceToCreate = "test-workspace"
 	if adminPassword != "" {
@@ -140,7 +135,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		t.Fatal("not implemented yet")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusCreated)
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
 
 	t.Log("verifying that the workspace was indeed created")
 	req, err = http.NewRequestWithContext(
@@ -152,7 +147,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	if adminPassword != "" {
 		decorateRequestWithAdminPassword(t, req, adminPassword)
 	}
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK)
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusOK))
 
 }
 
