@@ -239,64 +239,64 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 
 		// use the pull Secret
-		a.deployArgs = append(a.deployArgs, []string{
+		a.deployArgs = append(a.deployArgs,
 			"--set", "image.pullSecrets={proxy-pull}",
-		}...)
+		)
 	}
 
 	// if the dbmode is postgres, set several related values
 	args := []string{"--kubeconfig", kubeconfig.Name(), "upgrade", "--install", DefaultDeploymentName, "kong/kong"}
 	if a.proxyDBMode == PostgreSQL {
-		a.deployArgs = append(a.deployArgs, []string{
+		a.deployArgs = append(a.deployArgs,
 			"--set", "env.database=postgres",
 			"--set", "postgresql.enabled=true",
 			"--set", "postgresql.auth.username=kong",
 			"--set", "postgresql.auth.database=kong",
 			"--set", "postgresql.service.port=5432",
-		}...)
+		)
 	}
 
 	// if the ingress controller is disabled flag it in the chart and don't install any CRDs
 	if a.ingressControllerDisabled {
-		a.deployArgs = append(a.deployArgs, []string{
+		a.deployArgs = append(a.deployArgs,
 			"--set", "ingressController.enabled=false",
 			"--set", "ingressController.installCRDs=false",
 			"--skip-crds",
-		}...)
+		)
 	}
 
 	// set the ingress controller container image values if provided by the caller
 	if a.ingressControllerImage != "" {
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.image.repository=%s", a.ingressControllerImage)}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("ingressController.image.repository=%s", a.ingressControllerImage))
 	}
 	if a.ingressControllerImageTag != "" {
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.image.tag=%s", a.ingressControllerImageTag)}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("ingressController.image.tag=%s", a.ingressControllerImageTag))
 	}
 
 	// set the container image values if provided by the caller
 	if a.proxyImage != "" {
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("image.repository=%s", a.proxyImage)}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("image.repository=%s", a.proxyImage))
 	}
 	if a.proxyImageTag != "" {
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("image.tag=%s", a.proxyImageTag)}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("image.tag=%s", a.proxyImageTag))
 	}
 
 	// set the service type of the proxy admin's Kubernetes service
 	if a.proxyAdminServiceTypeLoadBalancer {
-		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=LoadBalancer"}...)
+		a.deployArgs = append(a.deployArgs, "--set", "admin.type=LoadBalancer")
 	} else {
-		a.deployArgs = append(a.deployArgs, []string{"--set", "admin.type=ClusterIP"}...)
+		a.deployArgs = append(a.deployArgs, "--set", "admin.type=ClusterIP")
 	}
 
 	// set the service type of the proxy's Kubernetes service
 	if a.proxyServiceType == corev1.ServiceTypeExternalName {
 		return fmt.Errorf("Service type ExternalName is not currently supported")
 	}
-	a.deployArgs = append(a.deployArgs, []string{"--set", "proxy.type=" + string(a.proxyServiceType)}...)
+	a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("proxy.type=%s", a.proxyServiceType))
 
 	// set the proxy log level
 	if len(a.proxyLogLevel) > 0 {
-		a.deployArgs = append(a.deployArgs, []string{"--set", "env.log_level", a.proxyLogLevel}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.log_level=%s", a.proxyLogLevel))
 	}
 
 	// deploy licenses and other configurations for enterprise mode
@@ -313,11 +313,17 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			return err
 		}
 		if !a.ingressControllerDisabled {
-			a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("ingressController.env.kong_admin_token.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName)}...)
-			a.deployArgs = append(a.deployArgs, []string{"--set", "ingressController.env.kong_admin_token.valueFrom.secretKeyRef.key=password"}...)
+			a.deployArgs = append(a.deployArgs,
+				"--set", fmt.Sprintf("ingressController.env.kong_admin_token.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName),
+			)
+			a.deployArgs = append(a.deployArgs,
+				"--set", "ingressController.env.kong_admin_token.valueFrom.secretKeyRef.key=password",
+			)
 		}
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName)}...)
-		a.deployArgs = append(a.deployArgs, []string{"--set", "env.password.valueFrom.secretKeyRef.key=password"}...)
+		a.deployArgs = append(a.deployArgs,
+			"--set", fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName),
+		)
+		a.deployArgs = append(a.deployArgs, "--set", "env.password.valueFrom.secretKeyRef.key=password")
 
 		// deploy the admin session configuration needed for enterprise enabled mode
 		if err := deployKongEnterpriseAdminGUISessionConf(ctx, cluster, a.namespace); err != nil {
@@ -329,7 +335,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	for name, value := range a.proxyEnvVars {
-		a.deployArgs = append(a.deployArgs, []string{"--set", fmt.Sprintf("env.%s=%s", name, value)}...)
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.%s=%s", name, value))
 	}
 
 	// compile the helm installation values
