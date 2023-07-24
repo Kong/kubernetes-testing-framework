@@ -6,7 +6,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"testing"
@@ -16,6 +15,7 @@ import (
 	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
+	"github.com/kong/kubernetes-testing-framework/internal/test"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -82,27 +82,29 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	}
 	t.Log("verifying the admin api version is enterprise")
 	httpClient := &http.Client{Timeout: time.Second * 10}
-	eventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, func(t *testing.T, body []byte) bool {
-		t.Log("check expected enterprise version")
-		adminOutput := struct {
-			Version string `json:"version"`
-		}{}
-		if err := json.Unmarshal(body, &adminOutput); err != nil {
-			t.Logf("WARNING: error while unmarshalling admin api output %s: %v", body, err)
-			return false
-		}
-		v, err := gokong.NewVersion(adminOutput.Version)
-		if err != nil {
-			t.Logf("WARNING: error while parsing admin api version %s: %v", adminOutput.Version, err)
-			return false
-		}
-		t.Logf("admin api version %s", v)
-		if !v.IsKongGatewayEnterprise() {
-			t.Logf("version %s should be an enterprise version but wasn't", v)
-			return false
-		}
-		return true
-	})
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, test.WithBodyChecker(
+		func(t *testing.T, body []byte) bool {
+			t.Log("check expected enterprise version")
+			adminOutput := struct {
+				Version string `json:"version"`
+			}{}
+			if err := json.Unmarshal(body, &adminOutput); err != nil {
+				t.Logf("WARNING: error while unmarshalling admin api output %s: %v", body, err)
+				return false
+			}
+			v, err := gokong.NewVersion(adminOutput.Version)
+			if err != nil {
+				t.Logf("WARNING: error while parsing admin api version %s: %v", adminOutput.Version, err)
+				return false
+			}
+			t.Logf("admin api version %s", v)
+			if !v.IsKongGatewayEnterprise() {
+				t.Logf("version %s should be an enterprise version but wasn't", v)
+				return false
+			}
+			return true
+		},
+	))
 
 	t.Log("deploying httpbin and waiting for readiness")
 	httpBinAddon := httpbin.New()
@@ -116,11 +118,13 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		nil,
 	)
 	require.NoError(t, err)
-	eventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, func(t *testing.T, body []byte) bool {
-		const expectedBody = "<title>httpbin.org</title>"
-		t.Logf("check expected content %s of the response body", expectedBody)
-		return bytes.Contains(body, []byte(expectedBody))
-	})
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, test.WithBodyChecker(
+		func(t *testing.T, body []byte) bool {
+			const expectedBody = "<title>httpbin.org</title>"
+			t.Logf("check expected content %s of the response body", expectedBody)
+			return bytes.Contains(body, []byte(expectedBody))
+		},
+	))
 
 	const workspaceToCreate = "test-workspace"
 	if adminPassword != "" {
@@ -136,7 +140,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		t.Fatal("not implemented yet")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	eventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusCreated, nil)
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusCreated)
 
 	t.Log("verifying that the workspace was indeed created")
 	req, err = http.NewRequestWithContext(
@@ -148,7 +152,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	if adminPassword != "" {
 		decorateRequestWithAdminPassword(t, req, adminPassword)
 	}
-	eventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK, nil)
+	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, http.StatusOK)
 
 }
 
@@ -165,35 +169,4 @@ func prepareKongEnterpriseLicense(t *testing.T) string {
 	licenseJSON, err := kong.GetLicenseJSONFromEnv()
 	require.NoError(t, err)
 	return licenseJSON
-}
-
-func eventuallyExpectedStatusCodeAndBody(
-	t *testing.T, httpClient *http.Client, req *http.Request, expectedStatusCode int, bodyChecker func(t *testing.T, body []byte) bool,
-) {
-	require.Eventually(
-		t,
-		func() bool {
-			resp, err := httpClient.Do(req)
-			if err != nil {
-				t.Logf("WARNING: error while waiting for %s: %v", req.URL, err)
-				return false
-			}
-			defer resp.Body.Close()
-			body, err := io.ReadAll(resp.Body)
-			if err != nil {
-				t.Logf("WARNING: error cannot read response body %s: %v", req.URL, err)
-				return false
-			}
-			if resp.StatusCode != expectedStatusCode {
-				t.Logf("WARNING: unexpected response %s: %s with body: %s", req.URL, resp.Status, body)
-				return false
-			}
-			if bodyChecker != nil && !bodyChecker(t, body) {
-				t.Logf("WARNING: unexpected content of response body %s: %s", req.URL, body)
-				return false
-			}
-			return true
-		},
-		time.Minute, time.Second,
-	)
 }
