@@ -210,36 +210,12 @@ func CleanupGeneratedResources(ctx context.Context, cluster Cluster, creatorID s
 
 // KustomizeDeployForCluster applies a given kustomizeURL to the provided cluster
 func KustomizeDeployForCluster(ctx context.Context, cluster Cluster, kustomizeURL string, flags ...string) error {
-	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	args := append([]string{"-v9", "apply", "-k", kustomizeURL},
-		flags...,
-	)
-	cmd := exec.CommandContext(ctx, "kubectl", args...)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to deploy %s for cluster %s: STDOUT=(%s) STDERR=(%s): %w",
-			kustomizeURL, cluster.Name(), stdout.String(), stderr.String(), err,
-		)
-	}
-	return nil
+	return kubectlWithArgs(ctx, cluster, append([]string{"-v9", "apply", "-k", kustomizeURL}, flags...)...)
 }
 
 // KustomizeDeleteForCluster deletes the provided kustomize manafests from the cluster
 func KustomizeDeleteForCluster(ctx context.Context, cluster Cluster, kustomizeURL string, flags ...string) error {
-	stdout, stderr := new(bytes.Buffer), new(bytes.Buffer)
-	args := append([]string{"-v9", "delete", "-k", kustomizeURL},
-		flags...,
-	)
-	cmd := exec.CommandContext(ctx, "kubectl", args...)
-	cmd.Stdout = stdout
-	cmd.Stderr = stderr
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("failed to delete %s for cluster %s: STDOUT=(%s) STDERR=(%s): %w",
-			kustomizeURL, cluster.Name(), stdout.String(), stderr.String(), err,
-		)
-	}
-	return nil
+	return kubectlWithArgs(ctx, cluster, append([]string{"-v9", "delete", "-k", kustomizeURL}, flags...)...)
 }
 
 // ApplyManifestByURL applies a given manifest URL to the cluster provided

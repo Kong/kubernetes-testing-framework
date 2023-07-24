@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.33.0
+
+- Make `KustomizeDeployForCluster` and `KustomizeDeleteForCluster` always
+  use a cluster's temporary kubeconfig file instead of the default one.
+  [#754](https://github.com/Kong/kubernetes-testing-framework/pull/754)
+
 ## v0.32.0
 
 - Allow passing additional flags to kubectl kustomize in
