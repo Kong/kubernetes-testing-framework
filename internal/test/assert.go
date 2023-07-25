@@ -38,16 +38,16 @@ func WithResponseChecker(bodyChecker func(*testing.T, *http.Response) bool) Conf
 	}
 }
 
-func WithBodyContains(expected string) ConfigurationOpt {
+func WithBodyContains(s string) ConfigurationOpt {
 	return WithResponseChecker(
 		func(t *testing.T, resp *http.Response) bool {
 			body, err := io.ReadAll(resp.Body)
 			if err != nil {
-				t.Logf("WARNING: error cannot read response body %s: %v", resp.Request.URL, err)
+				t.Logf("WARNING: error cannot read response body returned by %s: %v", resp.Request.URL, err)
 				return false
 			}
 			if !bytes.Contains(body, []byte(expected)) {
-				t.Logf("WARNING: unexpected content of response body %s: %s", resp.Request.URL, body)
+				t.Logf("WARNING: unexpected content of response body returned by %s: %s", resp.Request.URL, body)
 				return false
 			}
 			t.Logf("expected content of the response body received")
@@ -72,7 +72,7 @@ func WithStatusCode(expected int) ConfigurationOpt {
 func WithEnterpriseHeader() ConfigurationOpt {
 	return WithResponseChecker(
 		func(t *testing.T, resp *http.Response) bool {
-			version, _ := strings.CutPrefix(resp.Header.Get("Server"), "kong/")
+			version := strings.TrimPrefix(resp.Header.Get("Server"), "kong/")
 			v, err := gokong.NewVersion(version)
 			if err != nil {
 				t.Logf("WARNING: error while parsing admin api version %s: %v", version, err)
@@ -88,12 +88,13 @@ func WithEnterpriseHeader() ConfigurationOpt {
 	)
 }
 
-// EventuallyExpectedResponse is a helper function that retries the request until
-// it gets the expected response. For setting expected status code use WithStatusCode
-// option (otherwise it's not checked). For checking content of body only one has to be
-// passed (body can be read only one time).
+// EventuallyExpectedResponse is a helper function that issues the provided request
+// until it gets the expected response or the timeout (default: 1 minute) is reached.
+// For assertions about the received response one can provide options like WithStatusCode or WithBodyContains.
+// NOTE: only one option checking the body can be provided since body's reader can only
+// be read once.
 // Default is to retry for 1 minute with 1 second interval.
-func EventuallyExpectedResponse(
+func EventuallyExpectResponse(
 	t *testing.T, httpClient *http.Client, req *http.Request, opts ...ConfigurationOpt,
 ) {
 	options := configurationOption{
