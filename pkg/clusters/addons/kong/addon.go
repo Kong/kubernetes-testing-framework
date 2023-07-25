@@ -299,39 +299,39 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.log_level=%s", a.proxyLogLevel))
 	}
 
-	// deploy licenses and other configurations for enterprise mode
+	// Deploy licenses and other configurations for enterprise mode.
 	if a.proxyEnterpriseEnabled {
-		// deploy the license as a Kubernetes secret to enable enterprise features for the proxy
+		// Set the enterprise defaults helm installation values.
+		a.deployArgs = append(a.deployArgs, enterpriseDefaults()...)
+		// Deploy the license as a Kubernetes secret to enable enterprise features for the proxy.
 		if err := deployKongEnterpriseLicenseSecret(ctx, cluster, a.namespace, DefaultEnterpriseLicenseSecretName, a.proxyEnterpriseLicenseJSON); err != nil {
 			return err
 		}
-
-		// deploy the superadmin password as a Kubernetes secret adjacent to the proxy pod and configure
-		// the chart to use that secret to configure controller auth to the admin API.
-		a.proxyEnterpriseSuperAdminPassword, err = deployEnterpriseSuperAdminPasswordSecret(ctx, cluster, a.namespace, a.proxyEnterpriseSuperAdminPassword)
-		if err != nil {
-			return err
+		// For DB-less mode, admin password can't be configured because there is nowhere for it to be stored.
+		if a.proxyDBMode != DBLESS {
+			// Deploy the superadmin password as a Kubernetes secret adjacent to the proxy pod and configure
+			// the chart to use that secret to configure controller auth to the admin API.
+			a.proxyEnterpriseSuperAdminPassword, err = deployEnterpriseSuperAdminPasswordSecret(ctx, cluster, a.namespace, a.proxyEnterpriseSuperAdminPassword)
+			if err != nil {
+				return err
+			}
+			a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName))
+			a.deployArgs = append(a.deployArgs, "--set", "env.password.valueFrom.secretKeyRef.key=password")
+			a.deployArgs = append(a.deployArgs, "--set", "enterprise.rbac.enabled=true", "--set", "env.enforce_rbac=on")
+			if !a.ingressControllerDisabled {
+				a.deployArgs = append(
+					a.deployArgs,
+					"--set", fmt.Sprintf("ingressController.env.kong_admin_token.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName),
+				)
+				a.deployArgs = append(a.deployArgs, "--set", "ingressController.env.kong_admin_token.valueFrom.secretKeyRef.key=password")
+			}
 		}
-		if !a.ingressControllerDisabled {
-			a.deployArgs = append(a.deployArgs,
-				"--set", fmt.Sprintf("ingressController.env.kong_admin_token.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName),
-			)
-			a.deployArgs = append(a.deployArgs,
-				"--set", "ingressController.env.kong_admin_token.valueFrom.secretKeyRef.key=password",
-			)
-		}
-		a.deployArgs = append(a.deployArgs,
-			"--set", fmt.Sprintf("env.password.valueFrom.secretKeyRef.name=%s", DefaultEnterpriseAdminPasswordSecretName),
-		)
-		a.deployArgs = append(a.deployArgs, "--set", "env.password.valueFrom.secretKeyRef.key=password")
 
-		// deploy the admin session configuration needed for enterprise enabled mode
+		// Deploy the admin session configuration needed for enterprise enabled mode.
 		if err := deployKongEnterpriseAdminGUISessionConf(ctx, cluster, a.namespace); err != nil {
 			return err
 		}
 
-		// set the enterprise defaults helm installation values
-		a.deployArgs = append(a.deployArgs, enterpriseDefaults()...)
 	}
 
 	for name, value := range a.proxyEnvVars {
@@ -557,8 +557,6 @@ func defaults() []string {
 func enterpriseDefaults() []string {
 	return []string{
 		"--set", "enterprise.enabled=true",
-		"--set", "enterprise.rbac.enabled=true",
-		"--set", "env.enforce_rbac=on",
 		"--set", "admin.annotations.konghq.com/protocol=http",
 		"--set", fmt.Sprintf("enterprise.license_secret=%s", DefaultEnterpriseLicenseSecretName),
 	}

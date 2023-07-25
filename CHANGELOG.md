@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.34.0
+
+- Fix KTF to properly deploy Kong Gateway Enterprise in DBLess mode
+  [#757](https://github.com/Kong/kubernetes-testing-framework/pull/757)
+
 ## v0.33.0
 
 - Make `KustomizeDeployForCluster` and `KustomizeDeleteForCluster` always

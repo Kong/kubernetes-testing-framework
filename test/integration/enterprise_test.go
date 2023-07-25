@@ -22,7 +22,6 @@ import (
 
 func TestKongEnterprisePostgres(t *testing.T) {
 	SkipEnterpriseTestIfNoEnv(t)
-	t.Parallel()
 
 	licenseJSON := prepareKongEnterpriseLicense(t)
 
@@ -38,6 +37,20 @@ func TestKongEnterprisePostgres(t *testing.T) {
 		Build()
 
 	deployAndTestKongEnterprise(t, kongAddon, adminPassword)
+}
+
+func TestKongEnterpriseDBLess(t *testing.T) {
+	SkipEnterpriseTestIfNoEnv(t)
+
+	licenseJSON := prepareKongEnterpriseLicense(t)
+
+	t.Log("configuring the testing environment")
+	kongAddon := kongaddon.NewBuilder().
+		WithProxyAdminServiceTypeLoadBalancer().
+		WithProxyEnterpriseEnabled(licenseJSON).
+		Build()
+
+	deployAndTestKongEnterprise(t, kongAddon, "")
 }
 
 // deployAndTestKongEnterprise deploys a Kong Enterprise cluster and tests it for basic functionality.
@@ -97,26 +110,29 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyContains("<title>httpbin.org</title>"),
 	)
 
-	const workspaceToCreate = "test-workspace"
+	const consumerGroupToCreate = "test-consumer-group"
 	if adminPassword != "" {
-		t.Log("verifying enterprise workspace API functionality using /workspaces (works only for dbmode)")
+		t.Log("verifying enterprise consumer groups API functionality using /consumer_groups (works only for dbmode)")
 		req, err = http.NewRequestWithContext(
-			ctx, http.MethodPost, adminURL.JoinPath("/workspaces").String(),
-			strings.NewReader(fmt.Sprintf(`{"name": "%s"}`, workspaceToCreate)),
+			ctx, http.MethodPost, adminURL.JoinPath("/consumer_groups").String(),
+			strings.NewReader(fmt.Sprintf(`{"name": "%s"}`, consumerGroupToCreate)),
 		)
 		require.NoError(t, err)
 		decorateRequestWithAdminPassword(t, req, adminPassword)
 	} else {
-		t.Log("verifying enterprise workspace API functionality using /config (works only for dblessmode)")
-		t.Fatal("not implemented yet")
+		t.Log("verifying enterprise consumer groups API functionality using /config (works only for dblessmode)")
+		req, err = http.NewRequestWithContext(
+			ctx, http.MethodPost, adminURL.JoinPath("/config").String(),
+			strings.NewReader(fmt.Sprintf(`{"_format_version": "3.0", "consumer_groups": [{"name": "%s"}]}`, consumerGroupToCreate)),
+		)
 	}
 	req.Header.Set("Content-Type", "application/json")
 	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
 
-	t.Log("verifying that the workspace was indeed created")
+	t.Log("verifying that the consumer group was indeed created")
 	req, err = http.NewRequestWithContext(
 		ctx, http.MethodGet,
-		adminURL.JoinPath("/workspaces/").JoinPath(workspaceToCreate).String(),
+		adminURL.JoinPath("/consumer_groups/").JoinPath(consumerGroupToCreate).String(),
 		nil,
 	)
 	require.NoError(t, err)
