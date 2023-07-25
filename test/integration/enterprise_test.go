@@ -3,19 +3,16 @@
 package integration
 
 import (
-	"bytes"
-	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
-	gokong "github.com/kong/go-kong/kong"
 	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
+	"github.com/kong/kubernetes-testing-framework/internal/test"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
 	kongaddon "github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
@@ -27,31 +24,37 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	SkipEnterpriseTestIfNoEnv(t)
 	t.Parallel()
 
-	t.Log("preparing kong enterprise secrets")
-	licenseJSON, err := kong.GetLicenseJSONFromEnv()
-	require.NoError(t, err)
-	adminPassword, err := password.Generate(10, 5, 0, false, false)
-	require.NoError(t, err)
+	licenseJSON := prepareKongEnterpriseLicense(t)
+
+	t.Logf("generating a random password for the proxy admin service (applies only for dbmode)")
+	adminPassword := password.MustGenerate(10, 5, 0, false, false)
 
 	t.Log("configuring the testing environment")
-	metallbAddon := metallbaddon.New()
 	kongAddon := kongaddon.NewBuilder().
-		WithProxyEnterpriseEnabled(licenseJSON).
-		WithPostgreSQL().
 		WithProxyAdminServiceTypeLoadBalancer().
+		WithPostgreSQL().
+		WithProxyEnterpriseEnabled(licenseJSON).
 		WithProxyEnterpriseSuperAdminPassword(adminPassword).
 		Build()
-	builder := environment.NewBuilder().WithAddons(kongAddon, metallbAddon)
 
+	deployAndTestKongEnterprise(t, kongAddon, adminPassword)
+}
+
+// deployAndTestKongEnterprise deploys a Kong Enterprise cluster and tests it for basic functionality.
+// It works for both DB-less and DB-mode deployments (configuration of kongAddon). For DB-less set adminPassword to "".
+// It verifies that workspace (enterprise feature) can be successfully created.
+func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, adminPassword string) {
+	metallbAddon := metallbaddon.New()
+	builder := environment.NewBuilder().WithAddons(kongAddon, metallbAddon)
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
 	require.NoError(t, err)
 
 	t.Logf("setting up the environment cleanup for environment %s and cluster %s", env.Name(), env.Cluster().Name())
-	defer func() {
+	t.Cleanup(func() {
 		t.Logf("cleaning up environment %s and cluster %s", env.Name(), env.Cluster().Name())
 		require.NoError(t, env.Cleanup(ctx))
-	}()
+	})
 
 	t.Log("waiting for environment to be ready")
 	require.NoError(t, <-env.WaitForReady(ctx))
@@ -67,77 +70,74 @@ func TestKongEnterprisePostgres(t *testing.T) {
 	require.NotNil(t, adminURL)
 
 	t.Log("building a GET request to gather admin api information")
-	req, err := http.NewRequestWithContext(ctx, "GET", adminURL.String(), nil)
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, adminURL.String(), nil)
 	require.NoError(t, err)
-	req.Header.Set("Kong-Admin-Token", adminPassword)
-
-	t.Run("verifying the admin api version is enterprise", func(t *testing.T) {
-		t.Log("pulling the admin api information")
-		httpc := http.Client{Timeout: time.Second * 10}
-		var body []byte
-		require.Eventually(t, func() bool {
-			resp, err := httpc.Do(req)
-			if err != nil {
-				return false
-			}
-			defer resp.Body.Close()
-			body, err = io.ReadAll(resp.Body)
-			if err != nil {
-				return false
-			}
-			t.Logf("RESPONSE CODE: %d STATUS: %s", resp.StatusCode, resp.Status)
-			return resp.StatusCode == http.StatusOK
-		}, time.Minute, time.Second)
-
-		adminOutput := struct {
-			Version string `json:"version"`
-		}{}
-		require.NoError(t, json.Unmarshal(body, &adminOutput))
-		v, err := gokong.NewVersion(adminOutput.Version)
-		require.NoError(t, err)
-
-		t.Logf("admin api version %s", v)
-		require.Truef(t, v.IsKongGatewayEnterprise(), "version %s should be an enterprise version but wasn't", v)
-	})
-
-	t.Log("verifying enterprise workspace API functionality")
-	workspaceEnabledProxyURL := adminURL.String() + "/workspaces"
-	jsonStr := []byte(`{"name": "test-workspace"}`)
-	req, err = http.NewRequest("POST", workspaceEnabledProxyURL, bytes.NewBuffer(jsonStr))
-	require.NoError(t, err)
-	req.Header.Set("kong-admin-token", adminPassword)
-	req.Header.Set("Content-Type", "application/json")
-	client := &http.Client{Timeout: time.Second * 10}
-	require.Eventually(t, func() bool {
-		resp, err := client.Do(req)
-		if err != nil {
-			return false
-		}
-		defer resp.Body.Close()
-		return resp.StatusCode == http.StatusCreated
-	}, time.Minute, time.Second)
+	if adminPassword != "" {
+		decorateRequestWithAdminPassword(t, req, adminPassword)
+	} else {
+		t.Log("skipping setting the admin api password (Kong-Admin-Token header)")
+	}
+	t.Log("verifying the admin api version is enterprise")
+	httpClient := &http.Client{Timeout: time.Second * 10}
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithEnterpriseHeader())
 
 	t.Log("deploying httpbin and waiting for readiness")
-	httpbinAddon := httpbin.New()
-	require.NoError(t, env.Cluster().DeployAddon(ctx, httpbinAddon))
+	httpBinAddon := httpbin.New()
+	require.NoError(t, env.Cluster().DeployAddon(ctx, httpBinAddon))
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Log("accessing httpbin via ingress to validate that the kong proxy is functioning")
-	httpc := http.Client{Timeout: time.Second * 10}
-	require.Eventually(t, func() bool {
-		resp, err := httpc.Get(fmt.Sprintf("%s/%s", proxyURL, httpbinAddon.Path()))
-		if err != nil {
-			t.Logf("WARNING: error while waiting for %s: %v", proxyURL, err)
-			return false
-		}
-		defer resp.Body.Close()
-		if resp.StatusCode == http.StatusOK {
-			b := new(bytes.Buffer)
-			n, err := b.ReadFrom(resp.Body)
-			require.NoError(t, err)
-			require.True(t, n > 0)
-			return strings.Contains(b.String(), "<title>httpbin.org</title>")
-		}
-		return false
-	}, time.Minute*3, time.Second)
+	req, err = http.NewRequestWithContext(
+		ctx, http.MethodGet,
+		proxyURL.JoinPath(httpBinAddon.Path()).String(),
+		nil,
+	)
+	require.NoError(t, err)
+	test.EventuallyExpectResponse(
+		t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyContains("<title>httpbin.org</title>"),
+	)
+
+	const workspaceToCreate = "test-workspace"
+	if adminPassword != "" {
+		t.Log("verifying enterprise workspace API functionality using /workspaces (works only for dbmode)")
+		req, err = http.NewRequestWithContext(
+			ctx, http.MethodPost, adminURL.JoinPath("/workspaces").String(),
+			strings.NewReader(fmt.Sprintf(`{"name": "%s"}`, workspaceToCreate)),
+		)
+		require.NoError(t, err)
+		decorateRequestWithAdminPassword(t, req, adminPassword)
+	} else {
+		t.Log("verifying enterprise workspace API functionality using /config (works only for dblessmode)")
+		t.Fatal("not implemented yet")
+	}
+	req.Header.Set("Content-Type", "application/json")
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
+
+	t.Log("verifying that the workspace was indeed created")
+	req, err = http.NewRequestWithContext(
+		ctx, http.MethodGet,
+		adminURL.JoinPath("/workspaces/").JoinPath(workspaceToCreate).String(),
+		nil,
+	)
+	require.NoError(t, err)
+	if adminPassword != "" {
+		decorateRequestWithAdminPassword(t, req, adminPassword)
+	}
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK))
+
+}
+
+func decorateRequestWithAdminPassword(t *testing.T, req *http.Request, adminPassword string) {
+	t.Helper()
+	const passwdHeader = "Kong-Admin-Token"
+	t.Logf("setting the admin api password (Kong-Admin-Token header %s)", passwdHeader)
+	req.Header.Set(passwdHeader, adminPassword)
+}
+
+func prepareKongEnterpriseLicense(t *testing.T) string {
+	t.Helper()
+	t.Log("preparing kong enterprise license")
+	licenseJSON, err := kong.GetLicenseJSONFromEnv()
+	require.NoError(t, err)
+	return licenseJSON
 }
