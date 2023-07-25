@@ -3,14 +3,12 @@
 package integration
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
 	"testing"
 	"time"
 
-	gokong "github.com/kong/go-kong/kong"
 	"github.com/sethvargo/go-password/password"
 	"github.com/stretchr/testify/require"
 
@@ -81,29 +79,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	}
 	t.Log("verifying the admin api version is enterprise")
 	httpClient := &http.Client{Timeout: time.Second * 10}
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyChecker(
-		func(t *testing.T, body []byte) bool {
-			t.Log("check expected enterprise version")
-			adminOutput := struct {
-				Version string `json:"version"`
-			}{}
-			if err := json.Unmarshal(body, &adminOutput); err != nil {
-				t.Logf("WARNING: error while unmarshalling admin api output %s: %v", body, err)
-				return false
-			}
-			v, err := gokong.NewVersion(adminOutput.Version)
-			if err != nil {
-				t.Logf("WARNING: error while parsing admin api version %s: %v", adminOutput.Version, err)
-				return false
-			}
-			t.Logf("admin api version %s", v)
-			if !v.IsKongGatewayEnterprise() {
-				t.Logf("version %s should be an enterprise version but wasn't", v)
-				return false
-			}
-			return true
-		},
-	))
+	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithEnterpriseHeader())
 
 	t.Log("deploying httpbin and waiting for readiness")
 	httpBinAddon := httpbin.New()
@@ -117,7 +93,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		nil,
 	)
 	require.NoError(t, err)
-	test.EventuallyExpectedStatusCodeAndBody(
+	test.EventuallyExpectedResponse(
 		t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyContains("<title>httpbin.org</title>"),
 	)
 
@@ -135,7 +111,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		t.Fatal("not implemented yet")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
+	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
 
 	t.Log("verifying that the workspace was indeed created")
 	req, err = http.NewRequestWithContext(
@@ -147,7 +123,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	if adminPassword != "" {
 		decorateRequestWithAdminPassword(t, req, adminPassword)
 	}
-	test.EventuallyExpectedStatusCodeAndBody(t, httpClient, req, test.WithStatusCode(http.StatusOK))
+	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK))
 
 }
 
