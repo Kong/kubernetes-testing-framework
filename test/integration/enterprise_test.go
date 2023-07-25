@@ -129,7 +129,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	req.Header.Set("Content-Type", "application/json")
 	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
 
-	t.Log("verifying that the workspace was indeed created")
+	t.Log("verifying that the consumer group was indeed created")
 	req, err = http.NewRequestWithContext(
 		ctx, http.MethodGet,
 		adminURL.JoinPath("/consumer_groups/").JoinPath(consumerGroupToCreate).String(),
