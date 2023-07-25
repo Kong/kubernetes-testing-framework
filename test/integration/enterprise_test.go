@@ -79,7 +79,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	}
 	t.Log("verifying the admin api version is enterprise")
 	httpClient := &http.Client{Timeout: time.Second * 10}
-	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithEnterpriseHeader())
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithEnterpriseHeader())
 
 	t.Log("deploying httpbin and waiting for readiness")
 	httpBinAddon := httpbin.New()
@@ -93,7 +93,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		nil,
 	)
 	require.NoError(t, err)
-	test.EventuallyExpectedResponse(
+	test.EventuallyExpectResponse(
 		t, httpClient, req, test.WithStatusCode(http.StatusOK), test.WithBodyContains("<title>httpbin.org</title>"),
 	)
 
@@ -111,7 +111,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 		t.Fatal("not implemented yet")
 	}
 	req.Header.Set("Content-Type", "application/json")
-	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusCreated))
 
 	t.Log("verifying that the workspace was indeed created")
 	req, err = http.NewRequestWithContext(
@@ -123,7 +123,7 @@ func deployAndTestKongEnterprise(t *testing.T, kongAddon *kongaddon.Addon, admin
 	if adminPassword != "" {
 		decorateRequestWithAdminPassword(t, req, adminPassword)
 	}
-	test.EventuallyExpectedResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK))
+	test.EventuallyExpectResponse(t, httpClient, req, test.WithStatusCode(http.StatusOK))
 
 }
 

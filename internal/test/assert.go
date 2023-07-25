@@ -12,33 +12,33 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-type configurationOption struct {
+type httpResponseExpectOpts struct {
 	responseChecker []func(*testing.T, *http.Response) bool
 	waitFor         time.Duration
 	interval        time.Duration
 }
 
-type ConfigurationOpt func(*configurationOption)
+type HTTPResponseExpectOpt func(*httpResponseExpectOpts)
 
-func WithWaitFor(waitFor time.Duration) ConfigurationOpt {
-	return func(opts *configurationOption) {
+func WithWaitFor(waitFor time.Duration) HTTPResponseExpectOpt {
+	return func(opts *httpResponseExpectOpts) {
 		opts.waitFor = waitFor
 	}
 }
 
-func WithInterval(interval time.Duration) ConfigurationOpt {
-	return func(opts *configurationOption) {
+func WithInterval(interval time.Duration) HTTPResponseExpectOpt {
+	return func(opts *httpResponseExpectOpts) {
 		opts.interval = interval
 	}
 }
 
-func WithResponseChecker(bodyChecker func(*testing.T, *http.Response) bool) ConfigurationOpt {
-	return func(opts *configurationOption) {
-		opts.responseChecker = append(opts.responseChecker, bodyChecker)
+func WithResponseChecker(responseChecker func(*testing.T, *http.Response) bool) HTTPResponseExpectOpt {
+	return func(opts *httpResponseExpectOpts) {
+		opts.responseChecker = append(opts.responseChecker, responseChecker) //nolint:bodyclose
 	}
 }
 
-func WithBodyContains(s string) ConfigurationOpt {
+func WithBodyContains(s string) HTTPResponseExpectOpt {
 	return WithResponseChecker(
 		func(t *testing.T, resp *http.Response) bool {
 			body, err := io.ReadAll(resp.Body)
@@ -46,30 +46,28 @@ func WithBodyContains(s string) ConfigurationOpt {
 				t.Logf("WARNING: error cannot read response body returned by %s: %v", resp.Request.URL, err)
 				return false
 			}
-			if !bytes.Contains(body, []byte(expected)) {
+			if !bytes.Contains(body, []byte(s)) {
 				t.Logf("WARNING: unexpected content of response body returned by %s: %s", resp.Request.URL, body)
 				return false
 			}
-			t.Logf("expected content of the response body received")
 			return true
 		},
 	)
 }
 
-func WithStatusCode(expected int) ConfigurationOpt {
+func WithStatusCode(expected int) HTTPResponseExpectOpt {
 	return WithResponseChecker(
 		func(t *testing.T, resp *http.Response) bool {
 			if resp.StatusCode != expected {
 				t.Logf("WARNING: unexpected status code %d, expected %d", resp.StatusCode, expected)
 				return false
 			}
-			t.Logf("expected status code received")
 			return true
 		},
 	)
 }
 
-func WithEnterpriseHeader() ConfigurationOpt {
+func WithEnterpriseHeader() HTTPResponseExpectOpt {
 	return WithResponseChecker(
 		func(t *testing.T, resp *http.Response) bool {
 			version := strings.TrimPrefix(resp.Header.Get("Server"), "kong/")
@@ -95,9 +93,9 @@ func WithEnterpriseHeader() ConfigurationOpt {
 // be read once.
 // Default is to retry for 1 minute with 1 second interval.
 func EventuallyExpectResponse(
-	t *testing.T, httpClient *http.Client, req *http.Request, opts ...ConfigurationOpt,
+	t *testing.T, httpClient *http.Client, req *http.Request, opts ...HTTPResponseExpectOpt,
 ) {
-	options := configurationOption{
+	options := httpResponseExpectOpts{
 		waitFor:  time.Minute,
 		interval: time.Second,
 	}
