@@ -74,21 +74,21 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: a.namespace}}
 	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
-			return err
+			return fmt.Errorf("could not create Kong namespace: %w", err)
 		}
 	}
 
 	argo, err := getArgo(cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get ArgoCD instance: %w", err)
 	}
 	err = argo.CreateApplication(ctx, a.getUnstructuredApplication())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create Application: %w", err)
 	}
 	err = argo.CreateAppProject(ctx, a.getUnstructuredAppProject())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create AppProject: %w", err)
 	}
 
 	return nil
@@ -114,15 +114,15 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	argo, err := getArgo(cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get ArgoCD instance: %w", err)
 	}
 	err = argo.DeleteApplication(ctx, a.appName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not delete Application: %w", err)
 	}
 	err = argo.DeleteAppProject(ctx, a.project)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not delete AppProject: %w", err)
 	}
 	return nil
 }

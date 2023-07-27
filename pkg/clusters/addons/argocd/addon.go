@@ -27,7 +27,7 @@ const (
 
 	canaryDeployment = "argocd-repo-server"
 
-	manifestURL = "https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/core-install.yaml"
+	manifestURL = "https://raw.githubusercontent.com/argoproj/argo-cd/%s/manifests/core-install.yaml"
 
 	// DefaultServer is the default server value for Applications and AppProjects.
 	DefaultServer = "https://kubernetes.default.svc"
@@ -36,6 +36,7 @@ const (
 type Addon struct {
 	name      string
 	namespace string
+	version   string
 	client    *dynamic.DynamicClient
 }
 
@@ -107,29 +108,29 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: a.namespace}}
 	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
 		if !errors.IsAlreadyExists(err) {
-			return err
+			return fmt.Errorf("could not create ArgoCD namespace: %w", err)
 		}
 	}
 
 	kubeconfig, err := clusters.TempKubeconfig(cluster)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get cluster config: %w", err)
 	}
 
 	defer os.Remove(kubeconfig.Name())
 
 	deployArgs := []string{
 		"--kubeconfig", kubeconfig.Name(),
-		"apply", "-n", a.namespace, "-f", manifestURL,
+		"apply", "-n", a.namespace, "-f", fmt.Sprintf(manifestURL, a.version),
 	}
 
 	if err := retry.Command("kubectl", deployArgs...).WithStdout(io.Discard).Do(ctx); err != nil {
-		return err
+		return fmt.Errorf("could not deploy ArgoCD: %w", err)
 	}
 
 	dynamicClient, err := dynamic.NewForConfig(cluster.Config())
 	if err != nil {
-		return err
+		return fmt.Errorf("could not create client: %w", err)
 	}
 	a.client = dynamicClient
 
@@ -147,7 +148,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 				if errors.IsNotFound(err) {
 					return nil
 				}
-				return err
+				return fmt.Errorf("could not delete namespace: %w", err)
 			}
 		}
 	}

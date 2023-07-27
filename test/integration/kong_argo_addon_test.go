@@ -4,6 +4,7 @@ package integration
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -48,8 +49,9 @@ func TestKongArgoAddon(t *testing.T) {
 	t.Log("verifying that addons have been loaded into the environment")
 	require.Len(t, env.Cluster().ListAddons(), 3)
 
-	t.Log("verifying that the kong deployment is using custom images")
-	_, ready, err := kong.Ready(ctx, env.Cluster())
-	require.NoError(t, err)
-	require.True(t, ready)
+	t.Log("verifying that the ArgoCD creates a Kong deployment and it reaches the ready state")
+	require.Eventually(t, func() bool {
+		_, ready, err := kong.Ready(ctx, env.Cluster())
+		return err == nil && ready
+	}, time.Minute*3, time.Second)
 }
