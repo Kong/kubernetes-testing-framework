@@ -266,6 +266,16 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		)
 	}
 
+	if cluster.IPFamily() == clusters.IPv6 {
+		a.deployArgs = append(a.deployArgs,
+			"--set", "proxy.address=[::]",
+			"--set", "admin.address=[::1]",
+			"--set", "status.address=[::]",
+			"--set", "cluster.address=[::]",
+			"--set", "ingressController.admissionWebhook.address=[::]",
+		)
+	}
+
 	// if the ingress controller is disabled flag it in the chart and don't install any CRDs
 	if a.ingressControllerDisabled {
 		a.deployArgs = append(a.deployArgs,

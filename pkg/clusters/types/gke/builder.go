@@ -229,6 +229,8 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		cfg:             restCFG,
 		addons:          make(clusters.Addons),
 		l:               &sync.RWMutex{},
+		// we simply set this directly for GKE as we lack the ability to create other types of cluster
+		ipFamily: clusters.IPv4,
 	}
 
 	if err := utils.ClusterInitHooks(ctx, cluster); err != nil {

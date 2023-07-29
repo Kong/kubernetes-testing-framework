@@ -200,6 +200,9 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 
 func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
 	// get an IP range for the docker container network to use for MetalLB
+	// this returns addresses based on the _Docker network_ the cluster runs on, not the cluster itself. this may,
+	// for example, return IPv4 addresses even for an IPv6-only cluster. although unsupported addresses will be listed
+	// in the IPAddressPool, speaker will not actually assign them if they are not compatible with the cluster network.
 	network, network6, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
 	if err != nil {
 		return err

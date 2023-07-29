@@ -129,6 +129,11 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
+	ipFamily := clusters.IPv4
+	if b.ipv6Only {
+		ipFamily = clusters.IPv6
+	}
+
 	cluster := &Cluster{
 		name:       b.Name,
 		client:     kc,
@@ -136,6 +141,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		addons:     make(clusters.Addons),
 		deployArgs: deployArgs,
 		l:          &sync.RWMutex{},
+		ipFamily:   ipFamily,
 	}
 
 	if b.calicoCNI {

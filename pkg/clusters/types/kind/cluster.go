@@ -38,6 +38,7 @@ type Cluster struct {
 	addons     clusters.Addons
 	deployArgs []string
 	l          *sync.RWMutex
+	ipFamily   clusters.IPFamily
 }
 
 // New provides a new clusters.Cluster backed by a Kind based Kubernetes Cluster.
@@ -157,4 +158,8 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 
 	err = clusters.DumpDiagnostics(ctx, c, meta, outDir)
 	return outDir, err
+}
+
+func (c *Cluster) IPFamily() clusters.IPFamily {
+	return c.ipFamily
 }
