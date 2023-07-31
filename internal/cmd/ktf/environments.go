@@ -8,10 +8,12 @@ import (
 	"github.com/blang/semver/v4"
 	"github.com/spf13/cobra"
 
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/argocd"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/certmanager"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/httpbin"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/istio"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kong"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kongargo"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/kuma"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/registry"
@@ -148,6 +150,12 @@ func configureAddons(cmd *cobra.Command, builder *environments.Builder, addons [
 			builder = builder.WithAddons(certmanager.New())
 		case "kuma":
 			builder = builder.WithAddons(kuma.New())
+		case "argocd":
+			argoAddon := argocd.NewBuilder().Build()
+			builder = builder.WithAddons(argoAddon)
+		case "kong-argo":
+			kongArgoAddon := kongargo.NewBuilder().Build()
+			builder = builder.WithAddons(kongArgoAddon)
 		case "registry":
 			registryAddon := registry.NewBuilder().
 				WithServiceTypeLoadBalancer().
