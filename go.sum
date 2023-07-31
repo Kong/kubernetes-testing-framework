@@ -276,8 +276,8 @@ github.com/jstemmer/go-junit-report v0.0.0-20190106144839-af01ea7f8024/go.mod h1
 github.com/jstemmer/go-junit-report v0.9.1/go.mod h1:Brl9GWCQeLvo8nXZwPNNblvFj/XSXhF0NWZEnDohbsk=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
-github.com/kong/deck v1.24.0 h1:XFfGn4CiixT4wWgY17IqBvN64J8pLBuPDt0Wjae1dt8=
-github.com/kong/deck v1.24.0/go.mod h1:1AUvNaqRHhwqPNsQ0yd2Rgg5LHqS4v/PqsaEHJ8dXwE=
+github.com/kong/deck v1.25.0 h1:lcNAJQhoJmTjFHLt2DFcsXS9aqclauUxqelPxTKz9bU=
+github.com/kong/deck v1.25.0/go.mod h1:1AUvNaqRHhwqPNsQ0yd2Rgg5LHqS4v/PqsaEHJ8dXwE=
 github.com/kong/go-kong v0.46.0 h1:9I6nlX63WymU5Sg+d13iZDVwpW5vXh8/v0zarU27dzI=
 github.com/kong/go-kong v0.46.0/go.mod h1:41Sot1N/n8UHBp+gE/6nOw3vuzoHbhMSyU/zOS7VzPE=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
