@@ -99,6 +99,11 @@ func (b *Builder) Build() *Addon {
 	}
 }
 
+func (b *Builder) WithNamespace(namespace string) *Builder {
+	b.namespace = namespace
+	return b
+}
+
 func (b *Builder) WithProxyImagePullSecret(server, username, password, email string) *Builder {
 	b.proxyPullSecret = pullSecret{
 		Server:   server,
@@ -118,10 +123,6 @@ func (b *Builder) WithControllerDisabled() *Builder {
 	b.ingressControllerDisabled = true
 	return b
 }
-
-// -----------------------------------------------------------------------------
-// Kong Proxy Configuration Options
-// -----------------------------------------------------------------------------
 
 // WithDBLess configures the resulting Addon to deploy a DBLESS proxy backend.
 func (b *Builder) WithDBLess() *Builder {
