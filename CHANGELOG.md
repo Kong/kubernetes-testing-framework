@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Support specifying namespace of Kong addon to deploy Kong in certain
+  namespace.
+  [#766](https://github.com/Kong/kubernetes-testing-framework/pull/766)
+
 ## v0.34.0
 
 - Fix KTF to properly deploy Kong Gateway Enterprise in DBLess mode
