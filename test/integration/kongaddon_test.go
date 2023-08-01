@@ -43,6 +43,32 @@ func (tc customImageTest) name() string {
 	return fmt.Sprintf("KongAddonImages:[%s,%s]", tc.controllerImage(), tc.proxyImage())
 }
 
+func TestKongAddonWithNamespace(t *testing.T) {
+	testNS := "kong-test"
+	kong := kongaddon.NewBuilder().WithNamespace(testNS).WithProxyServiceType(corev1.ServiceTypeClusterIP).Build()
+
+	t.Log("configuring the testing environment")
+	metallb := metallbaddon.New()
+	builder := environment.NewBuilder().WithAddons(kong, metallb)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+
+	err = <-env.WaitForReady(ctx)
+	require.NoError(t, err)
+
+	t.Log("verifying that addons (kong and metallb) have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 2)
+
+	t.Log("verifying that the kong deployment is in the test namespace")
+	deployments := env.Cluster().Client().AppsV1().Deployments(testNS)
+	kongDeployment, err := deployments.Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
+	require.NoError(t, err)
+	require.Greater(t, int(kongDeployment.Status.ReadyReplicas), 0, "should have at least one ready replicas")
+	require.Equal(t, kongDeployment.Status.Replicas, kongDeployment.Status.ReadyReplicas, "replicas should be all ready")
+}
+
 func TestKongAddonWithCustomImage(t *testing.T) {
 	tests := []customImageTest{
 		{
