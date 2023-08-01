@@ -45,7 +45,7 @@ func (tc customImageTest) name() string {
 
 func TestKongAddonWithNamespace(t *testing.T) {
 	testNS := "kong-test"
-	kong := kongaddon.NewBuilder().WithNamespace(testNS).Build()
+	kong := kongaddon.NewBuilder().WithNamespace(testNS).WithProxyServiceType(corev1.ServiceTypeClusterIP).Build()
 
 	t.Log("configuring the testing environment")
 	metallb := metallbaddon.New()
@@ -58,17 +58,15 @@ func TestKongAddonWithNamespace(t *testing.T) {
 	err = <-env.WaitForReady(ctx)
 	require.NoError(t, err)
 
-	t.Log("verifying that addons (kong) have been loaded into the environment")
+	t.Log("verifying that addons (kong and metallb) have been loaded into the environment")
 	require.Len(t, env.Cluster().ListAddons(), 2)
 
 	t.Log("verifying that the kong deployment is in the test namespace")
 	deployments := env.Cluster().Client().AppsV1().Deployments(testNS)
 	kongDeployment, err := deployments.Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
 	require.NoError(t, err)
-	require.Len(t, kongDeployment.Spec.Template.Spec.Containers, 2)
-	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[0].Name, "ingress-controller")
-	require.Equal(t, kongDeployment.Spec.Template.Spec.Containers[1].Name, "proxy")
-
+	require.Greater(t, int(kongDeployment.Status.ReadyReplicas), 0, "should have at least one ready replicas")
+	require.Equal(t, kongDeployment.Status.Replicas, kongDeployment.Status.ReadyReplicas, "replicas should be all ready")
 }
 
 func TestKongAddonWithCustomImage(t *testing.T) {
