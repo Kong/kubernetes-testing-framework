@@ -23,7 +23,7 @@ require (
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/viper v1.16.0
 	github.com/stretchr/testify v1.8.4
-	golang.org/x/oauth2 v0.10.0
+	golang.org/x/oauth2 v0.11.0
 	golang.org/x/sync v0.3.0
 	google.golang.org/api v0.134.0
 	k8s.io/api v0.27.4
@@ -141,12 +141,12 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	golang.org/x/crypto v0.11.0 // indirect
+	golang.org/x/crypto v0.12.0 // indirect
 	golang.org/x/exp v0.0.0-20220407100705-7b9b53b0aca4 // indirect
-	golang.org/x/net v0.12.0 // indirect
-	golang.org/x/sys v0.10.0 // indirect
-	golang.org/x/term v0.10.0 // indirect
-	golang.org/x/text v0.11.0 // indirect
+	golang.org/x/net v0.14.0 // indirect
+	golang.org/x/sys v0.11.0 // indirect
+	golang.org/x/term v0.11.0 // indirect
+	golang.org/x/text v0.12.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230706204954-ccb25ca9f130 // indirect
