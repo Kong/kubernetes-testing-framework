@@ -293,6 +293,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return fmt.Errorf("Service type ExternalName is not currently supported")
 	}
 	a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("proxy.type=%s", a.proxyServiceType))
+	a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("udpProxy.type=%s", a.proxyServiceType))
 
 	// set the proxy log level
 	if len(a.proxyLogLevel) > 0 {
