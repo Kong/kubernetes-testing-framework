@@ -1,12 +1,14 @@
 # Changelog
 
-## Unreleased
+## v0.35.0
 
 - Support specifying namespace of Kong addon to deploy Kong in certain
   namespace.
   [#766](https://github.com/Kong/kubernetes-testing-framework/pull/766)
 - Fix setting UDP proxy service type in Kong addon.
   [#770](https://github.com/Kong/kubernetes-testing-framework/pull/770)
+- Add ArgoCD and KongArgoCD addons to support `ArgoCD`.
+  [#762](https://github.com/Kong/kubernetes-testing-framework/pull/762)  
 
 ## v0.34.0
 
