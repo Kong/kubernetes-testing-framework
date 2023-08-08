@@ -156,7 +156,8 @@ func (b *Builder) WithLogLevel(level string) *Builder {
 	return b
 }
 
-// WithProxyServiceType indicates which Service type to use for ingress traffic.
+// WithProxyServiceType indicates which Service type to use for ingress traffic,
+// including tcp proxy and udp proxy services.
 // The default type is LoadBalancer.
 func (b *Builder) WithProxyServiceType(serviceType corev1.ServiceType) *Builder {
 	b.proxyServiceType = serviceType
