@@ -48,8 +48,7 @@ func TestKongAddonWithNamespace(t *testing.T) {
 	kong := kongaddon.NewBuilder().WithNamespace(testNS).WithProxyServiceType(corev1.ServiceTypeClusterIP).Build()
 
 	t.Log("configuring the testing environment")
-	metallb := metallbaddon.New()
-	builder := environment.NewBuilder().WithAddons(kong, metallb)
+	builder := environment.NewBuilder().WithAddons(kong)
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
@@ -58,8 +57,8 @@ func TestKongAddonWithNamespace(t *testing.T) {
 	err = <-env.WaitForReady(ctx)
 	require.NoError(t, err)
 
-	t.Log("verifying that addons (kong and metallb) have been loaded into the environment")
-	require.Len(t, env.Cluster().ListAddons(), 2)
+	t.Log("verifying that kong addon have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 1)
 
 	t.Log("verifying that the kong deployment is in the test namespace")
 	deployments := env.Cluster().Client().AppsV1().Deployments(testNS)
@@ -93,14 +92,11 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 	kong := kongaddon.NewBuilder().
 		WithProxyImage(tc.proxyImageRepo, tc.proxyImageTag).
 		WithControllerImage(tc.controllerImageRepo, tc.controllerImageTag).
+		WithProxyServiceType(corev1.ServiceTypeClusterIP).
 		Build()
 
 	t.Log("configuring the testing environment")
-	// Add metallb to get an IP address for Kong's LoadBalancerservices
-	// TODO: when https://github.com/Kong/kubernetes-testing-framework/issues/540
-	// gets resolved then we can configure service types to be of ClusterIP and
-	// do away with metallb deployment here.
-	builder := environment.NewBuilder().WithAddons(kong, metallbaddon.New())
+	builder := environment.NewBuilder().WithAddons(kong)
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.Build(ctx)
@@ -115,8 +111,8 @@ func testKongAddonWithCustomImage(t *testing.T, tc customImageTest) {
 		require.NoError(t, env.Cleanup(ctx))
 	}()
 
-	t.Log("verifying that addons (kong and metallb) have been loaded into the environment")
-	require.Len(t, env.Cluster().ListAddons(), 2)
+	t.Log("verifying that kong addon have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 1)
 
 	t.Log("verifying that the kong deployment is using custom images")
 	deployments := env.Cluster().Client().AppsV1().Deployments(kong.Namespace())
