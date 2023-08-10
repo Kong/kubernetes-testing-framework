@@ -74,9 +74,10 @@ type Addon struct {
 	logger *logrus.Logger
 
 	// kubernetes and helm chart related configuration options
-	namespace  string
-	name       string
-	deployArgs []string
+	namespace    string
+	name         string
+	deployArgs   []string
+	chartVersion string
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
@@ -92,6 +93,7 @@ type Addon struct {
 	proxyLogLevel                     string
 	proxyServiceType                  corev1.ServiceType
 	proxyEnvVars                      map[string]string
+	proxyReadinessProbePath           string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -215,6 +217,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return err
 	}
 
+	// Pin the chart version if specified.
+	if a.chartVersion != "" {
+		a.deployArgs = append(a.deployArgs, "--version", a.chartVersion)
+	}
+
 	if a.proxyPullSecret != (pullSecret{}) {
 		// create the pull Secret
 		opts := create.CreateSecretDockerRegistryOptions{
@@ -298,6 +305,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// set the proxy log level
 	if len(a.proxyLogLevel) > 0 {
 		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.log_level=%s", a.proxyLogLevel))
+	}
+
+	// Set the proxy readiness probe path.
+	if len(a.proxyReadinessProbePath) > 0 {
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("readinessProbe.httpGet.path=%s", a.proxyReadinessProbePath))
 	}
 
 	// Deploy licenses and other configurations for enterprise mode.

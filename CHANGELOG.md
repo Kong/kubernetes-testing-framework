@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.36.0
+
+- Allow customizing Helm chart version and proxy readiness probe used
+  in Kong addon.
+  [#774](https://github.com/Kong/kubernetes-testing-framework/pull/774)
+
 ## v0.35.0
 
 - Support specifying namespace of Kong addon to deploy Kong in certain
