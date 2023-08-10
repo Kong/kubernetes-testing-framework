@@ -16,9 +16,10 @@ type Builder struct {
 	logger *logrus.Logger
 
 	// kubernetes and helm chart related configuration options
-	namespace  string
-	name       string
-	deployArgs []string
+	namespace    string
+	name         string
+	deployArgs   []string
+	chartVersion string
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
@@ -34,6 +35,7 @@ type Builder struct {
 	proxyLogLevel                     string
 	proxyServiceType                  corev1.ServiceType
 	proxyEnvVars                      map[string]string
+	proxyReadinessProbePath           string
 
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
@@ -76,9 +78,10 @@ func (b *Builder) Build() *Addon {
 	return &Addon{
 		logger: b.logger,
 
-		namespace:  b.namespace,
-		name:       b.name,
-		deployArgs: b.deployArgs,
+		namespace:    b.namespace,
+		name:         b.name,
+		deployArgs:   b.deployArgs,
+		chartVersion: b.chartVersion,
 
 		ingressControllerDisabled: b.ingressControllerDisabled,
 		ingressControllerImage:    b.ingressControllerImage,
@@ -92,6 +95,7 @@ func (b *Builder) Build() *Addon {
 		proxyLogLevel:                     b.proxyLogLevel,
 		proxyServiceType:                  b.proxyServiceType,
 		proxyEnvVars:                      b.proxyEnvVars,
+		proxyReadinessProbePath:           b.proxyReadinessProbePath,
 
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
@@ -121,6 +125,11 @@ func (b *Builder) WithProxyImagePullSecret(server, username, password, email str
 // WithControllerDisabled configures the Addon in proxy only mode (bring your own control plane).
 func (b *Builder) WithControllerDisabled() *Builder {
 	b.ingressControllerDisabled = true
+
+	// The default readiness probe path for the proxy is /status/ready which would make the proxy
+	// with no configuration never get ready if the controller is disabled.
+	b.proxyReadinessProbePath = "/status"
+
 	return b
 }
 
@@ -204,5 +213,17 @@ func (b *Builder) WithProxyEnterpriseEnabled(licenseJSON string) *Builder {
 // WithProxyEnterpriseSuperAdminPassword specify kong admin password
 func (b *Builder) WithProxyEnterpriseSuperAdminPassword(password string) *Builder {
 	b.proxyEnterpriseSuperAdminPassword = password
+	return b
+}
+
+// WithHelmChartVersion sets the helm chart version to use for the Kong proxy.
+func (b *Builder) WithHelmChartVersion(version string) *Builder {
+	b.chartVersion = version
+	return b
+}
+
+// WithProxyReadinessProbePath sets the path to use for the proxy readiness probe.
+func (b *Builder) WithProxyReadinessProbePath(path string) *Builder {
+	b.proxyReadinessProbePath = path
 	return b
 }
