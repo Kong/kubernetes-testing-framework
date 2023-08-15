@@ -41,16 +41,20 @@ type Builder struct {
 	proxyEnterpriseEnabled            bool
 	proxyEnterpriseSuperAdminPassword string
 	proxyEnterpriseLicenseJSON        string
+	// additionalValues stores values that are set during installing by helm.
+	// for each key-value pair, an argument `--set <key>=<value>` is added.
+	additionalValues map[string]string
 }
 
 // NewBuilder provides a new Builder object for configuring and generating
 // Kong Addon objects which can be deployed to cluster.Clusters
 func NewBuilder() *Builder {
 	builder := &Builder{
-		namespace:    DefaultNamespace,
-		name:         DefaultDeploymentName,
-		deployArgs:   []string{},
-		proxyEnvVars: make(map[string]string),
+		namespace:        DefaultNamespace,
+		name:             DefaultDeploymentName,
+		deployArgs:       []string{},
+		proxyEnvVars:     make(map[string]string),
+		additionalValues: make(map[string]string),
 	}
 	return builder.WithDBLess()
 }
@@ -100,6 +104,8 @@ func (b *Builder) Build() *Addon {
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
 		proxyEnterpriseSuperAdminPassword: b.proxyEnterpriseSuperAdminPassword,
+
+		additionalValues: b.additionalValues,
 	}
 }
 
@@ -225,5 +231,11 @@ func (b *Builder) WithHelmChartVersion(version string) *Builder {
 // WithProxyReadinessProbePath sets the path to use for the proxy readiness probe.
 func (b *Builder) WithProxyReadinessProbePath(path string) *Builder {
 	b.proxyReadinessProbePath = path
+	return b
+}
+
+// WithAdditionalValue sets arbitrary value of installing by helm.
+func (b *Builder) WithAdditonalValue(name, value string) *Builder {
+	b.additionalValues[name] = value
 	return b
 }
