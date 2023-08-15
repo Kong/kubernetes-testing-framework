@@ -99,6 +99,9 @@ type Addon struct {
 	proxyEnterpriseEnabled            bool
 	proxyEnterpriseSuperAdminPassword string
 	proxyEnterpriseLicenseJSON        string
+	// additionalValues stores values that are set during installing by helm.
+	// for each key-value pair, an argument `--set <key>=<value>` is added.
+	additionalValues map[string]string
 }
 
 type pullSecret struct {
@@ -349,6 +352,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	for name, value := range a.proxyEnvVars {
 		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("env.%s=%s", name, value))
+	}
+
+	for name, value := range a.additionalValues {
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("%s=%s", name, value))
 	}
 
 	// compile the helm installation values
