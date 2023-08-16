@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.37.0
+
+### Added
+
+- Allow specifying arbitrary helm values when deploying `Kong` addon.
+  [#776](https://github.com/Kong/kubernetes-testing-framework/pull/776)
+
 ## v0.36.0
 
 - Allow customizing Helm chart version and proxy readiness probe used
