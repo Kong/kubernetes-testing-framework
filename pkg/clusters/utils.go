@@ -284,7 +284,7 @@ func kubectlWithArgs(ctx context.Context, cluster Cluster, args ...string) error
 	args = append([]string{"--kubeconfig", kubeconfig.Name()},
 		args...,
 	)
-	cmd := exec.CommandContext(ctx, "kubectl", args...) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "kubectl", args...)
 	cmd.Stdout = stdout
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {
