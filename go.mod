@@ -8,7 +8,7 @@ go 1.19
 exclude github.com/docker/docker v24.0.0+incompatible
 
 require (
-	cloud.google.com/go/container v1.24.0
+	cloud.google.com/go/container v1.25.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.12.3
 	github.com/docker/docker v20.10.25+incompatible
