@@ -13,7 +13,7 @@ require (
 	github.com/cert-manager/cert-manager v1.12.3
 	github.com/docker/docker v20.10.25+incompatible
 	github.com/google/go-github/v48 v48.2.0
-	github.com/google/uuid v1.3.0
+	github.com/google/uuid v1.3.1
 	github.com/kong/deck v1.26.0
 	github.com/kong/go-kong v0.46.0
 	github.com/mitchellh/go-homedir v1.1.0
