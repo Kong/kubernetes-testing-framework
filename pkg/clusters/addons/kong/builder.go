@@ -235,7 +235,7 @@ func (b *Builder) WithProxyReadinessProbePath(path string) *Builder {
 }
 
 // WithAdditionalValue sets arbitrary value of installing by helm.
-func (b *Builder) WithAdditonalValue(name, value string) *Builder {
+func (b *Builder) WithAdditionalValue(name, value string) *Builder {
 	b.additionalValues[name] = value
 	return b
 }
