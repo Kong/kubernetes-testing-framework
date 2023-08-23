@@ -1,10 +1,17 @@
 # Changelog
 
+## v0.38.0
+
+### Breaking changes
+
+- Fix an API name typo. The `WithAdditonalValue` Kong addon builder method is
+  now `WithAdditionalValue`
+
 ## v0.37.0
 
 ### Added
 
-- Allow specifying arbitrary helm values when deploying `Kong` addon.
+- Allow specifying arbitrary helm values when deploying Kong addon.
   [#776](https://github.com/Kong/kubernetes-testing-framework/pull/776)
 
 ## v0.36.0
