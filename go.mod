@@ -15,7 +15,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.1
 	github.com/kong/deck v1.26.0
-	github.com/kong/go-kong v0.46.0
+	github.com/kong/go-kong v0.47.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.38.1
 	github.com/sethvargo/go-password v0.2.0
@@ -129,7 +129,7 @@ require (
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/ssgelm/cookiejarparser v1.0.1 // indirect
 	github.com/subosito/gotenv v1.4.2 // indirect
-	github.com/tidwall/gjson v1.14.4 // indirect
+	github.com/tidwall/gjson v1.16.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tklauser/go-sysconf v0.3.11 // indirect
