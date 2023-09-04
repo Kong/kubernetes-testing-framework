@@ -18,7 +18,7 @@ jobs:
     steps:
 
     - name: checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -36,7 +36,7 @@ jobs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
     steps:
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
 
     - id: set_test_names
       name: Set test names
@@ -65,7 +65,7 @@ jobs:
         password: ${{ secrets.PULP_PASSWORD }}
 
     - name: checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -98,7 +98,7 @@ jobs:
     # --------------------------------------------------------------------------
 
     - name: checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
 
@@ -125,7 +125,7 @@ jobs:
     steps:
 
     - name: checkout repository
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
       with:
         fetch-depth: 0
         # This is needed to trigger another workflow, specifically release workflow
