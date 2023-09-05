@@ -34,7 +34,7 @@ require (
 	k8s.io/kubectl v0.28.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.16.1
-	sigs.k8s.io/gateway-api v0.7.1
+	sigs.k8s.io/gateway-api v0.8.0
 	sigs.k8s.io/kind v0.20.0
 	sigs.k8s.io/kustomize/api v0.14.0
 	sigs.k8s.io/kustomize/kyaml v0.14.3
@@ -47,8 +47,8 @@ require (
 	github.com/morikuni/aec v1.0.0 // indirect
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
-	golang.org/x/mod v0.10.0 // indirect
-	golang.org/x/tools v0.9.3 // indirect
+	golang.org/x/mod v0.12.0 // indirect
+	golang.org/x/tools v0.12.0 // indirect
 	google.golang.org/genproto/googleapis/api v0.0.0-20230803162519-f966b187b2e5 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20230807174057-1744710a1577 // indirect
 )
