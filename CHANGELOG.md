@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.39.0
+
+- Upgrade `metallb` addon to `v0.13.11`
+  [#799](https://github.com/Kong/kubernetes-testing-framework/pull/799)
+
 ## v0.38.0
 
 ### Breaking changes
