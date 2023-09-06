@@ -1,6 +1,8 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.19
+go 1.21
+
+toolchain go1.21.0
 
 // TODO: remove this when
 // https://github.com/Kong/kubernetes-testing-framework/issues/670
