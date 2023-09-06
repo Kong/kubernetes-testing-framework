@@ -4,14 +4,14 @@ import (
 	"context"
 
 	"github.com/docker/docker/api/types"
-	dockerclient "github.com/docker/docker/client"
+	"github.com/docker/docker/client"
 )
 
 // RunPrivilegedCommand is a very basic and opinionated helper function which runs the
 // given command and arguments on the given container (by ID) privileged.
 func RunPrivilegedCommand(ctx context.Context, containerID, command string, args ...string) error {
 	// connect to the local docker env
-	dockerc, err := dockerclient.NewEnvClient() //nolint:staticcheck,nolintlint
+	dockerc, err := client.NewClientWithOpts(client.FromEnv)
 	if err != nil {
 		return err
 	}
