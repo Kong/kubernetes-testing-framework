@@ -60,7 +60,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
-	builder.WithClusterMinorVersion(1, 23)
+	builder.WithClusterMinorVersion(1, 24)
 	builder.WithWaitForTeardown(false)
 	builder.WithCreateSubnet(createSubnet)
 	builder.WithLabels(map[string]string{"test-cluster": "true"})
@@ -114,7 +114,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	kubernetesVersion, err := env.Cluster().Version()
 	require.NoError(t, err)
 	require.Equal(t, uint64(1), kubernetesVersion.Major)
-	require.Equal(t, uint64(23), kubernetesVersion.Minor)
+	require.Equal(t, uint64(24), kubernetesVersion.Minor)
 
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongAddon, err := env.Cluster().GetAddon("kong")
