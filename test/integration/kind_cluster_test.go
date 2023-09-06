@@ -9,7 +9,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/blang/semver/v4"
 	"github.com/stretchr/testify/require"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
@@ -26,9 +25,6 @@ func TestKindClusterBasics(t *testing.T) {
 
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()
-
-	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
-	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster")
 	env, err := builder.WithAddons(metallb.New(), kong.New()).Build(ctx)
@@ -136,9 +132,6 @@ func TestKindClusterProxyOnly(t *testing.T) {
 
 	t.Log("configuring the testing environment")
 	builder := environment.NewBuilder()
-
-	// TODO https://github.com/Kong/kubernetes-testing-framework/issues/364 remove once metallb behaves again
-	builder = builder.WithKubernetesVersion(semver.Version{Major: 1, Minor: 24, Patch: 4})
 
 	t.Log("building the testing environment and Kubernetes cluster with the KIC controller disabled")
 	env, err := builder.WithAddons(metallb.New(), kong.NewBuilder().WithControllerDisabled().Build()).Build(ctx)
