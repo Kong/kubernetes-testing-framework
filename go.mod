@@ -4,11 +4,6 @@ go 1.21
 
 toolchain go1.21.0
 
-// TODO: remove this when
-// https://github.com/Kong/kubernetes-testing-framework/issues/670
-// is solved.
-exclude github.com/docker/docker v24.0.0+incompatible
-
 require (
 	cloud.google.com/go/container v1.26.0
 	github.com/blang/semver/v4 v4.0.0
