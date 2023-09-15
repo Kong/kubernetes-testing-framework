@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.39.1
+
+- Removed a module exclude that made `go install` unhappy.
+  [#813](https://github.com/Kong/kubernetes-testing-framework/pull/813)
+
 ## v0.39.0
 
 - Upgrade `metallb` addon to `v0.13.11`
