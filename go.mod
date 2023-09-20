@@ -31,7 +31,7 @@ require (
 	k8s.io/kubectl v0.28.2
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/controller-runtime v0.16.2
-	sigs.k8s.io/gateway-api v0.8.0
+	sigs.k8s.io/gateway-api v0.8.1
 	sigs.k8s.io/kind v0.20.0
 	sigs.k8s.io/kustomize/api v0.14.0
 	sigs.k8s.io/kustomize/kyaml v0.14.3
