@@ -7,7 +7,7 @@ toolchain go1.21.0
 require (
 	cloud.google.com/go/container v1.26.0
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.13.0
+	github.com/cert-manager/cert-manager v1.13.1
 	github.com/docker/docker v24.0.6+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.3.1
@@ -62,7 +62,7 @@ require (
 	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
-	github.com/emicklei/go-restful/v3 v3.10.2 // indirect
+	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/evanphx/json-patch/v5 v5.6.0 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20151013193312-d6023ce2651d // indirect
