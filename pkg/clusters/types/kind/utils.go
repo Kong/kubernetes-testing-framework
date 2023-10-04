@@ -141,6 +141,38 @@ func (b *Builder) disableDefaultCNI() error {
 	return nil
 }
 
+func (b *Builder) useIPv6Only() error {
+	if err := b.ensureConfigFile(); err != nil {
+		return err
+	}
+
+	configYAML, err := os.ReadFile(*b.configPath)
+	if err != nil {
+		return fmt.Errorf("failed reading kind config from %s: %w", *b.configPath, err)
+	}
+
+	kindConfig := v1alpha4.Cluster{}
+	if err := yaml.Unmarshal(configYAML, &kindConfig); err != nil {
+		return fmt.Errorf("failed unmarshalling kind config: %w", err)
+	}
+
+	kindConfig.Networking.IPFamily = v1alpha4.IPv6Family
+	// For Windows/OS X Docker compatibility:
+	// https://kind.sigs.k8s.io/docs/user/configuration/#ip-family
+	kindConfig.Networking.APIServerAddress = "127.0.0.1"
+
+	configYAML, err = yaml.Marshal(kindConfig)
+	if err != nil {
+		return fmt.Errorf("failed marshalling kind config: %w", err)
+	}
+
+	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
+	if err != nil {
+		return fmt.Errorf("failed writing kind config %s: %w", *b.configPath, err)
+	}
+	return nil
+}
+
 // exportLogs dumps a kind cluster logs to the specified directory
 func exportLogs(ctx context.Context, name string, outDir string) error {
 	args := []string{"export", "logs", outDir, "--name", name}

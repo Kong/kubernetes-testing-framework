@@ -5,17 +5,17 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
 func TestHelperFunctions(t *testing.T) {
 	network := net.IPNet{
 		IP:   net.IPv4(192, 168, 1, 0),
-		Mask: net.IPv4Mask(0, 0, 0, 255),
+		Mask: net.IPv4Mask(255, 255, 255, 0),
 	}
+	// this should choose the upper half of the input network, minus network and broadcast addresses
+	// since we start with 192.168.1.0/24, we should get 192.168.1.128/25. the complete range is
+	// 192.168.1.128-192.168.1.255, and the returned range is thus 192.168.1.129-192.168.1.254.
 	ip1, ip2 := getIPRangeForMetallb(network)
-	assert.Equal(t, ip1.String(), net.IPv4(192, 168, 1, 100).String())
-	assert.Equal(t, ip2.String(), net.IPv4(192, 168, 1, 250).String())
-	assert.Equal(t, networking.GetIPRangeStr(ip1, ip2), "192.168.1.100-192.168.1.250")
+	assert.Equal(t, net.IPv4(192, 168, 1, 129).String(), ip1.String())
+	assert.Equal(t, net.IPv4(192, 168, 1, 254).String(), ip2.String())
 }

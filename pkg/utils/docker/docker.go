@@ -24,19 +24,23 @@ func InspectDockerContainer(containerID string) (*types.ContainerJSON, error) {
 	return &containerJSON, err
 }
 
+// TODO should be converted to net/ip to net/netip, but this requires a breaking change to a public function
+
 // GetDockerContainerIPNetwork supports retreiving the *net.IP4Net of a container specified
 // by name (and a specified network name for the case of multiple networks).
-func GetDockerContainerIPNetwork(containerID, networkName string) (*net.IPNet, error) {
+func GetDockerContainerIPNetwork(containerID, networkName string) (*net.IPNet, *net.IPNet, error) {
 	container, err := InspectDockerContainer(containerID)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	dockerNetwork := container.NetworkSettings.Networks[networkName]
 	_, network, err := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.Gateway, dockerNetwork.IPPrefixLen))
-	if err != nil {
-		return nil, err
+	_, network6, err6 := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.IPv6Gateway, dockerNetwork.GlobalIPv6PrefixLen))
+
+	if network == nil && network6 == nil {
+		return nil, nil, fmt.Errorf("no addresses found, IPv4Error(\"%s\"), IPv6Error(\"%s\")", err, err6)
 	}
 
-	return network, nil
+	return network, network6, nil
 }

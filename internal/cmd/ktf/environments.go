@@ -49,6 +49,7 @@ func init() { //nolint:gochecknoinits
 	// cluster configurations
 	environmentsCreateCmd.PersistentFlags().String("kubernetes-version", "", "which kubernetes version to use (default: latest for driver)")
 	environmentsCreateCmd.PersistentFlags().Bool("cni-calico", false, "use Calico for cluster CNI instead of the default CNI")
+	environmentsCreateCmd.PersistentFlags().Bool("ipv6-only", false, "only use IPv6")
 
 	// addon configurations
 	environmentsCreateCmd.PersistentFlags().StringArray("addon", nil, "name of an addon to deploy to the testing environment's cluster")
@@ -86,6 +87,10 @@ var environmentsCreateCmd = &cobra.Command{
 		useCalicoCNI, err := cmd.PersistentFlags().GetBool("cni-calico")
 		cobra.CheckErr(err)
 
+		// check if IPv6 was requested
+		useIPv6Only, err := cmd.PersistentFlags().GetBool("ipv6-only")
+		cobra.CheckErr(err)
+
 		// setup the new environment
 		builder := environments.NewBuilder()
 		if !useGeneratedName {
@@ -93,6 +98,9 @@ var environmentsCreateCmd = &cobra.Command{
 		}
 		if useCalicoCNI {
 			builder = builder.WithCalicoCNI()
+		}
+		if useIPv6Only {
+			builder = builder.WithIPv6Only()
 		}
 		if kubernetesVersion != "" {
 			version, err := semver.Parse(strings.TrimPrefix(kubernetesVersion, "v"))

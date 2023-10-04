@@ -36,6 +36,7 @@ type Cluster struct {
 	cfg             *rest.Config
 	addons          clusters.Addons
 	l               *sync.RWMutex
+	ipFamily        clusters.IPFamily
 }
 
 // NewFromExistingWithEnv provides a new clusters.Cluster backed by an existing GKE cluster,
@@ -277,4 +278,8 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 	err = clusters.DumpDiagnostics(ctx, c, meta, outDir)
 
 	return outDir, err
+}
+
+func (c *Cluster) IPFamily() clusters.IPFamily {
+	return c.ipFamily
 }

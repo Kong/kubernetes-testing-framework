@@ -10,6 +10,10 @@ import (
 // Public Functions - Helper
 // -----------------------------------------------------------------------------
 
+// TODO the tools in this file are no longer used internally. they have been replaced with stdlib+third party packages.
+// they remain here because they were public and removing them counts as a breaking change, but we probably should
+// remove them.
+
 const (
 	ipv4len   = 16
 	ipv4bytes = 4

@@ -25,6 +25,7 @@ type Builder struct {
 	configPath     *string
 	configReader   io.Reader
 	calicoCNI      bool
+	ipv6Only       bool
 }
 
 // NewBuilder provides a new *Builder object.
@@ -74,6 +75,12 @@ func (b *Builder) WithCalicoCNI() *Builder {
 	return b
 }
 
+// WithIPv6Only configures KIND to only use IPv6.
+func (b *Builder) WithIPv6Only() *Builder {
+	b.ipv6Only = true
+	return b
+}
+
 // Build creates and configures clients for a Kind-based Kubernetes clusters.Cluster.
 func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	deployArgs := make([]string, 0)
@@ -90,6 +97,12 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		// be ready because it wont be possible for it to become ready until we
 		// deploy calico, as the default CNI has been disabled.
 		deployArgs = append(deployArgs, "--wait", "1s")
+	}
+
+	if b.ipv6Only {
+		if err := b.useIPv6Only(); err != nil {
+			return nil, fmt.Errorf("failed configuring IPv6-only networking: %w", err)
+		}
 	}
 
 	var stdin io.Reader
@@ -116,6 +129,11 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		return nil, err
 	}
 
+	ipFamily := clusters.IPv4
+	if b.ipv6Only {
+		ipFamily = clusters.IPv6
+	}
+
 	cluster := &Cluster{
 		name:       b.Name,
 		client:     kc,
@@ -123,6 +141,7 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		addons:     make(clusters.Addons),
 		deployArgs: deployArgs,
 		l:          &sync.RWMutex{},
+		ipFamily:   ipFamily,
 	}
 
 	if b.calicoCNI {

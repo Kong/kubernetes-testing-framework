@@ -7,9 +7,11 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"net/netip"
 	"os"
 	"time"
 
+	"go4.org/netipx"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -26,7 +28,6 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/kind"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/docker"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/kubectl"
-	"github.com/kong/kubernetes-testing-framework/pkg/utils/networking"
 )
 
 // -----------------------------------------------------------------------------
@@ -141,10 +142,8 @@ func (a *addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 // -----------------------------------------------------------------------------
 
 var (
-	defaultStartIP = net.ParseIP("0.0.0.100")
-	defaultEndIP   = net.ParseIP("0.0.0.250")
-	metalManifest  = "https://github.com/metallb/metallb/config/native?ref=v0.13.11&timeout=2m"
-	secretKeyLen   = 128
+	metalManifest = "https://github.com/metallb/metallb/config/native?ref=v0.13.11&timeout=2m"
+	secretKeyLen  = 128
 )
 
 // -----------------------------------------------------------------------------
@@ -201,11 +200,15 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 
 func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
 	// get an IP range for the docker container network to use for MetalLB
-	network, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
+	// this returns addresses based on the _Docker network_ the cluster runs on, not the cluster itself. this may,
+	// for example, return IPv4 addresses even for an IPv6-only cluster. although unsupported addresses will be listed
+	// in the IPAddressPool, speaker will not actually assign them if they are not compatible with the cluster network.
+	network, network6, err := docker.GetDockerContainerIPNetwork(docker.GetKindContainerID(cluster.Name()), dockerNetwork)
 	if err != nil {
 		return err
 	}
 	ipStart, ipEnd := getIPRangeForMetallb(*network)
+	ip6Start, ip6End := getIPRangeForMetallb(*network6)
 
 	dynamicClient, err := dynamic.NewForConfig(cluster.Config())
 	if err != nil {
@@ -228,7 +231,8 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 				},
 				"spec": map[string]interface{}{
 					"addresses": []string{
-						networking.GetIPRangeStr(ipStart, ipEnd),
+						fmt.Sprintf("%s-%s", ipStart, ipEnd),
+						fmt.Sprintf("%s-%s", ip6Start, ip6End),
 					},
 				},
 			},
@@ -297,15 +301,24 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 	return nil
 }
 
+// TODO use netip throughout. this converts because old public APIs used net/ip instead of net/netip
+
 // getIPRangeForMetallb provides a range of IP addresses to use for MetalLB given an IPv4 Network
 //
-// TODO: Just choosing specific default IPs for now, need to check range validity and dynamically assign IPs.
+// TODO: this just chooses the upper half of the Docker network (minus the network and broadcast addresses for the
+// chosen subnet), although those IPs may be in use. Speaker will happily assign those, but they won't work.
+// In practice this doesn't appear to cause many problems, since the IPs are normally not in use by KIND components
+// (it appears to assign starting from the bottom of the Docker net)
 //
 // See: https://github.com/Kong/kubernetes-testing-framework/issues/24
-func getIPRangeForMetallb(network net.IPNet) (startIP, endIP net.IP) {
-	startIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultStartIP))
-	endIP = networking.ConvertUint32ToIPv4(networking.ConvertIPv4ToUint32(network.IP) | networking.ConvertIPv4ToUint32(defaultEndIP))
-	return
+func getIPRangeForMetallb(network net.IPNet) (startIP, endIP netip.Addr) {
+	// we trust that this is a valid prefix here because we already checked it in docker.GetDockerContainerIPNetwork
+	prefix := netip.MustParsePrefix(network.String())
+	half := prefix.Bits() + 1
+	wholeRange := netipx.RangeOfPrefix(prefix)
+	upperHalfPrefix := netip.PrefixFrom(wholeRange.To(), half).Masked()
+	halfRange := netipx.RangeOfPrefix(upperHalfPrefix)
+	return halfRange.From().Next(), halfRange.To().Prev()
 }
 
 // TODO: needs to be replaced with non-kubectl, just used this originally for speed.
