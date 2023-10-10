@@ -13,7 +13,7 @@ import (
 
 	"go4.org/netipx"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -43,6 +43,8 @@ const (
 
 	addressPoolName     = "ktf-pool"
 	l2AdvertisementName = "ktf-empty"
+
+	tickTime = 100 * time.Millisecond
 )
 
 var (
@@ -119,7 +121,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
 		Get(ctx, "controller", metav1.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return nil, false, nil
 		}
 		return nil, false, err
@@ -155,7 +157,7 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: DefaultNamespace}}
 	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
+		if !apierrors.IsAlreadyExists(err) {
 			return err
 		}
 	}
@@ -190,7 +192,7 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 		},
 	}
 	if _, err := cluster.Client().CoreV1().Secrets(ns.Name).Create(ctx, secret, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
+		if !apierrors.IsAlreadyExists(err) {
 			return err
 		}
 	}
@@ -239,13 +241,24 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 		}, metav1.CreateOptions{})
 
 		if err != nil {
-			if errors.IsAlreadyExists(err) {
+			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
 				err = res.Delete(ctx, addressPoolName, metav1.DeleteOptions{})
+			} else if apierrors.IsForbidden(err) {
+				// This means most likely that there's a conflicting IPAddressPool
+				// and we couldn't apply ours. In this case remove the existing pools
+				// 1 by 1 (most often there's going to be just 1) and re-attempt
+				// to create a new one.
+				ipAddressPools, errL := res.List(ctx, metav1.ListOptions{})
+				if errL != nil {
+					err = errL
+				} else if len(ipAddressPools.Items) > 0 {
+					err = res.Delete(ctx, ipAddressPools.Items[0].GetName(), metav1.DeleteOptions{})
+				}
 			}
 
 			select {
-			case <-time.After(time.Second):
+			case <-time.After(tickTime):
 				lastErr = err
 				continue
 			case <-ctx.Done():
@@ -282,14 +295,14 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 		}, metav1.CreateOptions{})
 
 		if err != nil {
-			if errors.IsAlreadyExists(err) {
+			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
 				err = res.Delete(ctx, l2AdvertisementName, metav1.DeleteOptions{})
 			}
 
 			lastErr = err
 			select {
-			case <-time.After(time.Second):
+			case <-time.After(tickTime):
 				continue
 			case <-ctx.Done():
 				return fmt.Errorf("failed to create metallb.io/v1beta1 L2Advertisement: %w, last error %v", ctx.Err(), lastErr)
