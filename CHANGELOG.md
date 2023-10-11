@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.40.0
+
+- Metallb addon now has a builder. The builder can disable IPAddressPool
+  creation.
+  [#835](https://github.com/Kong/kubernetes-testing-framework/pull/835)
+
 ## v0.39.1
 
 - Removed a module exclude that made `go install` unhappy.

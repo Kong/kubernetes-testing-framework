@@ -58,33 +58,35 @@ var (
 	}
 )
 
-type addon struct{}
+type Addon struct {
+	disablePoolCreation bool
+}
 
 func New() clusters.Addon {
-	return &addon{}
+	return &Addon{}
 }
 
 // -----------------------------------------------------------------------------
 // Metallb Addon - Addon Implementation
 // -----------------------------------------------------------------------------
 
-func (a *addon) Name() clusters.AddonName {
+func (a *Addon) Name() clusters.AddonName {
 	return AddonName
 }
 
-func (a *addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
+func (a *Addon) Dependencies(_ context.Context, _ clusters.Cluster) []clusters.AddonName {
 	return nil
 }
 
-func (a *addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	if cluster.Type() != kind.KindClusterType {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
 
-	return deployMetallbForKindCluster(ctx, cluster, kind.DefaultKindDockerNetwork)
+	return a.deployMetallbForKindCluster(ctx, cluster, kind.DefaultKindDockerNetwork)
 }
 
-func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
+func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	if cluster.Type() != kind.KindClusterType {
 		return fmt.Errorf("the metallb addon is currently only supported on %s clusters", kind.KindClusterType)
 	}
@@ -115,7 +117,7 @@ func (a *addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 	return metallbDeleteHack(ctx, kubeconfig)
 }
 
-func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
+func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.Object, bool, error) {
 	deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
 		Get(ctx, "controller", metav1.GetOptions{})
 	if err != nil {
@@ -132,7 +134,7 @@ func (a *addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	return nil, true, nil
 }
 
-func (a *addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
+func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][]byte, error) {
 	diagnostics := make(map[string][]byte)
 	return diagnostics, nil
 }
@@ -151,7 +153,7 @@ var (
 // -----------------------------------------------------------------------------
 
 // deployMetallbForKindCluster deploys Metallb to the given Kind cluster using the Docker network provided for LoadBalancer IPs.
-func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
+func (a *Addon) deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, dockerNetwork string) error {
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: DefaultNamespace}}
 	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
@@ -167,8 +169,10 @@ func deployMetallbForKindCluster(ctx context.Context, cluster clusters.Cluster, 
 	}
 
 	// create an ip address pool
-	if err := createIPAddressPool(ctx, cluster, dockerNetwork); err != nil {
-		return err
+	if !a.disablePoolCreation {
+		if err := createIPAddressPool(ctx, cluster, dockerNetwork); err != nil {
+			return err
+		}
 	}
 
 	if err := createL2Advertisement(ctx, cluster); err != nil {
