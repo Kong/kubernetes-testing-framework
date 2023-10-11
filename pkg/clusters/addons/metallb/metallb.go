@@ -404,33 +404,3 @@ func metallbDeleteHack(ctx context.Context, kubeconfig *os.File) error {
 		WithStdout(io.Discard).
 		Do(ctx)
 }
-
-// -----------------------------------------------------------------------------
-// Metallb Builder
-// -----------------------------------------------------------------------------
-
-// Builder is a configuration tool for metallb cluster.Addons.
-type Builder struct {
-	disablePoolCreation bool
-}
-
-// NewBuilder provides a new Builder object with default addon settings.
-func NewBuilder() *Builder {
-	builder := &Builder{
-		disablePoolCreation: false,
-	}
-	return builder
-}
-
-// WithPoolDisabled instructs the builder to create addons with pool creation disabled.
-func (b *Builder) WithPoolDisabled() *Builder {
-	b.disablePoolCreation = true
-	return b
-}
-
-// Build generates an addon with the builder's configuration.
-func (b *Builder) Build() *Addon {
-	return &Addon{
-		disablePoolCreation: b.disablePoolCreation,
-	}
-}
