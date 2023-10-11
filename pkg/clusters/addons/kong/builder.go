@@ -7,6 +7,10 @@ import (
 	corev1 "k8s.io/api/core/v1"
 )
 
+const (
+	DefaultKongAddonName = "kong"
+)
+
 // -----------------------------------------------------------------------------
 // Kong Addon - Builder
 // -----------------------------------------------------------------------------
@@ -15,11 +19,13 @@ import (
 type Builder struct {
 	logger *logrus.Logger
 
+	name string
+
 	// kubernetes and helm chart related configuration options
-	namespace    string
-	name         string
-	deployArgs   []string
-	chartVersion string
+	namespace       string
+	helmReleaseName string
+	deployArgs      []string
+	chartVersion    string
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
@@ -54,8 +60,9 @@ type Builder struct {
 // Kong Addon objects which can be deployed to cluster.Clusters
 func NewBuilder() *Builder {
 	builder := &Builder{
+		name:             DefaultKongAddonName,
 		namespace:        DefaultNamespace,
-		name:             DefaultDeploymentName,
+		helmReleaseName:  DefaultDeploymentName,
 		deployArgs:       []string{},
 		proxyEnvVars:     make(map[string]string),
 		additionalValues: make(map[string]string),
@@ -91,11 +98,12 @@ func (b *Builder) Build() *Addon {
 
 	return &Addon{
 		logger: b.logger,
+		name:   b.name,
 
-		namespace:    b.namespace,
-		name:         b.name,
-		deployArgs:   b.deployArgs,
-		chartVersion: b.chartVersion,
+		namespace:       b.namespace,
+		helmReleaseName: b.helmReleaseName,
+		deployArgs:      b.deployArgs,
+		chartVersion:    b.chartVersion,
 
 		ingressControllerDisabled: b.ingressControllerDisabled,
 		ingressControllerImage:    b.ingressControllerImage,
@@ -262,5 +270,24 @@ func (b *Builder) WithHTTPNodePort(port int) *Builder {
 // WithAdminNodePort sets the HTTP Nodeport.
 func (b *Builder) WithAdminNodePort(port int) *Builder {
 	b.adminNodePort = port
+	return b
+}
+
+// WithHelmReleaseName sets the helm release name.
+func (b *Builder) WithHelmReleaseName(name string) *Builder {
+	b.helmReleaseName = name
+	return b
+}
+
+// WithName sets the addon name.
+//
+// Note: if you want to deploy more than 1 addon of this type in a cluster, then
+// you need to specify the name here.
+// Without this, environment builder will silently overwrite the first addon
+// of the same type (using the same, default name).
+//
+// TODO: https://github.com/Kong/kubernetes-testing-framework/issues/846
+func (b *Builder) WithName(name string) *Builder {
+	b.name = name
 	return b
 }

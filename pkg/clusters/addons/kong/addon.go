@@ -73,11 +73,13 @@ const (
 type Addon struct {
 	logger *logrus.Logger
 
+	name string
+
 	// kubernetes and helm chart related configuration options
-	namespace    string
-	name         string
-	deployArgs   []string
-	chartVersion string
+	namespace       string
+	helmReleaseName string
+	deployArgs      []string
+	chartVersion    string
 
 	// ingress controller configuration options
 	ingressControllerDisabled bool
@@ -179,7 +181,7 @@ func (a *Addon) ProxyUDPURL(ctx context.Context, cluster clusters.Cluster) (*url
 // -----------------------------------------------------------------------------
 
 func (a *Addon) Name() clusters.AddonName {
-	return AddonName
+	return clusters.AddonName(a.name)
 }
 
 func (a *Addon) Dependencies(_ context.Context, cluster clusters.Cluster) []clusters.AddonName {
@@ -259,7 +261,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 
 	// if the dbmode is postgres, set several related values
-	args := []string{"--kubeconfig", kubeconfig.Name(), "upgrade", "--install", DefaultDeploymentName, "kong/kong"}
+	args := []string{"--kubeconfig", kubeconfig.Name(), "upgrade", "--install", a.helmReleaseName, "kong/kong"}
 	if a.proxyDBMode == PostgreSQL {
 		a.deployArgs = append(a.deployArgs,
 			"--set", "env.database=postgres",
@@ -409,7 +411,7 @@ func (a *Addon) Delete(ctx context.Context, cluster clusters.Cluster) error {
 
 	// delete the chart release from the cluster
 	stderr := new(bytes.Buffer)
-	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "uninstall", DefaultDeploymentName, "--namespace", a.namespace) //nolint:gosec
+	cmd := exec.CommandContext(ctx, "helm", "--kubeconfig", kubeconfig.Name(), "uninstall", a.helmReleaseName, "--namespace", a.namespace) //nolint:gosec
 	cmd.Stdout = io.Discard
 	cmd.Stderr = stderr
 	if err := cmd.Run(); err != nil {

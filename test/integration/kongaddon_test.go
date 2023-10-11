@@ -333,3 +333,68 @@ func TestKongUDPProxy(t *testing.T) {
 		return false
 	}, time.Minute*3, time.Second)
 }
+
+func TestKongAddonMultiplePerCluster(t *testing.T) {
+	testNS1 := "kong-test-1"
+	kong1 := kongaddon.NewBuilder().
+		// Have to specify the relelase name: https://github.com/Kong/charts/issues/910
+		WithHelmReleaseName("ingress-controller1").
+		WithNamespace(testNS1).
+		// We need to specify different names for addons due to this limitation:
+		// https://github.com/Kong/kubernetes-testing-framework/issues/846
+		// Without this environment builder will silently overwrite the first addon
+		// of the same type (using the same, default name).
+		WithName("kong1").
+		WithProxyServiceType(corev1.ServiceTypeClusterIP).
+		WithLogLevel("debug").
+		Build()
+
+	testNS2 := "kong-test-2"
+	kong2 := kongaddon.NewBuilder().
+		// Have to specify the relelase name: https://github.com/Kong/charts/issues/910
+		WithHelmReleaseName("ingress-controller2").
+		WithNamespace(testNS2).
+		// We need to specify different names for addons due to this limitation:
+		// https://github.com/Kong/kubernetes-testing-framework/issues/846
+		// Without this environment builder will silently overwrite the first addon
+		// of the same type (using the same, default name).
+		WithName("kong2").
+		WithProxyServiceType(corev1.ServiceTypeClusterIP).
+		WithLogLevel("debug").
+		Build()
+
+	t.Log("configuring the testing environment")
+	builder := environment.NewBuilder().WithAddons(kong1, kong2)
+
+	t.Log("building the testing environment and Kubernetes cluster")
+	env, err := builder.Build(ctx)
+	require.NoError(t, err)
+
+	t.Cleanup(func() {
+		assert.NoError(t, env.Cluster().DeleteAddon(ctx, kong1))
+		assert.NoError(t, env.Cluster().DeleteAddon(ctx, kong2))
+	})
+
+	err = <-env.WaitForReady(ctx)
+	require.NoError(t, err)
+
+	t.Log("verifying that kong addon have been loaded into the environment")
+	require.Len(t, env.Cluster().ListAddons(), 2)
+
+	apps := env.Cluster().Client().AppsV1()
+	t.Log("verifying that kong deployments are deployed in their namespaces")
+	{
+		deployments := apps.Deployments(testNS1)
+		kongDeployment, err := deployments.Get(ctx, "ingress-controller1-kong", metav1.GetOptions{})
+		require.NoError(t, err)
+		require.Greater(t, int(kongDeployment.Status.ReadyReplicas), 0, "should have at least one ready replicas")
+		require.Equal(t, kongDeployment.Status.Replicas, kongDeployment.Status.ReadyReplicas, "replicas should be all ready")
+	}
+	{
+		deployments := apps.Deployments(testNS2)
+		kongDeployment, err := deployments.Get(ctx, "ingress-controller2-kong", metav1.GetOptions{})
+		require.NoError(t, err)
+		require.Greater(t, int(kongDeployment.Status.ReadyReplicas), 0, "should have at least one ready replicas")
+		require.Equal(t, kongDeployment.Status.Replicas, kongDeployment.Status.ReadyReplicas, "replicas should be all ready")
+	}
+}
