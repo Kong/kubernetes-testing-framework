@@ -53,4 +53,8 @@ const (
 	// DefaultProxyNodePort indicates the default NodePort that will be used for
 	// the proxy when applicable.
 	DefaultProxyNodePort = 30080
+
+	// DefaultAdminNodePort indicates the default NodePort that will be used for
+	// the admin API when applicable.
+	DefaultAdminNodePort = 32080
 )

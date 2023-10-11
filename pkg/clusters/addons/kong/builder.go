@@ -37,6 +37,10 @@ type Builder struct {
 	proxyEnvVars                      map[string]string
 	proxyReadinessProbePath           string
 
+	// ports
+	httpNodePort  int
+	adminNodePort int
+
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
 	proxyEnterpriseSuperAdminPassword string
@@ -79,6 +83,13 @@ func (b *Builder) Build() *Addon {
 		b.proxyServiceType = corev1.ServiceTypeLoadBalancer
 	}
 
+	// if b.httpNodePort <= 0 {
+	// 	b.httpNodePort = DefaultProxyNodePort
+	// }
+	// if b.adminNodePort <= 0 {
+	// 	b.adminNodePort = DefaultAdminNodePort
+	// }
+
 	return &Addon{
 		logger: b.logger,
 
@@ -104,6 +115,9 @@ func (b *Builder) Build() *Addon {
 		proxyEnterpriseEnabled:            b.proxyEnterpriseEnabled,
 		proxyEnterpriseLicenseJSON:        b.proxyEnterpriseLicenseJSON,
 		proxyEnterpriseSuperAdminPassword: b.proxyEnterpriseSuperAdminPassword,
+
+		httpNodePort:  b.httpNodePort,
+		adminNodePort: b.adminNodePort,
 
 		additionalValues: b.additionalValues,
 	}
@@ -237,5 +251,23 @@ func (b *Builder) WithProxyReadinessProbePath(path string) *Builder {
 // WithAdditionalValue sets arbitrary value of installing by helm.
 func (b *Builder) WithAdditionalValue(name, value string) *Builder {
 	b.additionalValues[name] = value
+	return b
+}
+
+// WithHTTPNodePort sets the HTTP Nodeport.
+func (b *Builder) WithHTTPNodePort(port int) *Builder {
+	b.httpNodePort = port
+	return b
+}
+
+// WithAdminNodePort sets the HTTP Nodeport.
+func (b *Builder) WithAdminNodePort(port int) *Builder {
+	b.adminNodePort = port
+	return b
+}
+
+// WithName sets the addon name.
+func (b *Builder) WithName(name string) *Builder {
+	b.name = name
 	return b
 }
