@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.0
 
 require (
-	cloud.google.com/go/container v1.26.0
+	cloud.google.com/go/container v1.26.1
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.13.1
 	github.com/docker/docker v24.0.6+incompatible
