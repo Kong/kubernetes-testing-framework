@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.41.0
+
+- Allow deploying multiple kong addons to the cluster and identifying them by
+  their name.
+  [#845](https://github.com/Kong/kubernetes-testing-framework/pull/845)
+- Allow setting kong addon admin API and proxy NodePorts.
+  [#844](https://github.com/Kong/kubernetes-testing-framework/pull/844)
+
 ## v0.40.0
 
 - Metallb addon now has a builder. The builder can disable IPAddressPool
