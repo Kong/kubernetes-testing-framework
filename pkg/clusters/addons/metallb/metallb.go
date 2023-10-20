@@ -13,7 +13,7 @@ import (
 
 	"go4.org/netipx"
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -121,7 +121,7 @@ func (a *Addon) Ready(ctx context.Context, cluster clusters.Cluster) ([]runtime.
 	deployment, err := cluster.Client().AppsV1().Deployments(DefaultNamespace).
 		Get(ctx, "controller", metav1.GetOptions{})
 	if err != nil {
-		if errors.IsNotFound(err) {
+		if apierrors.IsNotFound(err) {
 			return nil, false, nil
 		}
 		return nil, false, err
@@ -157,7 +157,7 @@ func (a *Addon) deployMetallbForKindCluster(ctx context.Context, cluster cluster
 	// ensure the namespace for metallb is created
 	ns := corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: DefaultNamespace}}
 	if _, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &ns, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
+		if !apierrors.IsAlreadyExists(err) {
 			return err
 		}
 	}
@@ -194,7 +194,7 @@ func (a *Addon) deployMetallbForKindCluster(ctx context.Context, cluster cluster
 		},
 	}
 	if _, err := cluster.Client().CoreV1().Secrets(ns.Name).Create(ctx, secret, metav1.CreateOptions{}); err != nil {
-		if !errors.IsAlreadyExists(err) {
+		if !apierrors.IsAlreadyExists(err) {
 			return err
 		}
 	}
@@ -243,7 +243,7 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 		}, metav1.CreateOptions{})
 
 		if err != nil {
-			if errors.IsAlreadyExists(err) {
+			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
 				err = res.Delete(ctx, addressPoolName, metav1.DeleteOptions{})
 			}
@@ -286,7 +286,7 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 		}, metav1.CreateOptions{})
 
 		if err != nil {
-			if errors.IsAlreadyExists(err) {
+			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
 				err = res.Delete(ctx, l2AdvertisementName, metav1.DeleteOptions{})
 			}
