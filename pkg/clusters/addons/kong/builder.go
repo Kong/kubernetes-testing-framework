@@ -86,7 +86,7 @@ func (b *Builder) Build() *Addon {
 	}
 
 	// LoadBalancer is used by default for historical and convenience reasons.
-	switch b.proxyServiceType { //nolint:exhaustive
+	switch b.proxyServiceType {
 	case "":
 		b.proxyServiceType = corev1.ServiceTypeLoadBalancer
 	case corev1.ServiceTypeNodePort:
@@ -94,6 +94,7 @@ func (b *Builder) Build() *Addon {
 		if b.httpNodePort == 0 {
 			b.httpNodePort = DefaultProxyNodePort
 		}
+	default:
 	}
 
 	return &Addon{
