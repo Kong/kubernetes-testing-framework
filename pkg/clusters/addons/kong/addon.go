@@ -95,6 +95,10 @@ type Addon struct {
 	proxyEnvVars                      map[string]string
 	proxyReadinessProbePath           string
 
+	// Node ports
+	httpNodePort  int
+	adminNodePort int
+
 	// proxy server enterprise mode configuration options
 	proxyEnterpriseEnabled            bool
 	proxyEnterpriseSuperAdminPassword string
@@ -372,6 +376,14 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	args = append(args, "--namespace", a.namespace)
 	args = append(args, a.deployArgs...)
 	args = append(args, defaults()...)
+
+	if a.httpNodePort > 0 {
+		args = append(args, "--set", fmt.Sprintf("proxy.http.nodePort=%d", a.httpNodePort))
+	}
+	if a.adminNodePort > 0 {
+		args = append(args, "--set", fmt.Sprintf("admin.http.nodePort=%d", a.adminNodePort))
+	}
+
 	args = append(args, exposePortsDefault()...)
 	a.logger.Debugf("helm install arguments: %+v", args)
 
@@ -573,10 +585,8 @@ func defaults() []string {
 	return []string{
 		// we configure a cluster network exposed admin API over HTTP with no auth for testing convenience,
 		// but again keep in mind this is meant ONLY for transient testing scenarios and isn't secure.
-		"--set", "proxy.http.nodePort=30080",
 		"--set", "admin.enabled=true",
 		"--set", "admin.http.enabled=true",
-		"--set", "admin.http.nodePort=32080",
 		"--set", "admin.tls.enabled=false",
 		"--set", "tls.enabled=false",
 		"--set", "udpProxy.enabled=true",
