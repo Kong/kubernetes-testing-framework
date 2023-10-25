@@ -1,7 +1,7 @@
 * @Kong/k8s-maintainers
 
-cmd/ @shaneutt
-docs/ @shaneutt
-internal/ @shaneutt
-pkg/ @shaneutt
-test/ @shaneutt
+cmd/ @Kong/k8s-maintainers @shaneutt
+docs/ @Kong/k8s-maintainers @shaneutt
+internal/ @Kong/k8s-maintainers @shaneutt
+pkg/ @Kong/k8s-maintainers @shaneutt
+test/ @Kong/k8s-maintainers @shaneutt
