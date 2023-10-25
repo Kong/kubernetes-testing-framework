@@ -35,6 +35,8 @@ linters:
   - wastedassign
 
 linters-settings:
+  exhaustive:
+    default-signifies-exhaustive: true
   gci:
     sections:
     - standard
@@ -82,7 +84,7 @@ linters-settings:
       - pkg: sigs.k8s.io/gateway-api/apis/(v[\w\d]+)
         alias: gateway${1}
   forbidigo:
-    exclude_godoc_examples: false
+    exclude-godoc-examples: false
     forbid:
       - 'CoreV1\(\)\.Endpoints(# use DiscoveryV1 EndpointSlices API instead)?'
       - 'corev1\.Endpoint(# use DiscoveryV1 EndpointSlices API instead)?'
