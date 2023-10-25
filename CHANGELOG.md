@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.41.1
+
+- Updated metallb to v0.13.12.
+
 ## v0.41.0
 
 - Allow deploying multiple kong addons to the cluster and identifying them by

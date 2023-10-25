@@ -144,7 +144,7 @@ func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 // -----------------------------------------------------------------------------
 
 var (
-	metalManifest = "https://github.com/metallb/metallb/config/native?ref=v0.13.11&timeout=2m"
+	metalManifest = "https://github.com/metallb/metallb/config/native?ref=v0.13.12&timeout=2m"
 	secretKeyLen  = 128
 )
 
