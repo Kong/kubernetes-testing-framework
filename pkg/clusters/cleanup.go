@@ -14,6 +14,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
 	gatewayv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
@@ -153,17 +154,17 @@ func fixupObjKinds(obj client.Object) client.Object {
 	// Otherwise try to fix that up by performing type assertions and filling
 	// those 2 fields accordingly.
 	switch o := obj.(type) {
-	case *gatewayv1beta1.GatewayClass:
+	case *gatewayv1.GatewayClass:
 		o.Kind = "GatewayClass"
-		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		o.APIVersion = gatewayv1.GroupVersion.String()
 		return o
-	case *gatewayv1beta1.Gateway:
+	case *gatewayv1.Gateway:
 		o.Kind = "Gateway"
-		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		o.APIVersion = gatewayv1.GroupVersion.String()
 		return o
-	case *gatewayv1beta1.HTTPRoute:
+	case *gatewayv1.HTTPRoute:
 		o.Kind = "HTTPRoute"
-		o.APIVersion = gatewayv1beta1.GroupVersion.String()
+		o.APIVersion = gatewayv1.GroupVersion.String()
 		return o
 
 	case *gatewayv1alpha2.TCPRoute:
@@ -178,9 +179,9 @@ func fixupObjKinds(obj client.Object) client.Object {
 		o.Kind = "TLSRoute"
 		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
 		return o
-	case *gatewayv1alpha2.ReferenceGrant:
+	case *gatewayv1beta1.ReferenceGrant:
 		o.Kind = "ReferenceGrant"
-		o.APIVersion = gatewayv1alpha2.GroupVersion.String()
+		o.APIVersion = gatewayv1beta1.GroupVersion.String()
 		return o
 
 	default:
