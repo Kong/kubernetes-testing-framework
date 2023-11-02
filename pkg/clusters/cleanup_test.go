@@ -9,6 +9,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayv1alpha2 "sigs.k8s.io/gateway-api/apis/v1alpha2"
 	gatewayv1beta1 "sigs.k8s.io/gateway-api/apis/v1beta1"
 )
@@ -21,40 +22,40 @@ func TestFixupObjKinds(t *testing.T) {
 	}{
 		{
 			name: "gatewayclass",
-			obj: &gatewayv1beta1.GatewayClass{
+			obj: &gatewayv1.GatewayClass{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-gatewayclass",
 				},
 			},
 			expected: schema.GroupVersionKind{
 				Group:   "gateway.networking.k8s.io",
-				Version: "v1beta1",
+				Version: "v1",
 				Kind:    "GatewayClass",
 			},
 		},
 		{
 			name: "gateway",
-			obj: &gatewayv1beta1.Gateway{
+			obj: &gatewayv1.Gateway{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-gateway",
 				},
 			},
 			expected: schema.GroupVersionKind{
 				Group:   "gateway.networking.k8s.io",
-				Version: "v1beta1",
+				Version: "v1",
 				Kind:    "Gateway",
 			},
 		},
 		{
 			name: "httproute",
-			obj: &gatewayv1beta1.HTTPRoute{
+			obj: &gatewayv1.HTTPRoute{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-httproute",
 				},
 			},
 			expected: schema.GroupVersionKind{
 				Group:   "gateway.networking.k8s.io",
-				Version: "v1beta1",
+				Version: "v1",
 				Kind:    "HTTPRoute",
 			},
 		},
@@ -99,14 +100,14 @@ func TestFixupObjKinds(t *testing.T) {
 		},
 		{
 			name: "referencegrant",
-			obj: &gatewayv1alpha2.ReferenceGrant{
+			obj: &gatewayv1beta1.ReferenceGrant{
 				ObjectMeta: metav1.ObjectMeta{
 					Name: "my-referencegrant",
 				},
 			},
 			expected: schema.GroupVersionKind{
 				Group:   "gateway.networking.k8s.io",
-				Version: "v1alpha2",
+				Version: "v1beta1",
 				Kind:    "ReferenceGrant",
 			},
 		},
