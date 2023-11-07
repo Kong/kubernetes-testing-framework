@@ -11,7 +11,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.4.0
-	github.com/kong/deck v1.29.0
+	github.com/kong/deck v1.29.1
 	github.com/kong/go-kong v0.48.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.38.1
