@@ -150,11 +150,13 @@ jobs:
 
   integration-tests-passed:
     needs: integration-tests
-    if: always() && !contains(needs.*.result, 'failure')
+    if: always()
     runs-on: ubuntu-latest
     steps:
-    - name: integrations tests pased
-      run: echo all integrations tests passed
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Some jobs failed or were cancelled."
+          exit 1
 
   setup-e2e-tests:
     runs-on: ubuntu-latest
