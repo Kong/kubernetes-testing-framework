@@ -2,9 +2,15 @@
 
 ## Unreleased
 
+Nothing
+
+## v0.42.0
+
 - Bump Kong Gateway Enterprise default image to 3.4
   [#867](https://github.com/Kong/kubernetes-testing-framework/pull/867)
   [#868](https://github.com/Kong/kubernetes-testing-framework/pull/868)
+- Replace deck libraries with their new go-database-reconciler home.
+  [#883](https://github.com/Kong/kubernetes-testing-framework/pull/883)
 
 ## v0.41.1
 
