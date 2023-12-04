@@ -115,6 +115,7 @@ jobs:
       id: license
       with:
         password: ${{ secrets.PULP_PASSWORD }}
+        op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     - name: setup golang
       uses: actions/setup-go@v4
@@ -199,6 +200,7 @@ jobs:
         id: license
         with:
           password: ${{ secrets.PULP_PASSWORD }}
+          op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: checkout repository
         if: steps.detect_if_should_run.outputs.result == 'true'

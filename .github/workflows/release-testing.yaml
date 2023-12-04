@@ -63,6 +63,7 @@ jobs:
       id: license
       with:
         password: ${{ secrets.PULP_PASSWORD }}
+        op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     - name: checkout repository
       uses: actions/checkout@v4
@@ -92,6 +93,7 @@ jobs:
       id: license
       with:
         password: ${{ secrets.PULP_PASSWORD }}
+        op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     # --------------------------------------------------------------------------
     # Repository Checkout
