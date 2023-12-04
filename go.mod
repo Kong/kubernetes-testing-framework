@@ -14,7 +14,7 @@ require (
 	github.com/kong/go-database-reconciler v1.1.0
 	github.com/kong/go-kong v0.48.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/samber/lo v1.38.1
+	github.com/samber/lo v1.39.0
 	github.com/sethvargo/go-password v0.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
