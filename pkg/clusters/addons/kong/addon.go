@@ -589,7 +589,7 @@ func defaults() []string {
 		// but again keep in mind this is meant ONLY for transient testing scenarios and isn't secure.
 		"--set", "admin.enabled=true",
 		"--set", "admin.http.enabled=true",
-		"--set", "admin.tls.enabled=false",
+		"--set", "admin.tls.enabled=true",
 		"--set", "tls.enabled=false",
 		"--set", "udpProxy.enabled=true",
 	}
