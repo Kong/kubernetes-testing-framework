@@ -10,7 +10,7 @@ require (
 	github.com/cert-manager/cert-manager v1.13.3
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/go-github/v48 v48.2.0
-	github.com/google/uuid v1.4.0
+	github.com/google/uuid v1.5.0
 	github.com/kong/go-database-reconciler v1.1.0
 	github.com/kong/go-kong v0.48.0
 	github.com/mitchellh/go-homedir v1.1.0
