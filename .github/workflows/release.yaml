@@ -80,7 +80,7 @@ jobs:
     # --------------------------------------------------------------------------
 
     - name: download checksums artifact
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: CHECKSUMS
 
@@ -88,7 +88,7 @@ jobs:
       run: cat CHECKSUMS.* > CHECKSUMS
 
     - name: download binary artifacts
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4
       with:
         name: bin
 
