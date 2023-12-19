@@ -18,7 +18,7 @@ require (
 	github.com/sethvargo/go-password v0.2.0
 	github.com/sirupsen/logrus v1.9.3
 	github.com/spf13/cobra v1.8.0
-	github.com/spf13/viper v1.18.1
+	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
 	golang.org/x/oauth2 v0.15.0
