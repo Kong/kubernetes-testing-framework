@@ -1,8 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.43.0
 
-Nothing
+- Added `WithReleaseChannel` to the GKE cluster builder to allow specifying
+  a release channel for the cluster.
+  [#911](https://github.com/Kong/kubernetes-testing-framework/pull/911)
 
 ## v0.42.0
 

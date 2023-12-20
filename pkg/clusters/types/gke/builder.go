@@ -32,6 +32,7 @@ type Builder struct {
 	majorMinor      string
 	nodeMachineType string
 	labels          map[string]string
+	releaseChannel  *ReleaseChannel
 }
 
 const (
@@ -101,6 +102,22 @@ func (b *Builder) WithCreateSubnet(create bool) *Builder {
 // WithLabels adds labels that the created cluster is going to be labeled with.
 func (b *Builder) WithLabels(labels map[string]string) *Builder {
 	b.labels = lo.Assign(b.labels, labels)
+	return b
+}
+
+// ReleaseChannel is a type for specifying the release channel of the cluster.
+// See https://cloud.google.com/kubernetes-engine/docs/release-notes for more details.
+type ReleaseChannel string
+
+const (
+	ReleaseChannelRapid   ReleaseChannel = "rapid"
+	ReleaseChannelRegular ReleaseChannel = "regular"
+	ReleaseChannelStable  ReleaseChannel = "stable"
+)
+
+// WithReleaseChannel sets the release channel of the cluster.
+func (b *Builder) WithReleaseChannel(ch ReleaseChannel) *Builder {
+	b.releaseChannel = &ch
 	return b
 }
 
@@ -177,6 +194,15 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 			NodeIpv4CidrBlock:     "/29",
 			ClusterIpv4CidrBlock:  "/21",
 			ServicesIpv4CidrBlock: "/27",
+		}
+	}
+	if b.releaseChannel != nil {
+		channel, err := mapReleaseChannel(*b.releaseChannel)
+		if err != nil {
+			return nil, fmt.Errorf("faield mapping release channel to proto: %s", err)
+		}
+		pbcluster.ReleaseChannel = &containerpb.ReleaseChannel{
+			Channel: channel,
 		}
 	}
 
@@ -263,4 +289,17 @@ func sanitizeCreatedByID(id string) string {
 		return s[:maxAllowedLength]
 	}
 	return s
+}
+
+func mapReleaseChannel(ch ReleaseChannel) (containerpb.ReleaseChannel_Channel, error) {
+	switch ch {
+	case ReleaseChannelRapid:
+		return containerpb.ReleaseChannel_RAPID, nil
+	case ReleaseChannelRegular:
+		return containerpb.ReleaseChannel_REGULAR, nil
+	case ReleaseChannelStable:
+		return containerpb.ReleaseChannel_STABLE, nil
+	default:
+		return 0, fmt.Errorf("unknown release channel %s", ch)
+	}
 }
