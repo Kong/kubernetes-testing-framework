@@ -64,6 +64,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	builder.WithWaitForTeardown(false)
 	builder.WithCreateSubnet(createSubnet)
 	builder.WithLabels(map[string]string{"test-cluster": "true"})
+	builder.WithReleaseChannel(gke.ReleaseChannelRapid)
 
 	t.Logf("building cluster %s (this can take some time)", builder.Name)
 	cluster, err := builder.Build(ctx)
@@ -102,6 +103,10 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	if createSubnet {
 		require.NotEqual(t, "default", gkeCluster.Subnetwork)
 	}
+
+	t.Log("verify rapid release channel used")
+	require.NotNil(t, gkeCluster.ReleaseChannel)
+	require.Equal(t, containerpb.ReleaseChannel_RAPID, gkeCluster.ReleaseChannel.Channel)
 
 	t.Log("loading the gke cluster into a testing environment and deploying kong addon")
 	env, err := environments.NewBuilder().WithAddons(kong.New()).WithExistingCluster(cluster).Build(ctx)
