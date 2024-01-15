@@ -11,7 +11,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.5.0
-	github.com/kong/go-database-reconciler v1.1.0
+	github.com/kong/go-database-reconciler v1.2.0
 	github.com/kong/go-kong v0.50.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.39.0
@@ -137,7 +137,7 @@ require (
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
-	github.com/shirou/gopsutil/v3 v3.23.10 // indirect
+	github.com/shirou/gopsutil/v3 v3.23.12 // indirect
 	github.com/spf13/afero v1.11.0 // indirect
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
