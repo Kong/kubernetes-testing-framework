@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.44.0
+
+- Added a call to `NegotiateAPIVersion` when creating a Docker client to
+  ensure that the client is able to communicate with the Docker daemon.
+  [#932](https://github.com/Kong/kubernetes-testing-framework/pull/932)
+
 ## v0.43.0
 
 - Added `WithReleaseChannel` to the GKE cluster builder to allow specifying
