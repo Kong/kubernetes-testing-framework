@@ -16,11 +16,12 @@ import (
 // InspectDockerContainer is a helper function that uses the local docker environment
 // provides the full container spec for a container present in that environment by name.
 func InspectDockerContainer(containerID string) (*types.ContainerJSON, error) {
-	dockerc, err := client.NewClientWithOpts(client.FromEnv)
+	ctx := context.Background()
+	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
-	containerJSON, err := dockerc.ContainerInspect(context.Background(), containerID)
+	containerJSON, err := dockerc.ContainerInspect(ctx, containerID)
 	return &containerJSON, err
 }
 

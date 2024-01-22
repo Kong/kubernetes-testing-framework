@@ -11,7 +11,7 @@ import (
 // given command and arguments on the given container (by ID) privileged.
 func RunPrivilegedCommand(ctx context.Context, containerID, command string, args ...string) error {
 	// connect to the local docker env
-	dockerc, err := client.NewClientWithOpts(client.FromEnv)
+	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
 		return err
 	}

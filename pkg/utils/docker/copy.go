@@ -16,7 +16,7 @@ import (
 // ReadFileFromContainer reads a specific file from a given container by ID.
 func ReadFileFromContainer(ctx context.Context, containerID string, path string) (*bytes.Buffer, error) {
 	// connect to the local docker environment
-	dockerc, err := client.NewClientWithOpts(client.FromEnv)
+	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func WriteFileToContainer(ctx context.Context, containerID string, path string, 
 	}
 
 	// connect to the local docker environment
-	dockerc, err := client.NewClientWithOpts(client.FromEnv)
+	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
 		return fmt.Errorf("could not create a client with the local docker system: %w", err)
 	}
