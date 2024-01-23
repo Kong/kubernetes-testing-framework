@@ -8,7 +8,7 @@ require (
 	cloud.google.com/go/container v1.30.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.13.3
-	github.com/docker/docker v24.0.7+incompatible
+	github.com/docker/docker v25.0.0+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.5.0
 	github.com/kong/go-database-reconciler v1.3.1
@@ -41,6 +41,8 @@ require (
 
 require (
 	dario.cat/mergo v1.0.0 // indirect
+	github.com/containerd/log v0.1.0 // indirect
+	github.com/distribution/reference v0.5.0 // indirect
 	github.com/felixge/httpsnoop v1.0.4 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/google/gnostic-models v0.6.8 // indirect
@@ -56,9 +58,11 @@ require (
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1 // indirect
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.46.1 // indirect
-	go.opentelemetry.io/otel v1.21.0 // indirect
-	go.opentelemetry.io/otel/metric v1.21.0 // indirect
-	go.opentelemetry.io/otel/trace v1.21.0 // indirect
+	go.opentelemetry.io/otel v1.22.0 // indirect
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.22.0 // indirect
+	go.opentelemetry.io/otel/metric v1.22.0 // indirect
+	go.opentelemetry.io/otel/sdk v1.22.0 // indirect
+	go.opentelemetry.io/otel/trace v1.22.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/tools v0.16.1 // indirect
@@ -76,7 +80,6 @@ require (
 	github.com/avast/retry-go/v4 v4.5.1
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/docker/distribution v2.8.2+incompatible // indirect
 	github.com/docker/go-connections v0.4.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
