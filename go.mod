@@ -11,7 +11,7 @@ require (
 	github.com/docker/docker v24.0.7+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.5.0
-	github.com/kong/go-database-reconciler v1.2.0
+	github.com/kong/go-database-reconciler v1.3.1
 	github.com/kong/go-kong v0.50.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.39.0
@@ -155,7 +155,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/exp v0.0.0-20231006140011-7918f672742d // indirect
+	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
