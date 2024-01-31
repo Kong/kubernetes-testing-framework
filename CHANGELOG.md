@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Added support for arbitrary Helm chart values to the Kuma plugin.
+  [#958](https://github.com/Kong/kubernetes-testing-framework/pull/958)
+
 ## v0.45.0
 
 - `Kuma` addon now properly uses the Helm chart version passed in its builder's

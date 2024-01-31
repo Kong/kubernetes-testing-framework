@@ -17,13 +17,15 @@ type Builder struct {
 	version *semver.Version
 	logger  *logrus.Logger
 
-	mtlsEnabled bool
+	mtlsEnabled      bool
+	additionalValues map[string]string
 }
 
 // NewBuilder provides a new Builder object for configuring Kuma cluster addons.
 func NewBuilder() *Builder {
 	return &Builder{
-		name: string(AddonName),
+		name:             string(AddonName),
+		additionalValues: make(map[string]string),
 	}
 }
 
@@ -48,6 +50,12 @@ func (b *Builder) WithMTLS() *Builder {
 	return b
 }
 
+// WithAdditionalValue sets a key and value to pass to Helm using --set.
+func (b *Builder) WithAdditionalValue(name, value string) *Builder {
+	b.additionalValues[name] = value
+	return b
+}
+
 // Build generates a new kong cluster.Addon which can be loaded and deployed
 // into a test Environment's cluster.Cluster.
 func (b *Builder) Build() *Addon {
@@ -59,6 +67,7 @@ func (b *Builder) Build() *Addon {
 		version: b.version,
 		logger:  b.logger,
 
-		mtlsEnabled: b.mtlsEnabled,
+		mtlsEnabled:      b.mtlsEnabled,
+		additionalValues: b.additionalValues,
 	}
 }

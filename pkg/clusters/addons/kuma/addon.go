@@ -47,7 +47,8 @@ type Addon struct {
 
 	version *semver.Version
 
-	mtlsEnabled bool
+	mtlsEnabled      bool
+	additionalValues map[string]string
 }
 
 // New produces a new clusters.Addon for Kuma with MTLS enabled
@@ -155,6 +156,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// compile the helm installation values
 	args = append(args, "--create-namespace", "--namespace", Namespace)
+
+	for name, value := range a.additionalValues {
+		args = append(args, "--set", fmt.Sprintf("%s=%s", name, value))
+	}
+
 	a.logger.Debugf("helm install arguments: %+v", args)
 
 	// Sometimes running helm install fails. Just in case this happens, retry.
