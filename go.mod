@@ -7,7 +7,7 @@ toolchain go1.21.4
 require (
 	cloud.google.com/go/container v1.30.1
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.13.3
+	github.com/cert-manager/cert-manager v1.14.0
 	github.com/docker/docker v25.0.2+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
@@ -30,7 +30,7 @@ require (
 	k8s.io/cli-runtime v0.29.1
 	k8s.io/client-go v0.29.1
 	k8s.io/kubectl v0.29.1
-	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
+	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/controller-runtime v0.17.0
 	sigs.k8s.io/gateway-api v1.0.0
 	sigs.k8s.io/kind v0.20.0
@@ -93,9 +93,9 @@ require (
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-ole/go-ole v1.2.6 // indirect
-	github.com/go-openapi/jsonpointer v0.20.0 // indirect
-	github.com/go-openapi/jsonreference v0.20.2 // indirect
-	github.com/go-openapi/swag v0.22.4 // indirect
+	github.com/go-openapi/jsonpointer v0.20.2 // indirect
+	github.com/go-openapi/jsonreference v0.20.4 // indirect
+	github.com/go-openapi/swag v0.22.7 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
@@ -158,7 +158,7 @@ require (
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	golang.org/x/crypto v0.18.0 // indirect
-	golang.org/x/exp v0.0.0-20231110203233-9a3e6036ecaa // indirect
+	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
 	golang.org/x/net v0.20.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
@@ -175,7 +175,7 @@ require (
 	gotest.tools/v3 v3.4.0 // indirect
 	k8s.io/component-base v0.29.1 // indirect
 	k8s.io/klog/v2 v2.110.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20231010175941-2dd684a91f00 // indirect
+	k8s.io/kube-openapi v0.0.0-20240103051144-eec4567ac022 // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
 )
