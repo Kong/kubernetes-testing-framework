@@ -60,7 +60,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
-	builder.WithClusterMinorVersion(1, 24)
+	builder.WithClusterMinorVersion(1, 29)
 	builder.WithWaitForTeardown(false)
 	builder.WithCreateSubnet(createSubnet)
 	builder.WithLabels(map[string]string{"test-cluster": "true"})
