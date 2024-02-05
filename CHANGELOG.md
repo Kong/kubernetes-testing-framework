@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.39.2
+
+- `Kuma` addon now properly uses the Helm chart version passed in its builder's
+  `WithVersion` method.
+  [#949](https://github.com/Kong/kubernetes-testing-framework/pull/949)
+
 ## v0.39.1
 
 - Removed a module exclude that made `go install` unhappy.
