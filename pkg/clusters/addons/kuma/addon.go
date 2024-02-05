@@ -234,12 +234,36 @@ spec:
       name: ca-1
       type: builtin
     enabledBackend: ca-1`
+
+	allowAllTrafficPermission = `apiVersion: kuma.io/v1alpha1
+kind: MeshTrafficPermission
+metadata:
+  name: allow-all
+  namespace: kuma-system
+  labels:
+    kuma.io/mesh: default
+spec:
+  targetRef:
+    kind: Mesh
+  from:
+  - targetRef:
+      kind: Mesh
+    default:
+      action: Allow`
+)
+
+var (
+	// From Kuma 2.6.0, the default mesh traffic permission is no longer created by default
+	// and must be created manually if mTLS is enabled.
+	// https://github.com/kumahq/kuma/blob/2.6.0/UPGRADE.md#default-trafficroute-and-trafficpermission-resources-are-not-created-when-creating-a-new-mesh
+	installDefaultMeshTrafficPermissionCutoffVersion = semver.MustParse("2.6.0")
 )
 
 // enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
 // startup
 func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
 	ticker := time.NewTicker(5 * time.Second) //nolint:gomnd
+	defer ticker.Stop()
 	timeoutTimer := time.NewTimer(time.Minute)
 
 	for {
@@ -247,7 +271,12 @@ func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err e
 		case <-ctx.Done():
 			return fmt.Errorf("context completed while retrying to apply Mesh")
 		case <-ticker.C:
-			err = clusters.ApplyManifestByYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+			yamlToApply := mtlsEnabledDefaultMesh
+			if v, ok := a.Version(); ok && v.GTE(installDefaultMeshTrafficPermissionCutoffVersion) {
+				a.logger.Infof("Kuma version is %s or later, creating default mesh traffic permission", installDefaultMeshTrafficPermissionCutoffVersion)
+				yamlToApply = strings.Join([]string{mtlsEnabledDefaultMesh, allowAllTrafficPermission}, "\n---\n")
+			}
+			err = clusters.ApplyManifestByYAML(ctx, cluster, yamlToApply)
 			if err == nil {
 				return nil
 			}

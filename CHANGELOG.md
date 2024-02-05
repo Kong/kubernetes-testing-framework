@@ -1,10 +1,13 @@
 # Changelog
 
-## Unreleased
+## v0.45.0
 
 - `Kuma` addon now properly uses the Helm chart version passed in its builder's
   `WithVersion` method.
   [#949](https://github.com/Kong/kubernetes-testing-framework/pull/949)
+- When `Kuma` addon is used with version greater or equal to `2.6.0` and mTLS enabled,
+  a default allow-all `TrafficPermission` gets installed to preserve previous behavior.
+  [#950](https://github.com/Kong/kubernetes-testing-framework/pull/950)
 
 ## v0.44.0
 
