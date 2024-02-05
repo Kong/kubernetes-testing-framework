@@ -45,7 +45,7 @@ type Addon struct {
 	name   string
 	logger *logrus.Logger
 
-	version semver.Version
+	version *semver.Version
 
 	mtlsEnabled bool
 }
@@ -61,9 +61,14 @@ func (a *Addon) Namespace() string {
 	return Namespace
 }
 
-// Version indicates the Kuma version for this addon.
-func (a *Addon) Version() semver.Version {
-	return a.version
+// Version returns the version of the Kuma Helm chart deployed by the addon.
+// If the version is not set, the second return value will be false and the latest local
+// chart version will be used.
+func (a *Addon) Version() (v semver.Version, ok bool) {
+	if a.version == nil {
+		return semver.Version{}, false
+	}
+	return *a.version, true
 }
 
 // -----------------------------------------------------------------------------
@@ -143,6 +148,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// if the dbmode is postgres, set several related values
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultReleaseName, "kuma/kuma"}
+
+	if a.version != nil {
+		args = append(args, "--version", a.version.String())
+	}
 
 	// compile the helm installation values
 	args = append(args, "--create-namespace", "--namespace", Namespace)
