@@ -17,7 +17,7 @@ import (
 	"github.com/kong/go-database-reconciler/pkg/dump"
 	"github.com/kong/go-database-reconciler/pkg/file"
 	"github.com/kong/go-database-reconciler/pkg/state"
-	deckutils "github.com/kong/go-database-reconciler/pkg/utils"
+	dbreconcilerutils "github.com/kong/go-database-reconciler/pkg/utils"
 	"github.com/kong/go-kong/kong"
 	pwgen "github.com/sethvargo/go-password/password"
 	"github.com/sirupsen/logrus"
@@ -474,17 +474,19 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		if err != nil {
 			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
 		}
-		opts := deckutils.KongClientConfig{
+		opts := dbreconcilerutils.KongClientConfig{
 			Address: addr.String(),
 			HTTPClient: &http.Client{
 				Timeout: time.Second * 90, //nolint:gomnd
 			},
-			TLSSkipVerify: true,
+			TLSConfig: dbreconcilerutils.TLSConfig{
+				SkipVerify: true,
+			},
 		}
 		if a.proxyEnterpriseSuperAdminPassword != "" {
 			opts.Headers = append(opts.Headers, "kong-admin-token:"+a.proxyEnterpriseSuperAdminPassword)
 		}
-		client, err := deckutils.GetKongClient(opts)
+		client, err := dbreconcilerutils.GetKongClient(opts)
 		if err != nil {
 			return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
 		}
@@ -505,7 +507,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 				// arguably a workspaced client for default should work on OSS, but it doesn't!
 				wsClient = client
 			} else {
-				wsClient, err = deckutils.GetKongClient(wsOpts)
+				wsClient, err = dbreconcilerutils.GetKongClient(wsOpts)
 				if err != nil {
 					return diagnostics, fmt.Errorf("could not build Kong client: %w", err)
 				}

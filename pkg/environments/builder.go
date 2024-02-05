@@ -199,7 +199,7 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 			cluster: cluster,
 		}, nil
 	case 1:
-		return nil, addonDeploymentErrors[0] 
+		return nil, addonDeploymentErrors[0]
 	default:
 		errMsgs := make([]string, 0, totalFailures)
 		for _, err := range addonDeploymentErrors {
