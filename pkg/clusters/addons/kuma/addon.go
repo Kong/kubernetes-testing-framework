@@ -61,12 +61,14 @@ func (a *Addon) Namespace() string {
 	return Namespace
 }
 
-// Version indicates the Kuma version for this addon.
-func (a *Addon) Version() semver.Version {
+// Version returns the version of the Kuma Helm chart that will be deployed by the addon.
+// If the version is not set, the second return value will be false and the latest local
+// chart version will be used.
+func (a *Addon) Version() (v semver.Version, ok bool) {
 	if a.version == nil {
-		return semver.Version{}
+		return semver.Version{}, false
 	}
-	return *a.version
+	return *a.version, true
 }
 
 // -----------------------------------------------------------------------------
