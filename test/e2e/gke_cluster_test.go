@@ -123,8 +123,8 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	t.Log("validating kubernetes cluster version")
 	kubernetesVersion, err := env.Cluster().Version()
 	require.NoError(t, err)
-	require.Equal(t, gkeVersionMajor, kubernetesVersion.Major)
-	require.Equal(t, gkeVersionMinor, kubernetesVersion.Minor)
+	require.Equal(t, uint64(gkeVersionMajor), kubernetesVersion.Major)
+	require.Equal(t, uint64(gkeVersionMinor), kubernetesVersion.Minor)
 
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongAddon, err := env.Cluster().GetAddon("kong")
