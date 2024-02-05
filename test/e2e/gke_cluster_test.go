@@ -28,6 +28,11 @@ import (
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/kubernetes/generators"
 )
 
+const (
+	gkeVersionMajor = 1
+	gkeVersionMinor = 29
+)
+
 var (
 	gkeCreds    = os.Getenv(gke.GKECredsVar)
 	gkeProject  = os.Getenv(gke.GKEProjectVar)
@@ -60,7 +65,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 
 	t.Logf("configuring the GKE cluster PROJECT=(%s) LOCATION=(%s)", gkeProject, gkeLocation)
 	builder := gke.NewBuilder([]byte(gkeCreds), gkeProject, gkeLocation)
-	builder.WithClusterMinorVersion(1, 29)
+	builder.WithClusterMinorVersion(gkeVersionMajor, gkeVersionMinor)
 	builder.WithWaitForTeardown(false)
 	builder.WithCreateSubnet(createSubnet)
 	builder.WithLabels(map[string]string{"test-cluster": "true"})
@@ -118,8 +123,8 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	t.Log("validating kubernetes cluster version")
 	kubernetesVersion, err := env.Cluster().Version()
 	require.NoError(t, err)
-	require.Equal(t, uint64(1), kubernetesVersion.Major)
-	require.Equal(t, uint64(24), kubernetesVersion.Minor)
+	require.Equal(t, gkeVersionMajor, kubernetesVersion.Major)
+	require.Equal(t, gkeVersionMinor, kubernetesVersion.Minor)
 
 	t.Log("verifying that the kong addon deployed both proxy and controller")
 	kongAddon, err := env.Cluster().GetAddon("kong")
