@@ -21,7 +21,7 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.8.4
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
-	golang.org/x/oauth2 v0.16.0
+	golang.org/x/oauth2 v0.17.0
 	golang.org/x/sync v0.6.0
 	google.golang.org/api v0.162.0
 	k8s.io/api v0.29.1
@@ -157,9 +157,9 @@ require (
 	github.com/yusufpapurcu/wmi v1.2.3 // indirect
 	go.opencensus.io v0.24.0 // indirect
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
-	golang.org/x/crypto v0.18.0 // indirect
+	golang.org/x/crypto v0.19.0 // indirect
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
-	golang.org/x/net v0.20.0 // indirect
+	golang.org/x/net v0.21.0 // indirect
 	golang.org/x/sys v0.17.0 // indirect
 	golang.org/x/term v0.17.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
