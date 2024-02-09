@@ -246,7 +246,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		if opts.Server == "" {
 			opts.Server = "https://index.docker.io/v1/"
 		}
-		opts.PrintObj = func(obj runtime.Object) error {
+		opts.PrintObj = func(_ runtime.Object) error {
 			return nil
 		}
 
