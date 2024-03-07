@@ -94,6 +94,14 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
+	// most resources in the apply can simply update if they are already present. the job cannot, so forcibly delete
+	// any existing one to avoid a startup error if this addon was applied to the cluster in a previous run
+	if err := cluster.Client().BatchV1().Jobs(DefaultNamespace).Delete(ctx, webhookWaitJobName, metav1.DeleteOptions{}); err != nil {
+		if !errors.IsNotFound(err) { // tolerate the job having already been deleted
+			return err
+		}
+	}
+
 	deployArgs := []string{
 		"--kubeconfig", kubeconfig.Name(),
 		"apply", "-f", fmt.Sprintf(manifestFormatter, a.version),
