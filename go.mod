@@ -24,9 +24,9 @@ require (
 	golang.org/x/oauth2 v0.18.0
 	golang.org/x/sync v0.6.0
 	google.golang.org/api v0.170.0
-	k8s.io/api v0.29.2
+	k8s.io/api v0.29.3
 	k8s.io/apiextensions-apiserver v0.29.2
-	k8s.io/apimachinery v0.29.2
+	k8s.io/apimachinery v0.29.3
 	k8s.io/cli-runtime v0.29.2
 	k8s.io/client-go v0.29.2
 	k8s.io/kubectl v0.29.2
@@ -97,7 +97,7 @@ require (
 	github.com/go-openapi/swag v0.22.7 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/groupcache v0.0.0-20210331224755-41bb18bfe9da // indirect
-	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/golang/protobuf v1.5.4 // indirect
 	github.com/google/btree v1.1.2 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
