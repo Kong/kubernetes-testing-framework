@@ -36,7 +36,7 @@ func TestKongWithPostgresDBMode(t *testing.T) {
 	require.NoError(t, <-env.WaitForReady(ctx))
 
 	t.Logf("verifying that the kong proxy service %s gets provisioned an IP address by metallb", kongaddon.DefaultProxyServiceName)
-	proxyURL, err := kong.ProxyURL(ctx, env.Cluster())
+	proxyURL, err := kong.ProxyHTTPURL(ctx, env.Cluster())
 	require.NoError(t, err)
 	require.NotNil(t, proxyURL)
 

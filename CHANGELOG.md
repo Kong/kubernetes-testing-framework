@@ -2,8 +2,22 @@
 
 ## Unreleased
 
+## v0.46.0
+
+### Breaking changes
+
+- Fixed `ProxyUDPURL` function to return the correct URL (`<IP>:<PORT>`),
+  the type of returned value changed from `*url.URL` to `string`.
+  Renamed `ProxyURL` to `ProxyHTTPURL`.
+  [#1008](https://github.com/Kong/kubernetes-testing-framework/pull/1008)
+
+### Added
+
 - Added support for arbitrary Helm chart values to the Kuma plugin.
   [#958](https://github.com/Kong/kubernetes-testing-framework/pull/958)
+- Introduced new functions `ProxyTCPURL` and `ProxyTLSURL` that returns
+  the URL in the format `<IP>:<PORT>`. Introduced new function `ProxyHTTPSURL`.
+  [#1008](https://github.com/Kong/kubernetes-testing-framework/pull/1008)
 
 ## v0.45.0
 

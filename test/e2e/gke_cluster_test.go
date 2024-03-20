@@ -131,7 +131,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 	require.NoError(t, err)
 	kongAddonRaw, ok := kongAddon.(*kong.Addon)
 	require.True(t, ok)
-	proxyURL, err := kongAddonRaw.ProxyURL(ctx, env.Cluster())
+	proxyURL, err := kongAddonRaw.ProxyHTTPURL(ctx, env.Cluster())
 	require.NoError(t, err)
 	kongDeployment, err := env.Cluster().Client().AppsV1().Deployments(kongAddonRaw.Namespace()).Get(ctx, "ingress-controller-kong", metav1.GetOptions{})
 	require.NoError(t, err)
