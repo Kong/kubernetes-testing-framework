@@ -53,7 +53,7 @@ func TestKindClusterBasics(t *testing.T) {
 	require.NoError(t, err)
 	kongAddonRaw, ok := kongAddon.(*kong.Addon)
 	require.True(t, ok)
-	proxyURL, err := kongAddonRaw.ProxyURL(ctx, env.Cluster())
+	proxyURL, err := kongAddonRaw.ProxyHTTPURL(ctx, env.Cluster())
 	require.NoError(t, err)
 
 	t.Log("verifying the kong proxy is returning its default 404 response")

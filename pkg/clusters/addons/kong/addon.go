@@ -134,46 +134,47 @@ func (a *Addon) Namespace() string {
 // Kong Addon - Proxy Endpoint Methods
 // -----------------------------------------------------------------------------
 
-// ProxyURL provides a routable *url.URL for accessing the Kong proxy.
-func (a *Addon) ProxyURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
-	waitForObjects, ready, err := a.Ready(ctx, cluster)
+// ProxyHTTPURL provides a routable *url.URL for accessing the Kong proxy.
+func (a *Addon) ProxyHTTPURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
+	urlStr, err := a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultProxyHTTPPort)
 	if err != nil {
 		return nil, err
 	}
+	return url.Parse(urlStr)
+}
 
-	if !ready {
-		return nil, fmt.Errorf("the addon is not ready on cluster %s: non-empty unresolved objects list: %+v", cluster.Name(), waitForObjects)
+// ProxyHTTPSURL provides a routable *url.URL for accessing the Kong proxy.
+func (a *Addon) ProxyHTTPSURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
+	urlStr, err := a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultProxyTLSServicePort)
+	if err != nil {
+		return nil, err
 	}
-
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultProxyHTTPPort)
+	return url.Parse(urlStr)
 }
 
 // ProxyAdminURL provides a routable *url.URL for accessing the Kong Admin API.
 func (a *Addon) ProxyAdminURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
-	waitForObjects, ready, err := a.Ready(ctx, cluster)
+	urlStr, err := a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultAdminServiceName}, DefaultAdminServicePort)
 	if err != nil {
 		return nil, err
 	}
-
-	if !ready {
-		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
-	}
-
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultAdminServiceName}, DefaultAdminServicePort)
+	return url.Parse(urlStr)
 }
 
-// ProxyUDPURL provides a routable *url.URL for accessing the default UDP service for the Kong Proxy.
-func (a *Addon) ProxyUDPURL(ctx context.Context, cluster clusters.Cluster) (*url.URL, error) {
-	waitForObjects, ready, err := a.Ready(ctx, cluster)
-	if err != nil {
-		return nil, err
-	}
+// ProxyUDPURL provides a routable address for accessing the default UDP service for the Kong Proxy.
+func (a *Addon) ProxyUDPURL(ctx context.Context, cluster clusters.Cluster) (string, error) {
+	return a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultUDPServiceName}, DefaultUDPServicePort)
+}
 
-	if !ready {
-		return nil, fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
-	}
+// ProxyTCPURL provides a routable address for accessing the default TCP service for the Kong Proxy.
+func (a *Addon) ProxyTCPURL(ctx context.Context, cluster clusters.Cluster) (string, error) {
+	// TCP port is exposed on the same service as the HTTP port.
+	return a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultTCPServicePort)
+}
 
-	return urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultUDPServiceName}, DefaultUDPServicePort)
+// ProxyTLSURL provides a routable address for accessing the Kong proxy over TLS.
+func (a *Addon) ProxyTLSURL(ctx context.Context, cluster clusters.Cluster) (string, error) {
+	return a.urlForService(ctx, cluster, types.NamespacedName{Namespace: a.namespace, Name: DefaultProxyServiceName}, DefaultTLSServicePort)
 }
 
 // -----------------------------------------------------------------------------
@@ -560,6 +561,48 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 	return diagnostics, nil
 }
 
+func (a *Addon) urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (string, error) {
+	waitForObjects, ready, err := a.Ready(ctx, cluster)
+	if err != nil {
+		return "", err
+	}
+
+	if !ready {
+		return "", fmt.Errorf("the addon is not ready on cluster %s, see: %+v", cluster.Name(), waitForObjects)
+	}
+
+	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+	var urlSchemePrefix string
+	switch port {
+	case DefaultAdminServicePort, DefaultProxyHTTPPort:
+		urlSchemePrefix = "http://"
+	case DefaultProxyTLSServicePort:
+		urlSchemePrefix = "https://"
+	default:
+		// To make URL parsable and without scheme, it is expected to start with "//".
+		urlSchemePrefix = ""
+	}
+
+	var ip string
+	switch service.Spec.Type {
+	case corev1.ServiceTypeLoadBalancer:
+		if len(service.Status.LoadBalancer.Ingress) == 1 {
+			ip = service.Status.LoadBalancer.Ingress[0].IP
+		}
+	default:
+		if service.Spec.ClusterIP != "" {
+			ip = service.Spec.ClusterIP
+		}
+	}
+	if ip == "" {
+		return "", fmt.Errorf("service %s has not yet been provisioned", service.Name)
+	}
+	return fmt.Sprintf("%s%s:%d", urlSchemePrefix, ip, port), nil
+}
+
 // -----------------------------------------------------------------------------
 // Kong Addon - Private Secret Generation Config Options
 // -----------------------------------------------------------------------------
@@ -622,26 +665,6 @@ func exposePortsDefault() []string {
 		"--set", "udpProxy.stream[0].parameters[0]=udp",
 		"--set", "udpProxy.stream[0].parameters[1]=reuseport",
 	}
-}
-
-func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.NamespacedName, port int) (*url.URL, error) {
-	service, err := cluster.Client().CoreV1().Services(nsn.Namespace).Get(ctx, nsn.Name, metav1.GetOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	switch service.Spec.Type {
-	case corev1.ServiceTypeLoadBalancer:
-		if len(service.Status.LoadBalancer.Ingress) == 1 {
-			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))
-		}
-	default:
-		if service.Spec.ClusterIP != "" {
-			return url.Parse(fmt.Sprintf("http://%s:%d", service.Spec.ClusterIP, port))
-		}
-	}
-
-	return nil, fmt.Errorf("service %s has not yet been provisoned", service.Name)
 }
 
 // deployKongEnterpriseLicenseSecret deploys a Kubernetes secret containing the enterprise license data
