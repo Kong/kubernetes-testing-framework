@@ -14,7 +14,7 @@ import (
 // Builder is a configuration tool to generate Kuma cluster addons.
 type Builder struct {
 	name    string
-	version semver.Version
+	version *semver.Version
 	logger  *logrus.Logger
 
 	mtlsEnabled bool
@@ -29,7 +29,7 @@ func NewBuilder() *Builder {
 
 // WithVersion configures the specific version of Kuma which should be deployed.
 func (b *Builder) WithVersion(version semver.Version) *Builder {
-	b.version = version
+	b.version = &version
 	return b
 }
 

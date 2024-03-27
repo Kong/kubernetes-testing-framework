@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.39.2
+
+- Backport Kuma changes to honor version and handle Kuma 2.6.0 traffic
+  permissions properly.
+  [#1017](https://github.com/Kong/kubernetes-testing-framework/pull/1017)
+
 ## v0.39.1
 
 - Removed a module exclude that made `go install` unhappy.
