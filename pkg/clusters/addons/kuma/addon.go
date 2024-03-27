@@ -155,6 +155,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// compile the helm installation values
 	args = append(args, "--create-namespace", "--namespace", Namespace)
+	args = append(args, "--set", "cni.enabled=true")
+	args = append(args, "--set", "controlPlane.mode=standalone")
 	a.logger.Debugf("helm install arguments: %+v", args)
 
 	// Sometimes running helm install fails. Just in case this happens, retry.
