@@ -12,7 +12,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
 	github.com/kong/go-database-reconciler v1.8.0
-	github.com/kong/go-kong v0.51.1-0.20240125175037-0c077f5b9ac7
+	github.com/kong/go-kong v0.52.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.39.0
 	github.com/sethvargo/go-password v0.2.0
