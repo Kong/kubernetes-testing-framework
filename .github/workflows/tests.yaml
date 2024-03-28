@@ -17,6 +17,7 @@ on:
 
 jobs:
   installer-tests:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     steps:
 
@@ -32,6 +33,7 @@ jobs:
       run: ~/.local/bin/ktf
 
   unit-tests:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     steps:
 
@@ -67,6 +69,7 @@ jobs:
         attempt_delay: 30000
 
   setup-integration-tests:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
@@ -149,6 +152,7 @@ jobs:
         attempt_delay: 30000
 
   integration-tests-passed:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: integration-tests
     if: always()
     runs-on: ubuntu-latest
@@ -159,6 +163,7 @@ jobs:
           exit 1
 
   setup-e2e-tests:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
@@ -224,6 +229,7 @@ jobs:
           KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
 
   e2e-tests-passed:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     needs: e2e-tests
     if: always() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
