@@ -62,7 +62,7 @@ func init() { //nolint:gochecknoinits
 var environmentsCreateCmd = &cobra.Command{
 	Use:   "create",
 	Short: "create a new testing environment",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), EnvironmentCreateTimeout)
 		defer cancel()
 
@@ -286,7 +286,7 @@ func init() { //nolint:gochecknoinits
 var environmentsDeleteCmd = &cobra.Command{
 	Use:   "delete",
 	Short: "delete a testing environment",
-	Run: func(cmd *cobra.Command, args []string) {
+	Run: func(cmd *cobra.Command, _ []string) {
 		ctx, cancel := context.WithTimeout(context.Background(), EnvironmentCreateTimeout)
 		defer cancel()
 
