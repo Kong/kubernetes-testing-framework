@@ -41,7 +41,7 @@ type FakeAdminAPIServer struct {
 func NewFakeAdminAPIServer() (*FakeAdminAPIServer, error) {
 	// start up the fake admin api server
 	mocks := make(chan AdminAPIResponse, maxMocks)
-	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	endpoint := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
 		select {
 		case override := <-mocks:
 			// run any callbacks that were configured in the mock (these are optional)

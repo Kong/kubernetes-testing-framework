@@ -45,7 +45,7 @@ type Addon struct {
 	name   string
 	logger *logrus.Logger
 
-	version semver.Version
+	version *semver.Version
 
 	mtlsEnabled bool
 }
@@ -61,9 +61,14 @@ func (a *Addon) Namespace() string {
 	return Namespace
 }
 
-// Version indicates the Kuma version for this addon.
-func (a *Addon) Version() semver.Version {
-	return a.version
+// Version returns the version of the Kuma Helm chart deployed by the addon.
+// If the version is not set, the second return value will be false and the latest local
+// chart version will be used.
+func (a *Addon) Version() (v semver.Version, ok bool) {
+	if a.version == nil {
+		return semver.Version{}, false
+	}
+	return *a.version, true
 }
 
 // -----------------------------------------------------------------------------
@@ -143,6 +148,10 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// if the dbmode is postgres, set several related values
 	args := []string{"--kubeconfig", kubeconfig.Name(), "install", DefaultReleaseName, "kuma/kuma"}
+
+	if a.version != nil {
+		args = append(args, "--version", a.version.String())
+	}
 
 	// compile the helm installation values
 	args = append(args, "--create-namespace", "--namespace", Namespace)
@@ -225,12 +234,36 @@ spec:
       name: ca-1
       type: builtin
     enabledBackend: ca-1`
+
+	allowAllTrafficPermission = `apiVersion: kuma.io/v1alpha1
+kind: MeshTrafficPermission
+metadata:
+  name: allow-all
+  namespace: kuma-system
+  labels:
+    kuma.io/mesh: default
+spec:
+  targetRef:
+    kind: Mesh
+  from:
+  - targetRef:
+      kind: Mesh
+    default:
+      action: Allow`
+)
+
+var (
+	// From Kuma 2.6.0, the default mesh traffic permission is no longer created by default
+	// and must be created manually if mTLS is enabled.
+	// https://github.com/kumahq/kuma/blob/2.6.0/UPGRADE.md#default-trafficroute-and-trafficpermission-resources-are-not-created-when-creating-a-new-mesh
+	installDefaultMeshTrafficPermissionCutoffVersion = semver.MustParse("2.6.0")
 )
 
 // enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
 // startup
 func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err error) {
 	ticker := time.NewTicker(5 * time.Second) //nolint:gomnd
+	defer ticker.Stop()
 	timeoutTimer := time.NewTimer(time.Minute)
 
 	for {
@@ -238,7 +271,12 @@ func (a *Addon) enableMTLS(ctx context.Context, cluster clusters.Cluster) (err e
 		case <-ctx.Done():
 			return fmt.Errorf("context completed while retrying to apply Mesh")
 		case <-ticker.C:
-			err = clusters.ApplyManifestByYAML(ctx, cluster, mtlsEnabledDefaultMesh)
+			yamlToApply := mtlsEnabledDefaultMesh
+			if v, ok := a.Version(); ok && v.GTE(installDefaultMeshTrafficPermissionCutoffVersion) {
+				a.logger.Infof("Kuma version is %s or later, creating default mesh traffic permission", installDefaultMeshTrafficPermissionCutoffVersion)
+				yamlToApply = strings.Join([]string{mtlsEnabledDefaultMesh, allowAllTrafficPermission}, "\n---\n")
+			}
+			err = clusters.ApplyManifestByYAML(ctx, cluster, yamlToApply)
 			if err == nil {
 				return nil
 			}

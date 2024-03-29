@@ -240,7 +240,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		if opts.Server == "" {
 			opts.Server = "https://index.docker.io/v1/"
 		}
-		opts.PrintObj = func(obj runtime.Object) error {
+		opts.PrintObj = func(_ runtime.Object) error {
 			return nil
 		}
 
@@ -606,7 +606,8 @@ func urlForService(ctx context.Context, cluster clusters.Cluster, nsn types.Name
 		return nil, err
 	}
 
-	switch service.Spec.Type { //nolint:exhaustive
+	//nolint:exhaustive
+	switch service.Spec.Type {
 	case corev1.ServiceTypeLoadBalancer:
 		if len(service.Status.LoadBalancer.Ingress) == 1 {
 			return url.Parse(fmt.Sprintf("http://%s:%d", service.Status.LoadBalancer.Ingress[0].IP, port))

@@ -10,6 +10,7 @@ on:
   pull_request:
     branches:
     - 'main'
+    - 'release/[0-9]+.[0-9]+.x'
   push:
     branches:
     - 'main'
@@ -114,7 +115,7 @@ jobs:
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
-        password: ${{ secrets.PULP_PASSWORD }}
+        op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     - name: setup golang
       uses: actions/setup-go@v4
@@ -196,7 +197,7 @@ jobs:
         if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:
-          password: ${{ secrets.PULP_PASSWORD }}
+          op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
       - name: checkout repository
         if: steps.detect_if_should_run.outputs.result == 'true'
