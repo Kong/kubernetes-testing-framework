@@ -35,7 +35,7 @@ require (
 	sigs.k8s.io/gateway-api v1.0.0
 	sigs.k8s.io/kind v0.22.0
 	sigs.k8s.io/kustomize/api v0.16.0
-	sigs.k8s.io/kustomize/kyaml v0.16.0
+	sigs.k8s.io/kustomize/kyaml v0.17.0
 	sigs.k8s.io/yaml v1.4.0
 )
 
@@ -54,7 +54,6 @@ require (
 	github.com/russross/blackfriday/v2 v2.1.0 // indirect
 	github.com/sagikazarmark/locafero v0.4.0 // indirect
 	github.com/sagikazarmark/slog-shim v0.1.0 // indirect
-	github.com/sergi/go-diff v1.2.0 // indirect
 	github.com/shoenig/go-m1cpu v0.1.6 // indirect
 	github.com/sourcegraph/conc v0.3.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.49.0 // indirect
