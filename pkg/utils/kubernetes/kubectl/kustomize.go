@@ -40,15 +40,15 @@ func GetKustomizedManifest(kustomization types.Kustomization, manifests ...io.Re
 	if err != nil {
 		return nil, err
 	}
-	kustomized, err := runKustomize(workDir)
+	kustomized, err := RunKustomize(workDir)
 	if err != nil {
 		return nil, err
 	}
 	return bytes.NewReader(kustomized), nil
 }
 
-// runKustomize runs kustomize on a path and returns the YAML output.
-func runKustomize(path string) ([]byte, error) {
+// RunKustomize runs kustomize on a path and returns the YAML output.
+func RunKustomize(path string) ([]byte, error) {
 	k := krusty.MakeKustomizer(krusty.MakeDefaultOptions())
 	m, err := k.Run(filesys.MakeFsOnDisk(), path)
 	if err != nil {
