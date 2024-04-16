@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+## v0.47.0
+
+### Added
+
+- The former `kubectl.runKustomize` helper is now the public
+  `kubectl.RunKustomize`. This function allows building an existing
+  kustomization directory.
+
 ## v0.46.0
 
 ### Breaking changes
