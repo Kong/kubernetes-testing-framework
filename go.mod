@@ -24,9 +24,9 @@ require (
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/api v0.172.0
-	k8s.io/api v0.29.3
+	k8s.io/api v0.29.4
 	k8s.io/apiextensions-apiserver v0.29.3
-	k8s.io/apimachinery v0.29.3
+	k8s.io/apimachinery v0.29.4
 	k8s.io/cli-runtime v0.29.3
 	k8s.io/client-go v0.29.3
 	k8s.io/kubectl v0.29.3
@@ -158,7 +158,7 @@ require (
 	go.starlark.net v0.0.0-20230525235612-a134d8f9ddca // indirect
 	golang.org/x/crypto v0.21.0 // indirect
 	golang.org/x/exp v0.0.0-20231226003508-02704c960a9b // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect
 	golang.org/x/term v0.18.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
