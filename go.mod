@@ -1,6 +1,7 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.21.1
+go 1.22.0
+
 toolchain go1.22.2
 
 require (
@@ -23,11 +24,11 @@ require (
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/sync v0.7.0
 	google.golang.org/api v0.174.0
-	k8s.io/api v0.29.4
+	k8s.io/api v0.30.0
 	k8s.io/apiextensions-apiserver v0.29.4
 	k8s.io/apimachinery v0.30.0
 	k8s.io/cli-runtime v0.29.4
-	k8s.io/client-go v0.29.4
+	k8s.io/client-go v0.30.0
 	k8s.io/kubectl v0.29.4
 	k8s.io/utils v0.0.0-20240102154912-e7106e64919e
 	sigs.k8s.io/controller-runtime v0.17.3
