@@ -87,7 +87,7 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 
 	g, ctx := errgroup.WithContext(ctx)
 	// Limit the concurrency level to not overwhelm the API server.
-	g.SetLimit(8) //nolint:gomnd
+	g.SetLimit(8) //nolint:mnd
 
 	for _, namespace := range c.namespaces {
 		namespace := namespace
@@ -225,7 +225,7 @@ func resourceDeleterForObj(dyn *dynamic.DynamicClient, obj client.Object) delete
 
 // DumpDiagnostics dumps diagnostics from the underlying cluster.
 //
-// Deprecated. Users should use Cluster.DumpDiagnostics().
+// Deprecated: Users should use Cluster.DumpDiagnostics().
 func (c *Cleaner) DumpDiagnostics(ctx context.Context, meta string) (string, error) {
 	return c.cluster.DumpDiagnostics(ctx, meta)
 }

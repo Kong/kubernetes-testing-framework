@@ -242,7 +242,7 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		return outDir, err
 	}
 	logsDir := filepath.Join(outDir, "pod_logs")
-	err = os.Mkdir(logsDir, 0o750) //nolint:gomnd
+	err = os.Mkdir(logsDir, 0o750) //nolint:mnd
 	if err != nil {
 		return outDir, err
 	}

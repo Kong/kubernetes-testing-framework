@@ -478,7 +478,7 @@ func (a *Addon) DumpDiagnostics(ctx context.Context, cluster clusters.Cluster) (
 		opts := dbreconcilerutils.KongClientConfig{
 			Address: addr.String(),
 			HTTPClient: &http.Client{
-				Timeout: time.Second * 90, //nolint:gomnd
+				Timeout: time.Second * 90, //nolint:mnd
 			},
 			TLSConfig: dbreconcilerutils.TLSConfig{
 				SkipVerify: true,

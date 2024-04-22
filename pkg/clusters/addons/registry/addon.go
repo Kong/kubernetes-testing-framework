@@ -184,7 +184,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	a.deploymentName = deployment.Name
 
 	// expose the deployment via Service
-	portMapping := map[int32]int32{registryListenPort: 443} //nolint:gomnd
+	portMapping := map[int32]int32{registryListenPort: 443} //nolint:mnd
 	service := generators.NewServiceForDeploymentWithMappedPorts(deployment, corev1.ServiceTypeClusterIP, portMapping)
 	if a.serviceTypeLoadBalancer {
 		service = generators.NewServiceForDeploymentWithMappedPorts(deployment, corev1.ServiceTypeLoadBalancer, portMapping)
@@ -358,7 +358,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	// write the certificate to a tar archive, as needed for the docker client when
 	// copying files to containers.
 	containerID := dockerutils.GetKindContainerID(cluster.Name())
-	if err := dockerutils.WriteFileToContainer(ctx, containerID, registryCertPath, 0o644, crtPEM); err != nil { //nolint:gomnd
+	if err := dockerutils.WriteFileToContainer(ctx, containerID, registryCertPath, 0o644, crtPEM); err != nil { //nolint:mnd
 		return fmt.Errorf("failed to copy certificate to kind container: %w", err)
 	}
 
@@ -384,7 +384,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// create a new tar archive for the file contents, as required by the docker
 	// client api.
-	if err := dockerutils.WriteFileToContainer(ctx, containerID, containerdConfigPath, 0o644, containerdConfig.Bytes()); err != nil { //nolint:gomnd
+	if err := dockerutils.WriteFileToContainer(ctx, containerID, containerdConfigPath, 0o644, containerdConfig.Bytes()); err != nil { //nolint:mnd
 		return fmt.Errorf("could not write updated containerd configuration to kind container: %w", err)
 	}
 
