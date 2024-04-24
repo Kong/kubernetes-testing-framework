@@ -23,7 +23,7 @@ require (
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
 	golang.org/x/oauth2 v0.19.0
 	golang.org/x/sync v0.7.0
-	google.golang.org/api v0.176.0
+	google.golang.org/api v0.176.1
 	k8s.io/api v0.30.0
 	k8s.io/apiextensions-apiserver v0.30.0
 	k8s.io/apimachinery v0.30.0
@@ -40,8 +40,8 @@ require (
 )
 
 require (
-	cloud.google.com/go/auth v0.2.2 // indirect
-	cloud.google.com/go/auth/oauth2adapt v0.2.1 // indirect
+	cloud.google.com/go/auth v0.3.0 // indirect
+	cloud.google.com/go/auth/oauth2adapt v0.2.2 // indirect
 	dario.cat/mergo v1.0.0 // indirect
 	github.com/containerd/log v0.1.0 // indirect
 	github.com/distribution/reference v0.5.0 // indirect
