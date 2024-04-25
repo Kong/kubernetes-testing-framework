@@ -7,7 +7,7 @@ toolchain go1.22.2
 require (
 	cloud.google.com/go/container v1.35.0
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.14.4
+	github.com/cert-manager/cert-manager v1.14.5
 	github.com/docker/docker v26.1.0+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
