@@ -11,9 +11,9 @@ linters:
   - exportloopref
   - forbidigo
   - gochecknoinits
+  - gocritic
   - gofmt
   - goimports
-  - gomnd
   - gomodguard
   - gosec
   - gci
@@ -21,8 +21,8 @@ linters:
   - govet
   - importas
   - ineffassign
-  - megacheck
   - misspell
+  - mnd
   - nilerr
   - nolintlint
   - predeclared
@@ -88,5 +88,4 @@ linters-settings:
     forbid:
       - 'CoreV1\(\)\.Endpoints(# use DiscoveryV1 EndpointSlices API instead)?'
       - 'corev1\.Endpoint(# use DiscoveryV1 EndpointSlices API instead)?'
-issues:
-  fix: true
+

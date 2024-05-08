@@ -37,7 +37,7 @@ func TestGetLicenseJSON(t *testing.T) {
 	invalidLicense := &License{Data: LicenseData{Payload: LicensePayload{ExpirationDate: yesterdaysDateStr}}}
 	invalidLicenseJSON, err := json.Marshal(invalidLicense)
 	assert.NoError(t, err)
-	assert.NoError(t, os.Setenv(LicenseDataEnvVar, string(invalidLicenseJSON[:])))
+	assert.NoError(t, os.Setenv(LicenseDataEnvVar, string(invalidLicenseJSON)))
 	_, err = GetLicenseJSONFromEnv()
 	assert.Error(t, err)
 
@@ -45,7 +45,7 @@ func TestGetLicenseJSON(t *testing.T) {
 	invalidLicense = &License{Data: LicenseData{Payload: LicensePayload{ExpirationDate: "2021-10-20"}}}
 	invalidLicenseJSON, err = json.Marshal(invalidLicense)
 	assert.NoError(t, err)
-	assert.NoError(t, os.Setenv(LicenseDataEnvVar, string(invalidLicenseJSON[:])))
+	assert.NoError(t, os.Setenv(LicenseDataEnvVar, string(invalidLicenseJSON)))
 	_, err = GetLicenseJSONFromEnv()
 	assert.Error(t, err)
 	assert.Equal(t, fmt.Sprintf("the provided %s is expired", LicenseDataEnvVar), err.Error())

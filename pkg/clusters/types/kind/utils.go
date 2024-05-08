@@ -134,7 +134,7 @@ func (b *Builder) disableDefaultCNI() error {
 		return fmt.Errorf("failed marshalling kind config: %w", err)
 	}
 
-	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
+	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:mnd
 	if err != nil {
 		return fmt.Errorf("failed writing kind config %s: %w", *b.configPath, err)
 	}
@@ -166,7 +166,7 @@ func (b *Builder) useIPv6Only() error {
 		return fmt.Errorf("failed marshalling kind config: %w", err)
 	}
 
-	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:gomnd
+	err = os.WriteFile(*b.configPath, configYAML, 0o600) //nolint:mnd
 	if err != nil {
 		return fmt.Errorf("failed writing kind config %s: %w", *b.configPath, err)
 	}

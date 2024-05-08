@@ -103,13 +103,14 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 		return nil, fmt.Errorf("Environment cannot specify both existingCluster and clusterBuilder")
 	}
 
-	// determine if an existing cluster has been configured for deployment
-	if b.existingCluster != nil {
+	// Determine if an existing cluster has been configured for deployment.
+	switch {
+	case b.existingCluster != nil:
 		if b.kubernetesVersion != nil {
 			return nil, fmt.Errorf("can't provide kubernetes version when using an existing cluster")
 		}
 		cluster = b.existingCluster
-	} else if b.clusterBuilder != nil {
+	case b.clusterBuilder != nil:
 		if b.kubernetesVersion != nil {
 			return nil, fmt.Errorf("can't provide kubernetes version when providing a cluster builder")
 		}
@@ -117,7 +118,7 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 		if err != nil {
 			return nil, err
 		}
-	} else {
+	default:
 		builder := kind.NewBuilder().WithName(b.Name)
 		if b.kubernetesVersion != nil {
 			builder.WithClusterVersion(*b.kubernetesVersion)

@@ -28,12 +28,12 @@ func DumpAllDescribeAll(ctx context.Context, c Cluster, outDir string) error {
 	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
 	// kubectl api-resources --verbs=list --namespaced -o name  | xargs -n 1 kubectl get --show-kind --ignore-not-found -A -oyaml
 	// aka "kubectl get all" and "kubectl describe all", but also gets CRs and cluster-scoped resouces
-	getAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_get_all.yaml"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+	getAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_get_all.yaml"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:mnd
 	if err != nil {
 		return err
 	}
 	defer getAllOut.Close()
-	describeAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_describe_all.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+	describeAllOut, err := os.OpenFile(filepath.Join(outDir, "kubectl_describe_all.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:mnd
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 		}
 		if len(diagnostics) > 0 {
 			addonOut := filepath.Join(outDir, "addons", string(addon.Name()))
-			err = os.MkdirAll(addonOut, 0o750) //nolint:gomnd
+			err = os.MkdirAll(addonOut, 0o750) //nolint:mnd
 			if err != nil {
 				failedAddons[string(addon.Name())] = err
 				continue
@@ -142,7 +142,7 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 	// write errors if we failed to dump results of `kubectl get all` or `kubectl describe all`.
 	// in cases where kubernetes cluster may not be correctly created.
 	if err != nil {
-		kubectlErrorOut, openErr := os.OpenFile(filepath.Join(outDir, "kubectl_dump_error.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:gomnd
+		kubectlErrorOut, openErr := os.OpenFile(filepath.Join(outDir, "kubectl_dump_error.txt"), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0o644) //nolint:mnd
 		if openErr != nil {
 			return openErr
 		}

@@ -25,7 +25,7 @@ import (
 // Environments - Base Command
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:init
 	rootCmd.AddCommand(environmentsCmd)
 }
 
@@ -39,7 +39,7 @@ var environmentsCmd = &cobra.Command{
 // Environments - Create Subcommand
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:init
 	environmentsCmd.AddCommand(environmentsCreateCmd)
 
 	// environment naming
@@ -240,7 +240,7 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 		if len(imageParts) == 1 {
 			imageParts = append(imageParts, "latest")
 		}
-		if len(imageParts) != 2 { //nolint:gomnd
+		if len(imageParts) != 2 { //nolint:mnd
 			cobra.CheckErr(fmt.Errorf("malformed --kong-gateway-image: %s", customGatewayImage))
 		}
 		builder.WithProxyImage(imageParts[0], imageParts[1])
@@ -254,7 +254,7 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 		if len(imageParts) == 1 {
 			imageParts = append(imageParts, "latest")
 		}
-		if len(imageParts) != 2 { //nolint:gomnd
+		if len(imageParts) != 2 { //nolint:mnd
 			cobra.CheckErr(fmt.Errorf("malformed --kong-ingress-controller-image: %s", customControllerImage))
 		}
 		builder.WithControllerImage(imageParts[0], imageParts[1])
@@ -286,7 +286,7 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 // Environments - Delete Subcommand
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:gochecknoinits
+func init() { //nolint:init
 	environmentsCmd.AddCommand(environmentsDeleteCmd)
 	environmentsDeleteCmd.PersistentFlags().String("name", DefaultEnvironmentName, "name of the environment to delete")
 }
