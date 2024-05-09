@@ -11,7 +11,7 @@ import (
 
 var cfgFile string
 
-func init() { //nolint:init
+func init() { //nolint:gochecknoinits
 	// config init
 	cobra.OnInitialize(initConfig)
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.ktf.yaml)")
