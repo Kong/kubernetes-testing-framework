@@ -25,7 +25,7 @@ import (
 // Environments - Base Command
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:init
+func init() { //nolint:gochecknoinits
 	rootCmd.AddCommand(environmentsCmd)
 }
 
@@ -39,7 +39,7 @@ var environmentsCmd = &cobra.Command{
 // Environments - Create Subcommand
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:init
+func init() { //nolint:gochecknoinits
 	environmentsCmd.AddCommand(environmentsCreateCmd)
 
 	// environment naming
@@ -286,7 +286,7 @@ func configureKongAddon(cmd *cobra.Command, envBuilder *environments.Builder) *e
 // Environments - Delete Subcommand
 // -----------------------------------------------------------------------------
 
-func init() { //nolint:init
+func init() { //nolint:gochecknoinits
 	environmentsCmd.AddCommand(environmentsDeleteCmd)
 	environmentsDeleteCmd.PersistentFlags().String("name", DefaultEnvironmentName, "name of the environment to delete")
 }
