@@ -13,6 +13,7 @@ on:
 
 jobs:
   golangci-lint:
+    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
     runs-on: ubuntu-latest
     steps:
     - name: checkout repository
