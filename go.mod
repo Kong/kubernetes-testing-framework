@@ -35,7 +35,7 @@ require (
 	sigs.k8s.io/gateway-api v1.1.0
 	sigs.k8s.io/kind v0.23.0
 	sigs.k8s.io/kustomize/api v0.17.1
-	sigs.k8s.io/kustomize/kyaml v0.17.0
+	sigs.k8s.io/kustomize/kyaml v0.17.1
 	sigs.k8s.io/yaml v1.4.0
 )
 
