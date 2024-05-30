@@ -11,7 +11,7 @@ require (
 	github.com/docker/docker v26.1.3+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.12.0
+	github.com/kong/go-database-reconciler v1.12.1
 	github.com/kong/go-kong v0.55.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.39.0
