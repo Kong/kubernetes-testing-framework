@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -82,5 +82,5 @@ func WriteFileToContainer(ctx context.Context, containerID string, path string, 
 	}
 
 	// copy the file to the docker container
-	return dockerc.CopyToContainer(ctx, containerID, filepath.Dir(path), archiveBuffer, types.CopyToContainerOptions{})
+	return dockerc.CopyToContainer(ctx, containerID, filepath.Dir(path), archiveBuffer, container.CopyToContainerOptions{})
 }
