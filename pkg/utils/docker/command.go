@@ -3,7 +3,7 @@ package docker
 import (
 	"context"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -17,7 +17,7 @@ func RunPrivilegedCommand(ctx context.Context, containerID, command string, args
 	}
 
 	// load the exec command for the container
-	execID, err := dockerc.ContainerExecCreate(ctx, containerID, types.ExecConfig{
+	execID, err := dockerc.ContainerExecCreate(ctx, containerID, container.ExecOptions{
 		User:       "0",
 		Privileged: true,
 		Cmd:        append([]string{command}, args...),
@@ -27,5 +27,5 @@ func RunPrivilegedCommand(ctx context.Context, containerID, command string, args
 	}
 
 	// run the command
-	return dockerc.ContainerExecStart(ctx, execID.ID, types.ExecStartCheck{})
+	return dockerc.ContainerExecStart(ctx, execID.ID, container.ExecAttachOptions{})
 }
