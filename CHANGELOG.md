@@ -1,6 +1,10 @@
 # Changelog
 
-## Unreleased
+## v0.47.1
+
+- Adapt Kong addon to the `kong/kong` Helm chart v2.39.0 that requires
+  `enterprise.rbac.session_conf_secret` to be explicitly defined.
+  [#1105](https://github.com/Kong/kubernetes-testing-framework/pull/1105)
 
 ## v0.47.0
 
