@@ -360,6 +360,9 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			}
 		}
 
+		// Set the session configuration secret name for the admin GUI.
+		a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("enterprise.rbac.session_conf_secret=%s", DefaultAdminGUISessionConfSecretName))
+
 		// Deploy the admin session configuration needed for enterprise enabled mode.
 		if err := deployKongEnterpriseAdminGUISessionConf(ctx, cluster, a.namespace); err != nil {
 			return err
