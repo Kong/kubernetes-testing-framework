@@ -26,7 +26,7 @@ require (
 	google.golang.org/api v0.186.0
 	k8s.io/api v0.30.1
 	k8s.io/apiextensions-apiserver v0.30.1
-	k8s.io/apimachinery v0.30.1
+	k8s.io/apimachinery v0.30.2
 	k8s.io/cli-runtime v0.30.1
 	k8s.io/client-go v0.30.1
 	k8s.io/kubectl v0.30.1
