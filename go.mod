@@ -17,7 +17,7 @@ require (
 	github.com/samber/lo v1.39.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.3
-	github.com/spf13/cobra v1.8.0
+	github.com/spf13/cobra v1.8.1
 	github.com/spf13/viper v1.19.0
 	github.com/stretchr/testify v1.9.0
 	go4.org/netipx v0.0.0-20230728184502-ec4c8b891b28
