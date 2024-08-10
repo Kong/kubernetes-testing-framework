@@ -188,8 +188,8 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI2bnpBCr8=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
-github.com/kong/go-database-reconciler v1.14.2 h1:AWS8FjO+qhpjZ0hn26pdSNNwweDFa1pOkiQCL36/KXY=
-github.com/kong/go-database-reconciler v1.14.2/go.mod h1:OsyUWH3SUvXAd5HJx3PhRU3PyzH0uCy7bTlzoSfw8Ew=
+github.com/kong/go-database-reconciler v1.14.3 h1:Vmw5NNePkr2mc9r+As87dPRIsrOduM4b0zpPi9ci1mA=
+github.com/kong/go-database-reconciler v1.14.3/go.mod h1:OsyUWH3SUvXAd5HJx3PhRU3PyzH0uCy7bTlzoSfw8Ew=
 github.com/kong/go-kong v0.57.1 h1:PATDsjrRr0SMMtN433ONoZqm+7UKmv49zgqQyvWbfPY=
 github.com/kong/go-kong v0.57.1/go.mod h1:lG2zDVU0yynwV9S7gJXDwwi6zVY+MgS8aUX4QhzpDz4=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
