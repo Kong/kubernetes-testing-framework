@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.47.2
+
+- Updated metallb to 0.14.8
+  [#1154](https://github.com/Kong/kubernetes-testing-framework/pull/1154)
+
 ## v0.47.1
 
 - Adapt Kong addon to the `kong/kong` Helm chart v2.39.0 that requires

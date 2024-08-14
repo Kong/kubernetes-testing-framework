@@ -144,7 +144,7 @@ func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 // -----------------------------------------------------------------------------
 
 var (
-	metalManifest = "https://github.com/metallb/metallb/config/native?ref=v0.13.12&timeout=2m"
+	metalManifest = "https://github.com/metallb/metallb/config/native?ref=v0.14.8&timeout=2m"
 	secretKeyLen  = 128
 )
 
@@ -241,7 +241,6 @@ func createIPAddressPool(ctx context.Context, cluster clusters.Cluster, dockerNe
 				},
 			},
 		}, metav1.CreateOptions{})
-
 		if err != nil {
 			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
@@ -284,7 +283,6 @@ func createL2Advertisement(ctx context.Context, cluster clusters.Cluster) error 
 				},
 			},
 		}, metav1.CreateOptions{})
-
 		if err != nil {
 			if apierrors.IsAlreadyExists(err) {
 				// delete the existing resource and recreate it in another round of loop.
