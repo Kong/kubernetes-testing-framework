@@ -185,8 +185,8 @@ github.com/kisielk/errcheck v1.5.0/go.mod h1:pFxgyoBC7bSaBwPgfKdkLd5X25qrDl4LWUI
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kong/go-database-reconciler v1.14.6 h1:9KotENdCdk5EanMS3pJf+pN9VZga3ruUVGkg7aDfJNo=
 github.com/kong/go-database-reconciler v1.14.6/go.mod h1:Dv9h5cdWswFh8ZJRltxkZWTwKFBAAayvdku01HtVEbk=
-github.com/kong/go-kong v0.58.0 h1:9Y1Hg7ahCS7Ig+iAb9CZyjeT3ARuDe9ohV7mVa8n/eU=
-github.com/kong/go-kong v0.58.0/go.mod h1:8Vt6HmtgLNgL/7bSwAlz3DIWqBtzG7qEt9+OnMiQOa0=
+github.com/kong/go-kong v0.59.0 h1:U6dE2sqb8E8j0kESW/RCW9TkXH8Y3W0EtNDXJVsDNuM=
+github.com/kong/go-kong v0.59.0/go.mod h1:8Vt6HmtgLNgL/7bSwAlz3DIWqBtzG7qEt9+OnMiQOa0=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
 github.com/kong/semver/v4 v4.0.1/go.mod h1:LImQ0oT15pJvSns/hs2laLca2zcYoHu5EsSNY0J6/QA=
 github.com/konsorten/go-windows-terminal-sequences v1.0.1/go.mod h1:T0+1ngSBFLxvqU3pZ+m/2kptfBszLMUkC4ZK/EgS/cQ=
