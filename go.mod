@@ -1,7 +1,8 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.22.0
-toolchain go1.22.8
+go 1.22.7
+
+toolchain go1.23.1
 
 require (
 	cloud.google.com/go/container v1.40.0
