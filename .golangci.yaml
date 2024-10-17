@@ -2,65 +2,65 @@ run:
   timeout: 5m
 linters:
   enable:
-  - asciicheck
-  - bodyclose
-  - dogsled
-  - durationcheck
-  - errcheck
-  - exhaustive
-  - exportloopref
-  - forbidigo
-  - gochecknoinits
-  - gocritic
-  - gofmt
-  - goimports
-  - gomodguard
-  - gosec
-  - gci
-  - gosimple
-  - govet
-  - importas
-  - ineffassign
-  - misspell
-  - mnd
-  - nilerr
-  - nolintlint
-  - predeclared
-  - revive
-  - staticcheck
-  - typecheck
-  - unconvert
-  - unparam
-  - unused
-  - wastedassign
+    - asciicheck
+    - bodyclose
+    - dogsled
+    - durationcheck
+    - errcheck
+    - exhaustive
+    - copyloopvar
+    - forbidigo
+    - gochecknoinits
+    - gocritic
+    - gofmt
+    - goimports
+    - gomodguard
+    - gosec
+    - gci
+    - gosimple
+    - govet
+    - importas
+    - ineffassign
+    - misspell
+    - mnd
+    - nilerr
+    - nolintlint
+    - predeclared
+    - revive
+    - staticcheck
+    - typecheck
+    - unconvert
+    - unparam
+    - unused
+    - wastedassign
 
 linters-settings:
   exhaustive:
     default-signifies-exhaustive: true
   gci:
     sections:
-    - standard
-    - default
-    - prefix(github.com/kong/kubernetes-testing-framework)
+      - standard
+      - default
+      - prefix(github.com/kong/kubernetes-testing-framework)
   gomodguard:
     blocked:
       modules:
-      - github.com/ghodss/yaml:
-          recommendations:
-          - sigs.k8s.io/yaml
-      - gopkg.in/yaml.v2:
-          recommendations:
-          - sigs.k8s.io/yaml
-      - gopkg.in/yaml.v3:
-          recommendations:
-          - sigs.k8s.io/yaml
-      - github.com/pkg/errors:
-          recommendations:
-          - fmt
-          - errors
-      - golang.org/x/net/context:
-          recommendations:
-          - context
+        - github.com/ghodss/yaml:
+            recommendations:
+              - sigs.k8s.io/yaml
+        - gopkg.in/yaml.v2:
+            recommendations:
+              - sigs.k8s.io/yaml
+        - gopkg.in/yaml.v3:
+            recommendations:
+              - sigs.k8s.io/yaml
+        - github.com/pkg/errors:
+            recommendations:
+              - fmt
+              - errors
+        - golang.org/x/net/context:
+            recommendations:
+              - context
   importas:
     no-unaliased: true
     alias:
@@ -88,4 +88,3 @@ linters-settings:
     forbid:
       - 'CoreV1\(\)\.Endpoints(# use DiscoveryV1 EndpointSlices API instead)?'
       - 'corev1\.Endpoint(# use DiscoveryV1 EndpointSlices API instead)?'
-

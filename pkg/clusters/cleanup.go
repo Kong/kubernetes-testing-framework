@@ -90,7 +90,6 @@ func (c *Cleaner) Cleanup(ctx context.Context) error {
 	g.SetLimit(8) //nolint:mnd
 
 	for _, namespace := range c.namespaces {
-		namespace := namespace
 		g.Go(func() error {
 			namespaceClient := c.cluster.Client().CoreV1().Namespaces()
 
