@@ -1,7 +1,6 @@
 module github.com/kong/kubernetes-testing-framework
 
 go 1.22.7
-
 toolchain go1.23.2
 
 require (
@@ -13,7 +12,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
 	github.com/kong/go-database-reconciler v1.17.0
-	github.com/kong/go-kong v0.61.0
+	github.com/kong/go-kong v0.62.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.47.0
 	github.com/sethvargo/go-password v0.3.1
@@ -165,7 +164,7 @@ require (
 	gotest.tools/v3 v3.5.1 // indirect
 	k8s.io/component-base v0.31.4 // indirect
 	k8s.io/klog/v2 v2.130.1 // indirect
-	k8s.io/kube-openapi v0.0.0-20240903163716-9e1beecbcb38 // indirect
+	k8s.io/kube-openapi v0.0.0-20241105132330-32ad38e42d3f // indirect
 	sigs.k8s.io/json v0.0.0-20221116044647-bc3834ca7abd // indirect
-	sigs.k8s.io/structured-merge-diff/v4 v4.4.1 // indirect
+	sigs.k8s.io/structured-merge-diff/v4 v4.4.2 // indirect
 )
