@@ -61,7 +61,7 @@ jobs:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     steps:
 
-    - uses: Kong/kong-license@master
+    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
       id: license
       with:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -91,7 +91,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: Kong/kong-license@master
+    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
       id: license
       with:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
