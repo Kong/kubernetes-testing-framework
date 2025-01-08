@@ -26,13 +26,14 @@ type Builder struct {
 	jsonCreds         []byte
 	waitForTeardown   bool
 
-	createSubnet    bool
-	addons          clusters.Addons
-	clusterVersion  *semver.Version
-	majorMinor      string
-	nodeMachineType string
-	labels          map[string]string
-	releaseChannel  *ReleaseChannel
+	createSubnet        bool
+	addons              clusters.Addons
+	clusterVersion      *semver.Version
+	majorMinor          string
+	nodeMachineType     string
+	labels              map[string]string
+	releaseChannel      *ReleaseChannel
+	enableNetworkPolicy bool
 }
 
 const (
@@ -105,6 +106,12 @@ func (b *Builder) WithLabels(labels map[string]string) *Builder {
 	return b
 }
 
+// WithNetworkPolicy adds labels that the created cluster is going to be labeled with.
+func (b *Builder) WithNetworkPolicy() *Builder {
+	b.enableNetworkPolicy = true
+	return b
+}
+
 // ReleaseChannel is a type for specifying the release channel of the cluster.
 // See https://cloud.google.com/kubernetes-engine/docs/release-notes for more details.
 type ReleaseChannel string
@@ -149,10 +156,15 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 	parent := fmt.Sprintf("projects/%s/locations/%s", b.project, b.location)
 	pbcluster := containerpb.Cluster{
 		Name: b.Name,
-		NodeConfig: &containerpb.NodeConfig{
-			MachineType: b.nodeMachineType,
+		NodePools: []*containerpb.NodePool{
+			{
+				Name: "default-pool",
+				Config: &containerpb.NodeConfig{
+					MachineType: b.nodeMachineType,
+				},
+				InitialNodeCount: 1,
+			},
 		},
-		InitialNodeCount: 1,
 		// disable the GKE ingress controller, which will otherwise interact with classless Ingresses
 		AddonsConfig: &containerpb.AddonsConfig{
 			HttpLoadBalancing: &containerpb.HttpLoadBalancing{Disabled: true},
@@ -203,6 +215,12 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 		}
 		pbcluster.ReleaseChannel = &containerpb.ReleaseChannel{
 			Channel: channel,
+		}
+	}
+	if b.enableNetworkPolicy {
+		pbcluster.NetworkPolicy = &containerpb.NetworkPolicy{
+			Enabled:  true,
+			Provider: containerpb.NetworkPolicy_CALICO,
 		}
 	}
 
