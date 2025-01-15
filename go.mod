@@ -32,7 +32,7 @@ require (
 	k8s.io/client-go v0.32.0
 	k8s.io/kubectl v0.32.0
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
-	sigs.k8s.io/controller-runtime v0.19.3
+	sigs.k8s.io/controller-runtime v0.19.4
 	sigs.k8s.io/gateway-api v1.2.1
 	sigs.k8s.io/kind v0.26.0
 	sigs.k8s.io/kustomize/api v0.18.0
