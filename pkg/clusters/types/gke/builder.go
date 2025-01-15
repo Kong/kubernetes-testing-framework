@@ -106,7 +106,7 @@ func (b *Builder) WithLabels(labels map[string]string) *Builder {
 	return b
 }
 
-// WithNetworkPolicy adds labels that the created cluster is going to be labeled with.
+// WithNetworkPolicy enables network policy backed by calico for the cluster
 func (b *Builder) WithNetworkPolicy() *Builder {
 	b.enableNetworkPolicy = true
 	return b
