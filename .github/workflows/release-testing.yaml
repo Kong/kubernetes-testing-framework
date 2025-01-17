@@ -14,7 +14,7 @@ jobs:
   # --------------------------------------------------------------------------
 
   unit-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
 
@@ -32,7 +32,7 @@ jobs:
       run: make test.unit
 
   setup-integration-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
@@ -120,7 +120,7 @@ jobs:
         KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
 
   release-tagging:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     needs:
     - unit-tests
