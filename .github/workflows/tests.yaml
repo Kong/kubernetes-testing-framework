@@ -56,7 +56,7 @@ jobs:
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
       if: steps.detect_if_should_run.outputs.result == 'true'
-      uses: Wandalen/wretry.action@ffdd254f4eaf1562b8a2c66aeaa37f1ff2231179 # v3.7.3
+      uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
       with:
         action: codecov/codecov-action@v3
         with: |
@@ -139,7 +139,7 @@ jobs:
     # somewhat defeats the purpose of uploading those reports. Why bother uploading
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
-      uses: Wandalen/wretry.action@ffdd254f4eaf1562b8a2c66aeaa37f1ff2231179 # v3.7.3
+      uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
       with:
         action: codecov/codecov-action@v3
         with: |
