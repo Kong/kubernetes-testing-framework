@@ -214,6 +214,8 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 		}
 	}
 
+	const namespaceWaitTime = time.Second
+
 	// wait for the namespace to tear down
 	for {
 		select {
@@ -229,7 +231,12 @@ func deleteKnative(ctx context.Context, cluster clusters.Cluster, version string
 				}
 				return err
 			}
-			time.Sleep(time.Second)
+
+			select {
+			case <-ctx.Done():
+				continue // this will return an error in the next iteration
+			case <-time.After(namespaceWaitTime):
+			}
 		}
 	}
 }
