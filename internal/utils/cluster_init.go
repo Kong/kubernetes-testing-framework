@@ -28,6 +28,9 @@ const (
 // regardless of which cluster type (e.g. kind, gke). This includes the creation
 // of some special administrative namespaces and service accounts.
 func ClusterInitHooks(ctx context.Context, cluster clusters.Cluster) error {
+	const (
+		serviceAccountWaitTime = time.Second
+	)
 	// create the admin namespace if it doesn't already exist
 	namespace, err := cluster.Client().CoreV1().Namespaces().Create(ctx, &corev1.Namespace{ObjectMeta: metav1.ObjectMeta{Name: AdminNamespace}}, metav1.CreateOptions{})
 	if err != nil {
@@ -39,6 +42,7 @@ func ClusterInitHooks(ctx context.Context, cluster clusters.Cluster) error {
 	// wait for the default service account to be available
 	var defaultSAFound bool
 	var defaultSA *corev1.ServiceAccount
+
 	for !defaultSAFound {
 		select {
 		case <-ctx.Done():
@@ -47,8 +51,12 @@ func ClusterInitHooks(ctx context.Context, cluster clusters.Cluster) error {
 			defaultSA, err = cluster.Client().CoreV1().ServiceAccounts(namespace.Name).Get(ctx, "default", metav1.GetOptions{})
 			if err != nil {
 				if errors.IsNotFound(err) {
-					time.Sleep(time.Second)
-					continue // try again if its not there yet
+					select {
+					case <-time.After(serviceAccountWaitTime):
+						continue // try again if its not there yet
+					case <-ctx.Done():
+						return fmt.Errorf("context completed before cluster init hooks could finish: %w", ctx.Err())
+					}
 				}
 				return err // don't tolerate any errors except 404
 			}

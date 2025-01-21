@@ -123,7 +123,13 @@ func (env *environment) WaitForReady(ctx context.Context) chan error {
 					hung.Stop()
 					return
 				}
-				time.Sleep(objectWaitSleepTime)
+				// Wait before retry to prevent spamming env with readiness check.
+				select {
+				case <-time.After(objectWaitSleepTime):
+				case <-ctx.Done():
+					hung.Stop()
+					return
+				}
 			}
 		}
 	}()

@@ -250,7 +250,12 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 				clusterReady = true
 				break
 			}
-			time.Sleep(waitForClusterTick)
+
+			select {
+			case <-ctx.Done():
+				continue // this will return an error in the next iteration
+			case <-time.After(waitForClusterTick):
+			}
 		}
 	}
 
