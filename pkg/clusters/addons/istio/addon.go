@@ -74,6 +74,10 @@ func (a *Addon) Version() semver.Version {
 // EnableMeshForNamespace will add the "istio-injection=enabled" label to the provided namespace
 // by name which will indicate to Istio to inject sidecard pods to add it to the mesh network.
 func (a *Addon) EnableMeshForNamespace(ctx context.Context, cluster clusters.Cluster, name string) error {
+	const (
+		namspaceWaitTime = time.Second
+	)
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -89,8 +93,12 @@ func (a *Addon) EnableMeshForNamespace(ctx context.Context, cluster clusters.Clu
 				if errors.IsConflict(err) {
 					// if there's a conflict then an update happened since we pulled the namespace,
 					// simply pull and try again.
-					time.Sleep(time.Second)
-					continue
+					select {
+					case <-time.After(namspaceWaitTime):
+						continue // try again if its not there yet
+					case <-ctx.Done():
+						continue // this will return an error in the next iteration
+					}
 				}
 				return fmt.Errorf("could not enable mesh for namespace %s: %w", name, err)
 			}
@@ -141,6 +149,8 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		return err
 	}
 
+	const jobWaitTime = time.Second
+
 	// wait for the job to complete
 	var deployJobCompleted bool
 	for !deployJobCompleted {
@@ -155,7 +165,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			if a.istioDeployJob.Status.Succeeded > 0 {
 				deployJobCompleted = true
 			} else {
-				time.Sleep(time.Second)
+				select {
+				case <-time.After(jobWaitTime):
+					continue
+				case <-ctx.Done():
+					continue // this will return an error in the next iteration
+				}
 			}
 		}
 	}
@@ -302,8 +317,8 @@ func (a *Addon) deployExtras(ctx context.Context, cluster clusters.Cluster) erro
 }
 
 const (
-	defaultRetries          = 3
-	defaultRetryWaitSeconds = 3
+	defaultRetries       = 3
+	defaultRetryWaitTime = 3 * time.Second
 )
 
 // retryKubectlApply retries a command multiple times with a limit, and is particularly
@@ -319,8 +334,12 @@ func retryKubectlApply(ctx context.Context, args ...string) (err error) {
 		if err = cmd.Run(); err == nil {
 			break
 		}
-		time.Sleep(time.Second * defaultRetryWaitSeconds)
-		count--
+		select {
+		case <-ctx.Done():
+			continue
+		case <-time.After(defaultRetryWaitTime):
+			count--
+		}
 	}
 
 	if err != nil {

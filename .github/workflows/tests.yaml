@@ -16,13 +16,19 @@ on:
   workflow_dispatch: {}
 
 jobs:
+  ensure-actions-sha-pin:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+    - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@c3a2b64f69b7a1542a68f44d9edbd9ec3fc1455e # v3.0.20
+
   installer-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
 
     - name: checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - name: run installer script
       env:
@@ -33,17 +39,17 @@ jobs:
       run: ~/.local/bin/ktf
 
   unit-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
 
     - name: checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
 
     - name: setup golang
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
       with:
         go-version-file: go.mod
 
@@ -56,7 +62,7 @@ jobs:
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
       if: steps.detect_if_should_run.outputs.result == 'true'
-      uses: Wandalen/wretry.action@ffdd254f4eaf1562b8a2c66aeaa37f1ff2231179 # v3.7.3
+      uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
       with:
         action: codecov/codecov-action@v3
         with: |
@@ -69,13 +75,13 @@ jobs:
         attempt_delay: 30000
 
   setup-integration-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
     steps:
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - id: set_test_names
       name: Set test names
@@ -109,7 +115,7 @@ jobs:
       run: echo "KTF_TEST_RUN_ENTERPRISE_CASES=true" >> $GITHUB_ENV
 
     - name: checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
       with:
         fetch-depth: 0
 
@@ -120,7 +126,7 @@ jobs:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     - name: setup golang
-      uses: actions/setup-go@v5
+      uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
       with:
         go-version-file: go.mod
 
@@ -139,7 +145,7 @@ jobs:
     # somewhat defeats the purpose of uploading those reports. Why bother uploading
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
-      uses: Wandalen/wretry.action@ffdd254f4eaf1562b8a2c66aeaa37f1ff2231179 # v3.7.3
+      uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
       with:
         action: codecov/codecov-action@v3
         with: |
@@ -152,7 +158,7 @@ jobs:
         attempt_delay: 30000
 
   integration-tests-passed:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     needs: integration-tests
     if: always()
     runs-on: ubuntu-latest
@@ -163,13 +169,13 @@ jobs:
           exit 1
 
   setup-e2e-tests:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     outputs:
       test_names: ${{ steps.set_test_names.outputs.test_names }}
     steps:
 
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
     - id: set_test_names
       name: Set test names
@@ -207,13 +213,13 @@ jobs:
 
       - name: checkout repository
         if: steps.detect_if_should_run.outputs.result == 'true'
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 0
 
       - name: setup golang
         if: steps.detect_if_should_run.outputs.result == 'true'
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@3041bf56c941b39c61721a86cd11f3bb1338122a # v5.2.0
         with:
           go-version: '^1.19'
 
@@ -229,10 +235,31 @@ jobs:
           KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
 
   e2e-tests-passed:
-    timeout-minutes: ${{ fromJSON(vars.GHA_DEFAULT_TIMEOUT) }}
+    timeout-minutes: 10
     needs: e2e-tests
     if: always() && !contains(needs.*.result, 'failure')
     runs-on: ubuntu-latest
     steps:
     - name: e2e tests pased
       run: echo all e2e tests passed
+
+  # TODO: when this gets merged, e2e-tests-passed and integration-tests-passed should be removed
+  # and checks on GitHub pull requests should be updated to use this job.
+
+  # We need this step to fail the workflow if any of the previous steps failed or were cancelled.
+  # It allows to use this particular job as a required check for PRs.
+  # Ref: https://github.com/orgs/community/discussions/26822#discussioncomment-3305794
+  passed:
+    runs-on: ubuntu-latest
+    needs:
+      - ensure-actions-sha-pin
+      - unit-tests
+      - installer-tests
+      - e2e-tests
+      - integration-tests
+    if: always()
+    steps:
+      - if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: |
+          echo "Some jobs failed or were cancelled."
+          exit 1

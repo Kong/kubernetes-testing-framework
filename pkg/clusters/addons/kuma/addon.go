@@ -79,6 +79,8 @@ func (a *Addon) Version() (v semver.Version, ok bool) {
 // EnableMeshForNamespace will add the "kuma.io/sidecar-injection: enabled" label to the provided namespace,
 // enabling sidecar injections fo all Pods in the namespace
 func EnableMeshForNamespace(ctx context.Context, cluster clusters.Cluster, name string) error {
+	const namespaceWaitTime = time.Second
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -94,7 +96,11 @@ func EnableMeshForNamespace(ctx context.Context, cluster clusters.Cluster, name 
 				if errors.IsConflict(err) {
 					// if there's a conflict then an update happened since we pulled the namespace,
 					// simply pull and try again.
-					time.Sleep(time.Second)
+					select {
+					case <-ctx.Done():
+						continue // this will return an error in the next iteration
+					case <-time.After(namespaceWaitTime):
+					}
 					continue
 				}
 				return fmt.Errorf("could not enable mesh for namespace %s: %w", name, err)
