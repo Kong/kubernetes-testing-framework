@@ -31,8 +31,13 @@ const (
 	TagNameCreateBy = "ktf_created_by"
 )
 
-func CreateEKSClusterAll(ctx context.Context, cfg aws.Config, clusterName,
-	k8sMinorVersion, nodeMachineType string, tags map[string]string) error {
+// CreateEKSClusterAll create an EKS cluster with all the necessary resources
+// It creates the cluster by sending direct API calls to create AWS resources instead of setting up CloudFormation stacks
+// Make sure you've set the correct AWS credentials and the caller identity has correct permissions to create these resources
+// More information: https://docs.aws.amazon.com/sdk-for-go/v2/developer-guide/configure-gosdk.html#specifying-credentials
+func CreateEKSClusterAll(ctx context.Context, cfg aws.Config,
+	clusterName, k8sMinorVersion, nodeMachineType string,
+	tags map[string]string) error {
 
 	stsClient := sts.NewFromConfig(cfg)
 	ec2Client := ec2.NewFromConfig(cfg)
@@ -114,6 +119,21 @@ func CreateEKSClusterAll(ctx context.Context, cfg aws.Config, clusterName,
 	return nil
 }
 
+// DeleteEKSClusterAll cleans up all created resources of a given existing EKS cluster
+// It cleans up the resources introduced during the cluster creation.
+// You probably need to clean up the resources manually in the following scenarios:
+//  1. the cluster creation was not complete: this function could not collect necessary information from an incomplete state
+//  2. the cleanup process fails for some reason
+//
+// To clean up the resources manually, using the cluster name to search resources in the following AWS services:
+// - EKS - Compute - NodeGroup
+// - EKS - Cluster
+// - EC2 - Launch Template
+// - IAM - Roles
+// - VPC - Load Balancers
+// - VPC - Internet Gateways
+// - VPC - Security Groups
+// - VPC
 func DeleteEKSClusterAll(ctx context.Context, cfg aws.Config, clusterName string) error {
 	eksClient := eks.NewFromConfig(cfg)
 	ec2Client := ec2.NewFromConfig(cfg)
@@ -298,7 +318,7 @@ func createNodeGroup(ctx context.Context, eksClient *eks.Client, ec2Client *ec2.
 func waitForNodeGroupReady(ctx context.Context, eksClient *eks.Client, clusterName, nodeGroupName string) error {
 	childCtx, cancel := context.WithTimeout(ctx, 10*time.Minute)
 	defer cancel()
-	ticker := time.NewTicker(10 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	defer ticker.Stop()
 
 	for {
