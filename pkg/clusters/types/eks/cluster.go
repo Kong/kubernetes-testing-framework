@@ -4,22 +4,22 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/config"
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
-	err_pkg "github.com/pkg/errors"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"sync"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/blang/semver/v4"
+	err_pkg "github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
 )
 
 const (

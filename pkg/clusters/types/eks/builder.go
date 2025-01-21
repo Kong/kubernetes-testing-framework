@@ -3,13 +3,15 @@ package eks
 import (
 	"context"
 	"fmt"
+	"strings"
+
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
 	"github.com/pkg/errors"
-	"strings"
+
+	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
+	aws_operations "github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
 )
 
 // Builder generates clusters.Cluster objects backed by GKE given

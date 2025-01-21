@@ -3,6 +3,9 @@ package aws_operations
 import (
 	"context"
 	"fmt"
+	"os"
+	"time"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	ec2Types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
@@ -18,8 +21,6 @@ import (
 	eksiam "github.com/weaveworks/eksctl/pkg/iam"
 	"github.com/weaveworks/eksctl/pkg/nodebootstrap"
 	"k8s.io/client-go/kubernetes"
-	"os"
-	"time"
 )
 
 const (
