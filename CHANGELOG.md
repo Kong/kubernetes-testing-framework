@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.47.3
+
+- Support enabling network policy when creating GKE clusters
+  [#1258](https://github.com/Kong/kubernetes-testing-framework/pull/1258)
+
 ## v0.47.2
 
 - Updated metallb to 0.14.8
