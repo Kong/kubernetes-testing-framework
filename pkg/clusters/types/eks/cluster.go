@@ -13,17 +13,16 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/blang/semver/v4"
-	err_pkg "github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	"github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
+	awsoperations "github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
 )
 
 const (
-	EnvAccessKeyId                = "AWS_ACCESS_KEY_ID"
+	EnvAccessKeyID                = "AWS_ACCESS_KEY_ID"
 	EnvAccessKey                  = "AWS_SECRET_ACCESS_KEY"
 	EnvRegion                     = "AWS_REGION"
 	ClusterTypeName clusters.Type = "eks"
@@ -46,9 +45,9 @@ type Cluster struct {
 // NewFromExisting provides a new clusters.Cluster backed by an existing EKS cluster,
 // but allows some of the configuration to be filled in from the ENV instead of arguments.
 func NewFromExisting(ctx context.Context, cfg aws.Config, name string) (*Cluster, error) {
-	restCfg, kubeCfg, err := aws_operations.ClientForCluster(ctx, cfg, name)
+	restCfg, kubeCfg, err := awsoperations.ClientForCluster(ctx, cfg, name)
 	if err != nil {
-		return nil, err_pkg.Wrapf(err, "failed to get kube client for cluster %s", name)
+		return nil, fmt.Errorf("failed to get kube client for cluster %s: %w", name, err)
 	}
 	return &Cluster{
 		name:   name,
@@ -60,8 +59,8 @@ func NewFromExisting(ctx context.Context, cfg aws.Config, name string) (*Cluster
 }
 
 func guardOnEnv() error {
-	if os.Getenv(EnvAccessKeyId) == "" {
-		return errors.New(EnvAccessKeyId + " is not set")
+	if os.Getenv(EnvAccessKeyID) == "" {
+		return errors.New(EnvAccessKeyID + " is not set")
 	}
 	if os.Getenv(EnvAccessKey) == "" {
 		return errors.New(EnvAccessKey + " is not set")
@@ -103,10 +102,10 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return err_pkg.Wrap(err, "failed to load AWS SDK config")
+		return fmt.Errorf("failed to load AWS SDK config: %w", err)
 	}
 
-	return aws_operations.DeleteEKSClusterAll(ctx, cfg, c.Name())
+	return awsoperations.DeleteEKSClusterAll(ctx, cfg, c.Name())
 }
 
 func (c *Cluster) Client() *kubernetes.Clientset {

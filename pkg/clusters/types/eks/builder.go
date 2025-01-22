@@ -8,10 +8,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/blang/semver/v4"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
-	aws_operations "github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
+	awsoperations "github.com/kong/kubernetes-testing-framework/pkg/clusters/types/eks/aws-operations"
 )
 
 // Builder generates clusters.Cluster objects backed by GKE given
@@ -74,10 +73,10 @@ func (b *Builder) Build(ctx context.Context) (clusters.Cluster, error) {
 
 	cfg, err := config.LoadDefaultConfig(ctx)
 	if err != nil {
-		return nil, errors.Wrap(err, "failed to load AWS SDK config")
+		return nil, fmt.Errorf("failed to load AWS SDK config: %w", err)
 	}
 
-	err = aws_operations.CreateEKSClusterAll(ctx, cfg, b.Name, minorVersion(b.clusterVersion), b.nodeMachineType, b.tags)
+	err = awsoperations.CreateEKSClusterAll(ctx, cfg, b.Name, minorVersion(b.clusterVersion), b.nodeMachineType, b.tags)
 	if err != nil {
 		return nil, err
 	}

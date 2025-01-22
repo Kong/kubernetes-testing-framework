@@ -1,12 +1,12 @@
-package aws_operations
+package awsoperations
 
 import (
 	"context"
+	"fmt"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
-	"github.com/pkg/errors"
 )
 
 func createRoles(ctx context.Context, iamClient *iam.Client, namePrefix string) (string, string, error) {
@@ -20,7 +20,7 @@ func createRoles(ctx context.Context, iamClient *iam.Client, namePrefix string) 
 		}, trustedEntitiesEKS,
 	)
 	if err != nil {
-		return "", "", errors.Wrap(err, "error creating the IAM role for the cluster to use")
+		return "", "", fmt.Errorf("error creating the IAM role for the cluster to use: %w", err)
 	}
 
 	nodeRoleArn, err := createRole(ctx, iamClient,
@@ -32,7 +32,7 @@ func createRoles(ctx context.Context, iamClient *iam.Client, namePrefix string) 
 		}, nil, trustedEntitiesEC2,
 	)
 	if err != nil {
-		return "", "", errors.Wrap(err, "error creating the IAM role for the nodegroup to use")
+		return "", "", fmt.Errorf("error creating the IAM role for the nodegroup to use: %w", err)
 	}
 	return clusterRoleArn, nodeRoleArn, nil
 }
@@ -47,7 +47,7 @@ func createRole(ctx context.Context, iamClient *iam.Client,
 
 	roleOutput, err := iamClient.CreateRole(ctx, input)
 	if err != nil {
-		return "", errors.Wrapf(err, "failed to create role %s", newRoleName)
+		return "", fmt.Errorf("failed to create role %s: %w", newRoleName, err)
 	}
 
 	for name, policy := range inlinePolicies {
@@ -57,7 +57,7 @@ func createRole(ctx context.Context, iamClient *iam.Client,
 			PolicyName:     aws.String(name),
 		})
 		if err != nil {
-			return "", errors.Wrapf(err, "error adding inline policy %s to role %s", name, newRoleName)
+			return "", fmt.Errorf("error adding inline policy %s to role %s: %w", name, newRoleName, err)
 		}
 	}
 
@@ -67,7 +67,7 @@ func createRole(ctx context.Context, iamClient *iam.Client,
 			PolicyArn: aws.String(policyName),
 		})
 		if err != nil {
-			return "", errors.Wrapf(err, "error attaching policy %s to role %s", policyName, newRoleName)
+			return "", fmt.Errorf("error attaching policy %s to role %s: %w", policyName, newRoleName, err)
 		}
 	}
 
@@ -98,7 +98,7 @@ func deleteRoles(ctx context.Context, iamClient *iam.Client, roles []string) err
 			RoleName: aws.String(roleName),
 		})
 		if err != nil {
-			return errors.Wrapf(err, "failed to delete IAM role %s", roleArn)
+			return fmt.Errorf("failed to delete IAM role %s: %w", roleArn, err)
 		}
 	}
 
@@ -110,7 +110,7 @@ func detachManagedPolicies(ctx context.Context, client *iam.Client, roleName str
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
-		return errors.Wrapf(err, "error listing managed policies in role %s", roleName)
+		return fmt.Errorf("error listing managed policies in role %s: %w", roleName, err)
 	}
 
 	for _, policy := range listResp.AttachedPolicies {
@@ -119,7 +119,7 @@ func detachManagedPolicies(ctx context.Context, client *iam.Client, roleName str
 			PolicyArn: policy.PolicyArn,
 		})
 		if err != nil {
-			return errors.Wrapf(err, "error detaching policy %s from role %s", aws.ToString(policy.PolicyArn), roleName)
+			return fmt.Errorf("error detaching policy %s from role %s: %w", aws.ToString(policy.PolicyArn), roleName, err)
 		}
 	}
 
@@ -131,7 +131,7 @@ func deleteInlinePolicies(ctx context.Context, iamClient *iam.Client, roleName s
 		RoleName: aws.String(roleName),
 	})
 	if err != nil {
-		return errors.Wrapf(err, "error listing inline policies in role %s", roleName)
+		return fmt.Errorf("error listing inline policies in role %s: %w", roleName, err)
 	}
 
 	for _, policyName := range listResp.PolicyNames {
@@ -141,7 +141,7 @@ func deleteInlinePolicies(ctx context.Context, iamClient *iam.Client, roleName s
 		})
 
 		if err != nil {
-			return errors.Wrapf(err, "error deleting inline policy %s from role %s", policyName, roleName)
+			return fmt.Errorf("error deleting inline policy %s from role %s: %w", policyName, roleName, err)
 		}
 	}
 

@@ -1,4 +1,4 @@
-package aws_operations
+package awsoperations
 
 import (
 	"context"
@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/eks"
 	"github.com/aws/aws-sdk-go-v2/service/sts"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
-	"github.com/pkg/errors"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 )
@@ -23,26 +22,26 @@ func ClientForCluster(ctx context.Context, awsCfg aws.Config, clusterName string
 	eksClient := eks.NewFromConfig(awsCfg)
 	stsClient := sts.NewFromConfig(awsCfg)
 
-	// Fetch cluster details
 	describeInput := &eks.DescribeClusterInput{
 		Name: &clusterName,
 	}
 	resp, err := eksClient.DescribeCluster(ctx, describeInput)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to describe EKS cluster")
+		return nil, nil, fmt.Errorf("failed to describe EKS cluster: %w", err)
 	}
 
 	clusterInfo := resp.Cluster
 	bearerToken, err := generateBearerToken(ctx, stsClient, clusterName)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to generate bearer token")
+		return nil, nil, fmt.Errorf("failed to generate bearer token: %w", err)
 	}
 
 	caData, err := base64.StdEncoding.DecodeString(*clusterInfo.CertificateAuthority.Data)
 	if err != nil {
-		return nil, nil, errors.Wrap(err, "failed to decode certificate authority data")
+		return nil, nil, fmt.Errorf("failed to decode certificate authority data: %w", err)
 	}
-	// caller should parse env name from the output (.clusters[0].cluster.name)
+
+	// one may parse and get the env name from the output (.clusters[0].cluster.name)
 	cfg := rest.Config{
 		BearerToken: bearerToken,
 		Host:        *clusterInfo.Endpoint,
