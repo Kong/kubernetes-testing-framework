@@ -42,6 +42,9 @@ jobs:
     timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
+    - id: codecov_token
+      run: |
+        echo "result=${{ secrets.CODECOV_TOKEN != '' }}" >> $GITHUB_OUTPUT
 
     - name: checkout repository
       uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -61,10 +64,10 @@ jobs:
     # somewhat defeats the purpose of uploading those reports. Why bother uploading
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
-      if: steps.detect_if_should_run.outputs.result == 'true'
+      if: steps.codecov_token.outputs.result == 'true'
       uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
       with:
-        action: codecov/codecov-action@v3
+        action: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with: |
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
@@ -103,11 +106,15 @@ jobs:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     runs-on: ubuntu-latest
     steps:
+    - id: codecov_token
+      run: |
+        echo "result=${{ secrets.CODECOV_TOKEN != '' }}" >> $GITHUB_OUTPUT
+
     # This step is needed to avoid running the integration tests requiring an enterprise license
     # if the secrets are not available.
     - name: Detect if we should run test cases requring an enterprise license (have required secrets)
       id: detect_if_should_run_enterprise
-      run: echo "result=${{ secrets.PULP_PASSWORD != '' }}" >> $GITHUB_OUTPUT
+      run: echo "result=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN  != '' }}" >> $GITHUB_OUTPUT
 
     - name: Set environment variable to enable test cases requiring an enterprise license
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
@@ -146,8 +153,9 @@ jobs:
     # if we don't care if the upload's successful?
     - name: Upload coverage to Codecov
       uses: Wandalen/wretry.action@e68c23e6309f2871ca8ae4763e7629b9c258e1ea # v3.8.0
+      if: steps.codecov_token.outputs.result == 'true'
       with:
-        action: codecov/codecov-action@v3
+        action: codecov/codecov-action@b9fd7d16f6d7d1b5d2bec1a2887e65ceed900238 # v4
         with: |
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: true
@@ -203,7 +211,7 @@ jobs:
       # https://github.com/Kong/kubernetes-testing-framework/issues/596
       - name: Detect if we should run (have required secrets)
         id: detect_if_should_run
-        run: echo "result=${{ secrets.PULP_PASSWORD != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
+        run: echo "result=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
       - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
         if: steps.detect_if_should_run.outputs.result == 'true'
