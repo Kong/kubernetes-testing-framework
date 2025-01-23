@@ -19,10 +19,9 @@ require (
 	github.com/docker/docker v27.5.0+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.18.0
+	github.com/kong/go-database-reconciler v1.18.1
 	github.com/kong/go-kong v0.63.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/pkg/errors v0.9.1
 	github.com/samber/lo v1.47.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.3
@@ -41,7 +40,7 @@ require (
 	k8s.io/client-go v0.32.1
 	k8s.io/kubectl v0.32.1
 	k8s.io/utils v0.0.0-20241104100929-3ea5e8cea738
-	sigs.k8s.io/controller-runtime v0.19.4
+	sigs.k8s.io/controller-runtime v0.20.0
 	sigs.k8s.io/gateway-api v1.2.1
 	sigs.k8s.io/kind v0.26.0
 	sigs.k8s.io/kustomize/api v0.19.0
@@ -107,7 +106,7 @@ require (
 	github.com/go-openapi/swag v0.23.0 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
-	github.com/google/btree v1.1.2 // indirect
+	github.com/google/btree v1.1.3 // indirect
 	github.com/google/gnostic-models v0.6.9 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
@@ -157,6 +156,7 @@ require (
 	github.com/pelletier/go-toml v1.9.5 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.2 // indirect
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
+	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pkg/sftp v1.13.6 // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/power-devops/perfstat v0.0.0-20210106213030-5aafc221ea8c // indirect
