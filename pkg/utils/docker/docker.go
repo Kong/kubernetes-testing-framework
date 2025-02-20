@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 )
 
@@ -15,7 +15,7 @@ import (
 
 // InspectDockerContainer is a helper function that uses the local docker environment
 // provides the full container spec for a container present in that environment by name.
-func InspectDockerContainer(containerID string) (*types.ContainerJSON, error) {
+func InspectDockerContainer(containerID string) (*container.InspectResponse, error) {
 	ctx := context.Background()
 	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
