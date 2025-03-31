@@ -39,7 +39,14 @@ func GetDockerContainerIPNetwork(containerID, networkName string) (*net.IPNet, *
 	_, network, err := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.Gateway, dockerNetwork.IPPrefixLen))
 	_, network6, err6 := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.IPv6Gateway, dockerNetwork.GlobalIPv6PrefixLen))
 
-	if network == nil && network6 == nil {
+	if err != nil {
+		return nil, nil, err
+	}
+	if err6 != nil {
+		return nil, nil, err6
+	}
+
+	if network == nil || network6 == nil {
 		return nil, nil, fmt.Errorf("no addresses found, IPv4Error(\"%s\"), IPv6Error(\"%s\")", err, err6)
 	}
 
