@@ -30,7 +30,7 @@ import (
 
 const (
 	gkeVersionMajor = 1
-	gkeVersionMinor = 29
+	gkeVersionMinor = 32
 )
 
 var (

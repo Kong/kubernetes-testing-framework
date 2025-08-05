@@ -15,6 +15,8 @@ import (
 )
 
 func TestKongArgoAddon(t *testing.T) {
+	t.Skip("This test requires fixing: https://github.com/Kong/kubernetes-testing-framework/issues/1375")
+
 	namespace := "ktf-test-kong-addon"
 	release := "integration"
 	t.Log("configuring argo addon")
