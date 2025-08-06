@@ -7,6 +7,9 @@ on:
         description: 'a release tag that will be created upon success'
         required: true
 
+permissions:
+  contents: read
+
 jobs:
 
   # --------------------------------------------------------------------------
@@ -126,6 +129,8 @@ jobs:
     - unit-tests
     - integration-tests
     - e2e-tests
+    permissions:
+      contents: write
     steps:
 
     - name: checkout repository

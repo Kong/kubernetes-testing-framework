@@ -1,5 +1,11 @@
 name: lint
 
+concurrency:
+  # Run only for most recent commit in PRs but for all tags and commits on main
+  # Ref: https://docs.github.com/en/actions/using-jobs/using-concurrency
+  group: ${{ github.workflow }}-${{ github.head_ref || github.sha }}
+  cancel-in-progress: true
+
 on:
   pull_request:
     branches:
@@ -10,6 +16,9 @@ on:
     tags:
     - '*'
   workflow_dispatch: {}
+
+permissions:
+  contents: read
 
 jobs:
   golangci-lint:

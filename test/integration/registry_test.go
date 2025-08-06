@@ -12,6 +12,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kong/go-kong/kong"
+
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/certmanager"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/metallb"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters/addons/registry"
@@ -22,6 +23,8 @@ import (
 const httpbinImage = "docker.io/kennethreitz/httpbin"
 
 func TestEnvironmentWithRegistryAddon(t *testing.T) {
+	t.Skip("This test requires fixing: https://github.com/Kong/kubernetes-testing-framework/issues/1374")
+
 	t.Parallel()
 
 	t.Log("configuring the testing environment")
