@@ -11,6 +11,8 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	clientgoscheme "k8s.io/client-go/kubernetes/scheme"
 	gatewayv1 "sigs.k8s.io/gateway-api/apis/v1"
 	gatewayclient "sigs.k8s.io/gateway-api/pkg/client/clientset/versioned"
 
@@ -32,7 +34,10 @@ func TestCleaner(t *testing.T) {
 	require.NoError(t, err)
 
 	cluster := env.Cluster()
-	cleaner := clusters.NewCleaner(cluster)
+	scheme := runtime.NewScheme()
+	require.NoError(t, clientgoscheme.AddToScheme(scheme))
+	require.NoError(t, gatewayv1.Install(scheme))
+	cleaner := clusters.NewCleaner(cluster, scheme)
 	t.Cleanup(func() { cleaner.Cleanup(context.Background()) })
 
 	t.Log("waiting for the test environment to be ready")
