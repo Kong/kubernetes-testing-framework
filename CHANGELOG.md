@@ -2,6 +2,8 @@
 
 ## v0.47.3
 
+- Use controller-runtime client for deleting objects in cleaner
+  [#1373](https://github.com/Kong/kubernetes-testing-framework/pull/1373)
 - Support enabling network policy when creating GKE clusters
   [#1258](https://github.com/Kong/kubernetes-testing-framework/pull/1258)
 
