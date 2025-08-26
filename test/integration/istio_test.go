@@ -19,6 +19,8 @@ import (
 )
 
 func TestIstioAddonDeployment(t *testing.T) {
+	t.Skip("skipping until https://github.com/Kong/kubernetes-testing-framework/issues/1413 is resolved")
+
 	t.Parallel()
 
 	t.Log("deploying the test cluster and environment")
