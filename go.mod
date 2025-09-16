@@ -10,8 +10,8 @@ require (
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.24.3
-	github.com/kong/go-kong v0.67.0
+	github.com/kong/go-database-reconciler v1.27.0
+	github.com/kong/go-kong v0.68.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.51.0
 	github.com/sethvargo/go-password v0.3.1
