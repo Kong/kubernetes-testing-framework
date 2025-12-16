@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.48.0
+
+- Updating dependencies.
+
 ## v0.47.3
 
 - Use controller-runtime client for deleting objects in cleaner
