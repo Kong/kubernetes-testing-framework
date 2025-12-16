@@ -87,7 +87,7 @@ func (a *Addon) EnableMeshForNamespace(ctx context.Context, cluster clusters.Clu
 			if err != nil {
 				return fmt.Errorf("could not enable mesh for namespace %s: %w", name, err)
 			}
-			namespace.ObjectMeta.Labels["istio-injection"] = "enabled"
+			namespace.Labels["istio-injection"] = "enabled"
 			_, err = cluster.Client().CoreV1().Namespaces().Update(ctx, namespace, metav1.UpdateOptions{})
 			if err != nil {
 				if errors.IsConflict(err) {

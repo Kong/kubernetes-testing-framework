@@ -90,7 +90,7 @@ func EnableMeshForNamespace(ctx context.Context, cluster clusters.Cluster, name 
 			if err != nil {
 				return fmt.Errorf("could not enable mesh for namespace %s: %w", name, err)
 			}
-			namespace.ObjectMeta.Labels["kuma.io/sidecar-injection"] = "enabled"
+			namespace.Labels["kuma.io/sidecar-injection"] = "enabled"
 			_, err = cluster.Client().CoreV1().Namespaces().Update(ctx, namespace, metav1.UpdateOptions{})
 			if err != nil {
 				if errors.IsConflict(err) {
@@ -264,12 +264,10 @@ spec:
       action: Allow`
 )
 
-var (
-	// From Kuma 2.6.0, the default mesh traffic permission is no longer created by default
-	// and must be created manually if mTLS is enabled.
-	// https://github.com/kumahq/kuma/blob/2.6.0/UPGRADE.md#default-trafficroute-and-trafficpermission-resources-are-not-created-when-creating-a-new-mesh
-	installDefaultMeshTrafficPermissionCutoffVersion = semver.MustParse("2.6.0")
-)
+// From Kuma 2.6.0, the default mesh traffic permission is no longer created by default
+// and must be created manually if mTLS is enabled.
+// https://github.com/kumahq/kuma/blob/2.6.0/UPGRADE.md#default-trafficroute-and-trafficpermission-resources-are-not-created-when-creating-a-new-mesh
+var installDefaultMeshTrafficPermissionCutoffVersion = semver.MustParse("2.6.0")
 
 // enableMTLS attempts to apply a Mesh resource with a basic retry mechanism to deal with delays in the Kuma webhook
 // startup

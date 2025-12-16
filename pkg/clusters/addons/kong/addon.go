@@ -323,7 +323,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 
 	// set the service type of the proxy's Kubernetes service
 	if a.proxyServiceType == corev1.ServiceTypeExternalName {
-		return fmt.Errorf("Service type ExternalName is not currently supported")
+		return fmt.Errorf("Service type ExternalName is not currently supported") //nolint:staticcheck
 	}
 	a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("proxy.type=%s", a.proxyServiceType))
 	a.deployArgs = append(a.deployArgs, "--set", fmt.Sprintf("udpProxy.type=%s", a.proxyServiceType))
