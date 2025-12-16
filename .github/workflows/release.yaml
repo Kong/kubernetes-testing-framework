@@ -49,7 +49,7 @@ jobs:
     - name: build for ${{ matrix.os }} ${{ matrix.arch }}
       run: make build GOOS=${{ matrix.os }} GOARCH=${{ matrix.arch }}
     - name: upload ${{ matrix.os }} ${{ matrix.arch }} artifact
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: bin-${{ matrix.os }}-${{ matrix.arch }}
         path: build/ktf.${{ matrix.os }}.${{ matrix.arch }}
@@ -63,7 +63,7 @@ jobs:
       run: sha256sum ktf.${{ matrix.os }}.${{ matrix.arch }} >> CHECKSUMS.${{ matrix.os }}.${{ matrix.arch }}
       working-directory: ./build/
     - name: upload checksum for ${{ matrix.os }} ${{ matrix.arch }}
-      uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+      uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6.0.0
       with:
         name: CHECKSUMS-${{ matrix.os }}-${{ matrix.arch }}
         path: build/CHECKSUMS.${{ matrix.os }}.${{ matrix.arch }}
