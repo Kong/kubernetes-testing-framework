@@ -4,7 +4,7 @@ go 1.24.6
 
 require (
 	cloud.google.com/go/container v1.45.0
-	github.com/avast/retry-go/v4 v4.6.1
+	github.com/avast/retry-go/v4 v4.7.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.18.2
 	github.com/docker/docker v28.3.3+incompatible
