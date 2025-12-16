@@ -270,6 +270,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 			"--set", "postgresql.auth.username=kong",
 			"--set", "postgresql.auth.database=kong",
 			"--set", "postgresql.service.port=5432",
+			// Set PostgreSQL image, registry and tag to some sane defaults,
+			// because now, after https://github.com/Kong/charts/issues/1400
+			// the chart does not specify any default image for PostgreSQL.
+			"--set", "postgresql.image.registry=registry-1.docker.io",
+			"--set", "postgresql.image.repository=bitnamilegacy/postgresql",
+			"--set", "postgresql.image.tag=13.11.0-debian-11-r83",
 		)
 	}
 
