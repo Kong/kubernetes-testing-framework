@@ -20,7 +20,7 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
-	golang.org/x/oauth2 v0.33.0
+	golang.org/x/oauth2 v0.34.0
 	golang.org/x/sync v0.19.0
 	google.golang.org/api v0.257.0
 	k8s.io/api v0.34.1
