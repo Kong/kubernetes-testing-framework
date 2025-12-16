@@ -1,6 +1,6 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.24.4
+go 1.24.6
 
 require (
 	cloud.google.com/go/container v1.44.0
@@ -10,7 +10,7 @@ require (
 	github.com/docker/docker v28.3.3+incompatible
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.24.3
+	github.com/kong/go-database-reconciler v1.31.0
 	github.com/kong/go-kong v0.71.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.51.0
@@ -55,6 +55,7 @@ require (
 	github.com/docker/go-connections v0.5.0 // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.1 // indirect
+	github.com/ettle/strcase v0.2.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
