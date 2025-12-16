@@ -120,7 +120,7 @@ func DumpDiagnostics(ctx context.Context, c Cluster, meta string, outDir string)
 		}
 		defer failedAddonOut.Close()
 		for failed, reason := range failedAddons {
-			_, err = failedAddonOut.WriteString(fmt.Sprintf("%s: %v\n", failed, reason))
+			_, err = fmt.Fprintf(failedAddonOut, "%s: %v\n", failed, reason)
 			if err != nil {
 				return err
 			}

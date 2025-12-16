@@ -20,7 +20,6 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
 	"sigs.k8s.io/kustomize/api/types"
-	kustomize "sigs.k8s.io/kustomize/api/types"
 	"sigs.k8s.io/kustomize/kyaml/resid"
 
 	"github.com/kong/kubernetes-testing-framework/internal/retry"
@@ -339,9 +338,9 @@ const admissionPatch = `
 `
 
 func getManifest() (io.Reader, error) {
-	return kubectl.GetKustomizedManifest(kustomize.Kustomization{
+	return kubectl.GetKustomizedManifest(types.Kustomization{
 		Resources: []string{metalManifest},
-		Patches: []kustomize.Patch{
+		Patches: []types.Patch{
 			{
 				Patch: admissionPatch,
 				Target: &types.Selector{

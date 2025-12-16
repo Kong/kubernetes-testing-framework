@@ -184,7 +184,7 @@ func (b *Builder) Build(ctx context.Context) (env Environment, err error) {
 	// wait for all deployments to report, and gather up any errors
 	collectedDeploymentErrorsCount := 0
 	addonDeploymentErrors := make([]error, 0)
-	for !(collectedDeploymentErrorsCount == len(b.addons)) {
+	for collectedDeploymentErrorsCount != len(b.addons) {
 		if err := <-addonDeploymentErrorQueue; err != nil {
 			addonDeploymentErrors = append(addonDeploymentErrors, err)
 		}

@@ -268,7 +268,7 @@ func (c *Cluster) DumpDiagnostics(ctx context.Context, meta string) (string, err
 		}
 		defer failedPodOut.Close()
 		for failed, reason := range failedPods {
-			_, err = failedPodOut.WriteString(fmt.Sprintf("%s: %v\n", failed, reason))
+			_, err = fmt.Fprintf(failedPodOut, "%s: %v\n", failed, reason)
 			if err != nil {
 				return outDir, err
 			}

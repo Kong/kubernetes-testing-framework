@@ -10,12 +10,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-var (
-	// DefaultRequiredCompletionsForJobs indicates the number of Pod
-	// completions that will be required by default for any generated
-	// Job resources.
-	DefaultRequiredCompletionsForJobs int32 = 1
-)
+// DefaultRequiredCompletionsForJobs indicates the number of Pod
+// completions that will be required by default for any generated
+// Job resources.
+var DefaultRequiredCompletionsForJobs int32 = 1
 
 // GenerateBashJob will create a ConfigMap and a Job that can be deployed to run
 // a bash script given the container image you want the job to run and the shell
@@ -27,7 +25,7 @@ func GenerateBashJob(image, imageTag string, commands ...string) (*corev1.Config
 	script.WriteString("#!/bin/bash\n")
 	script.WriteString("set -euox pipefail\n")
 	for _, command := range commands {
-		script.WriteString(fmt.Sprintf("%s\n", command))
+		fmt.Fprintf(script, "%s\n", command)
 	}
 
 	// configure the script in a configmap for mounting
