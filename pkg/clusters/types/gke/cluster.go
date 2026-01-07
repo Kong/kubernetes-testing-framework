@@ -111,7 +111,7 @@ func (c *Cluster) Cleanup(ctx context.Context) error {
 	defer c.l.Unlock()
 
 	if os.Getenv(EnvKeepCluster) == "" {
-		credsOpt := option.WithCredentialsJSON(c.jsonCreds)
+		credsOpt := option.WithAuthCredentialsJSON(option.ServiceAccount, c.jsonCreds)
 		mgrc, err := container.NewClusterManagerClient(ctx, credsOpt)
 		if err != nil {
 			return err
