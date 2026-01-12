@@ -157,8 +157,8 @@ github.com/josharian/intern v1.0.0 h1:vlS4z54oSdjm0bgjRigI+G1HpF+tI+9rE5LLzOg8Hm
 github.com/josharian/intern v1.0.0/go.mod h1:5DoeVV0s6jJacbCEi61lwdGj/aVlrQvzHFFd8Hwg//Y=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/kong/go-database-reconciler v1.31.0 h1:LITt0L/EhajVaSNDMj/TOxh4Cst7CRhiTykYMMlOoLk=
-github.com/kong/go-database-reconciler v1.31.0/go.mod h1:kw4+JGF6iv70LcLBmuY2UuMr8KSdqop77IR86B1mYvU=
+github.com/kong/go-database-reconciler v1.31.1 h1:geOI5rnv1x98lABQQSdJzUovO3WnecZKcIp+gF170AI=
+github.com/kong/go-database-reconciler v1.31.1/go.mod h1:kw4+JGF6iv70LcLBmuY2UuMr8KSdqop77IR86B1mYvU=
 github.com/kong/go-kong v0.71.0 h1:unPik6osV1DD3DF+jLs9oMedxWQsnepPYTm1dRQSIa4=
 github.com/kong/go-kong v0.71.0/go.mod h1:J0vGB3wsZ2i99zly1zTRe3v7rOKpkhQZRwbcTFP76qM=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
