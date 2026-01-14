@@ -209,14 +209,18 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 	}
 	defer os.Remove(kubeconfig.Name())
 
+	const timeout = 2 * time.Minute
+	ctxWithTimeout, cancel := context.WithTimeout(ctx, timeout)
+	defer cancel()
+
 	// ensure the repo exists
-	err = retry.Command("helm", "--kubeconfig", kubeconfig.Name(), "repo", "add", "--force-update", "kong", KongHelmRepoURL).Do(ctx)
+	err = retry.Command("helm", "--debug", "--kubeconfig", kubeconfig.Name(), "repo", "add", "--force-update", "kong", KongHelmRepoURL).Do(ctxWithTimeout)
 	if err != nil {
 		return err
 	}
 
 	// ensure all repos are up to date
-	err = retry.Command("helm", "--kubeconfig", kubeconfig.Name(), "repo", "update").Do(ctx)
+	err = retry.Command("helm", "--debug", "--kubeconfig", kubeconfig.Name(), "repo", "update").Do(ctxWithTimeout)
 	if err != nil {
 		return err
 	}
