@@ -15,7 +15,7 @@ require (
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/samber/lo v1.52.0
 	github.com/sethvargo/go-password v0.3.1
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
