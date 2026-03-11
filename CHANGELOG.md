@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Continue dumping of resources anyways if errors happen in running `get all`
+  and `describe all` commands to dump as much information as possible.
+  [#1492](https://github.com/Kong/kubernetes-testing-framework/pull/1492)
+
 ## v0.48.0
 
 - Updating dependencies.
