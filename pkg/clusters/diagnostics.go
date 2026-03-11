@@ -3,6 +3,7 @@ package clusters
 import (
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"os"
 	"os/exec"
@@ -54,6 +55,7 @@ func DumpAllDescribeAll(ctx context.Context, c Cluster, outDir string) error {
 	combinedList := strings.Split(namespacedList.String()+clusterList.String(), "\n")
 
 	// run kubectl get all and kubectl describe all for each resource.
+	var errs error
 	for _, resource := range combinedList {
 		if resource == "" {
 			// unwanted artifact of the split
@@ -64,18 +66,22 @@ func DumpAllDescribeAll(ctx context.Context, c Cluster, outDir string) error {
 		resourceGet := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "get", "--show-kind", "--ignore-not-found", "-A", "-oyaml", resource) //nolint:gosec
 		resourceGet.Stdout = getAllOut
 		resourceGet.Stderr = &getErr
+		// Review: Should we traverse the list manually instead of describing all in one command? The `describe <resource-type> -A` actually performs like:
+		// - List all resources
+		// - Describe the resources one by one
+		// In the process of diagnostics, the cleanup is in process and some resources may disappear so errors may happen and we lose the describe result for remaining resources.
 		resourceDescribe := exec.CommandContext(ctx, "kubectl", "--kubeconfig", kubeconfig.Name(), "describe", "--all-namespaces", resource) //nolint:gosec
 		resourceDescribe.Stdout = describeAllOut
 		resourceDescribe.Stderr = &descErr
 		if err := resourceGet.Run(); err != nil {
-			return fmt.Errorf("could not get resources for cmd '%s': err %s, stderr: %s", resourceGet.String(), err, getErr.String())
+			errs = errors.Join(errs, fmt.Errorf("could not get resources for cmd '%s': err %s, stderr: %s", resourceGet.String(), err, getErr.String()))
 		}
 		if err := resourceDescribe.Run(); err != nil {
-			return fmt.Errorf("could not get resources for cmd '%s': err %s, stderr: %s", resourceDescribe.String(), err, descErr.String())
+			errs = errors.Join(errs, fmt.Errorf("could not describe resources for cmd '%s': err %s, stderr: %s", resourceDescribe.String(), err, descErr.String()))
 		}
 	}
 
-	return nil
+	return errs
 }
 
 // DumpDiagnostics gathers a wide range of generic, diagnostic information from the test cluster,
