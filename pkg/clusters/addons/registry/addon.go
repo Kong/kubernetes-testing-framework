@@ -206,7 +206,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "registry-cert",
 		},
-		Spec: certmanagerv1.CertificateSpec{
+		Spec: certmanagerv1.CertificateSpec{ //nolint:gosec
 			SecretName: "registry-cert-secret",
 			DNSNames: []string{
 				"registry.registry.svc.cluster.local",

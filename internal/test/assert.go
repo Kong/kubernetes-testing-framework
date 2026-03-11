@@ -107,7 +107,7 @@ func EventuallyExpectResponse(
 	require.Eventually(
 		t,
 		func() bool {
-			resp, err := httpClient.Do(req)
+			resp, err := httpClient.Do(req) //nolint:gosec
 			if err != nil {
 				t.Logf("WARNING: error while waiting for %s: %v", req.URL, err)
 				return false
