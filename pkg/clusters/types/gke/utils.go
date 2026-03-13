@@ -120,7 +120,7 @@ func listLatestClusterPatchVersions(ctx context.Context, c *container.ClusterMan
 // to an IAM user with the necessary permissions, if not an error will be received).
 func clientAuthFromCreds(ctx context.Context, jsonCreds []byte) (*container.ClusterManagerClient, string, error) {
 	// store the API options with the JSON credentials for auth
-	credsOpt := option.WithCredentialsJSON(jsonCreds)
+	credsOpt := option.WithAuthCredentialsJSON(option.ServiceAccount, jsonCreds)
 
 	// build the google api client to talk to GKE
 	mgrc, err := container.NewClusterManagerClient(ctx, credsOpt)
