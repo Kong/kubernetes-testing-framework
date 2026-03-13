@@ -21,7 +21,7 @@ require (
 	github.com/stretchr/testify v1.11.1
 	go4.org/netipx v0.0.0-20231129151722-fdeea329fbba
 	golang.org/x/oauth2 v0.34.0
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 	google.golang.org/api v0.260.0
 	k8s.io/api v0.35.2
 	k8s.io/apiextensions-apiserver v0.35.2
