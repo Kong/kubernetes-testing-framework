@@ -3,7 +3,7 @@ module github.com/kong/kubernetes-testing-framework
 go 1.25.0
 
 require (
-	cloud.google.com/go/container v1.45.0
+	cloud.google.com/go/container v1.46.0
 	github.com/avast/retry-go/v4 v4.7.0
 	github.com/blang/semver/v4 v4.0.0
 	github.com/cert-manager/cert-manager v1.19.3
