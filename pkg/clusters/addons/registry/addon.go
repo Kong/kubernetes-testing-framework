@@ -213,7 +213,7 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 				"registry.registry.svc",
 				"registry",
 			},
-			IssuerRef: cmmeta.ObjectReference{
+			IssuerRef: cmmeta.IssuerReference{
 				Name:  string(certmanager.DefaultIssuerName),
 				Kind:  "ClusterIssuer",
 				Group: "cert-manager.io",
