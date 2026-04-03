@@ -91,8 +91,7 @@ func WriteFileToContainer(ctx context.Context, containerID string, path string, 
 		CopyUIDGID:                false,
 	}
 	// copy the file to the docker container
-	_, err = dockerc.CopyToContainer(ctx, containerID, opts)
-	if err != nil {
+	if _, err := dockerc.CopyToContainer(ctx, containerID, opts); err != nil {
 		return fmt.Errorf("could not copy file to container: %w", err)
 	}
 	return nil

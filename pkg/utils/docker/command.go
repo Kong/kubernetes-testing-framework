@@ -26,8 +26,7 @@ func RunPrivilegedCommand(ctx context.Context, containerID, command string, args
 	}
 
 	// run the command
-	_, err = dockerc.ExecStart(ctx, execID.ID, client.ExecStartOptions{})
-	if err != nil {
+	if _, err := dockerc.ExecStart(ctx, execID.ID, client.ExecStartOptions{}); err != nil {
 		return err
 	}
 
