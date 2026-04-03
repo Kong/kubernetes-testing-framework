@@ -5,8 +5,7 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 )
 
 // -----------------------------------------------------------------------------
@@ -15,13 +14,13 @@ import (
 
 // InspectDockerContainer is a helper function that uses the local docker environment
 // provides the full container spec for a container present in that environment by name.
-func InspectDockerContainer(containerID string) (*container.InspectResponse, error) {
+func InspectDockerContainer(containerID string) (*client.ContainerInspectResult, error) {
 	ctx := context.Background()
 	dockerc, err := NewNegotiatedClientWithOpts(ctx, client.FromEnv)
 	if err != nil {
 		return nil, err
 	}
-	containerJSON, err := dockerc.ContainerInspect(ctx, containerID)
+	containerJSON, err := dockerc.ContainerInspect(ctx, containerID, client.ContainerInspectOptions{})
 	return &containerJSON, err
 }
 
@@ -30,12 +29,12 @@ func InspectDockerContainer(containerID string) (*container.InspectResponse, err
 // GetDockerContainerIPNetwork supports retreiving the *net.IP4Net of a container specified
 // by name (and a specified network name for the case of multiple networks).
 func GetDockerContainerIPNetwork(containerID, networkName string) (*net.IPNet, *net.IPNet, error) {
-	container, err := InspectDockerContainer(containerID)
+	res, err := InspectDockerContainer(containerID)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	dockerNetwork := container.NetworkSettings.Networks[networkName]
+	dockerNetwork := res.Container.NetworkSettings.Networks[networkName]
 	_, network, err := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.Gateway, dockerNetwork.IPPrefixLen))
 	_, network6, err6 := net.ParseCIDR(fmt.Sprintf("%s/%d", dockerNetwork.IPv6Gateway, dockerNetwork.GlobalIPv6PrefixLen))
 
