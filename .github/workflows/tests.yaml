@@ -113,7 +113,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: Kong/kong-license@master
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
@@ -199,7 +199,7 @@ jobs:
         id: detect_if_should_run
         run: echo "result=${{ secrets.PULP_PASSWORD != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
-      - uses: Kong/kong-license@master
+      - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
         if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:

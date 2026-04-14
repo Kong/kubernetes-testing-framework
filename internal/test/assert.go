@@ -107,16 +107,13 @@ func EventuallyExpectResponse(
 	require.Eventually(
 		t,
 		func() bool {
-			resp, err := httpClient.Do(req)
+			r := req.Clone(t.Context())
+			resp, err := httpClient.Do(r) //nolint:gosec
 			if err != nil {
 				t.Logf("WARNING: error while waiting for %s: %v", req.URL, err)
 				return false
 			}
 			defer resp.Body.Close()
-			if err != nil {
-				t.Logf("WARNING: error cannot read response body %s: %v", req.URL, err)
-				return false
-			}
 			for _, checker := range options.responseChecker {
 				if !checker(t, resp) {
 					return false
