@@ -12,7 +12,7 @@ require (
 	github.com/kong/go-database-reconciler v1.31.1
 	github.com/kong/go-kong v0.71.0
 	github.com/mitchellh/go-homedir v1.1.0
-	github.com/moby/moby/client v0.3.0
+	github.com/moby/moby/client v0.4.0
 	github.com/samber/lo v1.53.0
 	github.com/sethvargo/go-password v0.3.1
 	github.com/sirupsen/logrus v1.9.4
@@ -106,7 +106,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
-	github.com/moby/moby/api v1.54.0 // indirect
+	github.com/moby/moby/api v1.54.1 // indirect
 	github.com/moby/term v0.5.2 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.3-0.20250322232337-35a7c28c31ee // indirect
