@@ -3,8 +3,7 @@ package docker
 import (
 	"context"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 )
 
 // RunPrivilegedCommand is a very basic and opinionated helper function which runs the
@@ -17,7 +16,7 @@ func RunPrivilegedCommand(ctx context.Context, containerID, command string, args
 	}
 
 	// load the exec command for the container
-	execID, err := dockerc.ContainerExecCreate(ctx, containerID, container.ExecOptions{
+	execID, err := dockerc.ExecCreate(ctx, containerID, client.ExecCreateOptions{
 		User:       "0",
 		Privileged: true,
 		Cmd:        append([]string{command}, args...),
@@ -27,5 +26,9 @@ func RunPrivilegedCommand(ctx context.Context, containerID, command string, args
 	}
 
 	// run the command
-	return dockerc.ContainerExecStart(ctx, execID.ID, container.ExecAttachOptions{})
+	if _, err := dockerc.ExecStart(ctx, execID.ID, client.ExecStartOptions{}); err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -9,8 +9,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
+	"github.com/moby/moby/client"
 )
 
 // ReadFileFromContainer reads a specific file from a given container by ID.
@@ -21,11 +20,15 @@ func ReadFileFromContainer(ctx context.Context, containerID string, path string)
 		return nil, err
 	}
 
+	opts := client.CopyFromContainerOptions{
+		SourcePath: filepath.Dir(path),
+	}
 	// pull an archived copy of the path directory from the container
-	archiveBuffer, _, err := dockerc.CopyFromContainer(ctx, containerID, filepath.Dir(path))
+	res, err := dockerc.CopyFromContainer(ctx, containerID, opts)
 	if err != nil {
 		return nil, err
 	}
+	archiveBuffer := res.Content
 	defer archiveBuffer.Close()
 
 	// search the archive and verify that the given file by path is present
@@ -81,6 +84,15 @@ func WriteFileToContainer(ctx context.Context, containerID string, path string, 
 		return fmt.Errorf("could not create a client with the local docker system: %w", err)
 	}
 
+	opts := client.CopyToContainerOptions{
+		DestinationPath:           filepath.Dir(path),
+		Content:                   archiveBuffer,
+		AllowOverwriteDirWithFile: false,
+		CopyUIDGID:                false,
+	}
 	// copy the file to the docker container
-	return dockerc.CopyToContainer(ctx, containerID, filepath.Dir(path), archiveBuffer, container.CopyToContainerOptions{})
+	if _, err := dockerc.CopyToContainer(ctx, containerID, opts); err != nil {
+		return fmt.Errorf("could not copy file to container: %w", err)
+	}
+	return nil
 }

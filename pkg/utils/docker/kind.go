@@ -27,15 +27,15 @@ func GetKindContainerID(clusterName string) string {
 func GetKindContainerIP(clusterName string) (string, error) {
 	containerID := GetKindContainerID(clusterName)
 
-	containerJSON, err := InspectDockerContainer(containerID)
+	res, err := InspectDockerContainer(containerID)
 	if err != nil {
 		return "", err
 	}
 
-	kindNetwork, ok := containerJSON.NetworkSettings.Networks[DefaultKindNetwork]
+	kindNetwork, ok := res.Container.NetworkSettings.Networks[DefaultKindNetwork]
 	if !ok {
 		return "", fmt.Errorf("missing docker container network %s", DefaultKindNetwork)
 	}
 
-	return kindNetwork.IPAddress, nil
+	return kindNetwork.IPAddress.String(), nil
 }

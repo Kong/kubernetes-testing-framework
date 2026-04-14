@@ -26,6 +26,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"path/filepath"
 
 	"github.com/google/go-github/v48/github"
 	"golang.org/x/oauth2"
@@ -49,11 +50,11 @@ func main() {
 	}
 
 	// gather the provided arguments
-	workflow := os.Args[1]
+	workflow := filepath.Clean(os.Args[1])
 	ref := os.Args[2]
 
 	// validate that the workflow file exists
-	if _, err := os.Stat(fmt.Sprintf(".github/workflows/%s", workflow)); err != nil {
+	if _, err := os.Stat(filepath.Join(".github/workflows", workflow)); err != nil {
 		reportFailureAndExit(fmt.Errorf("ERROR: no workflow file %s was found in this repo: %w", workflow, err))
 	}
 

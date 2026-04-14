@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-    - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@6124774845927d14c601359ab8138699fa5b70c3 # v4.0.1
+    - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@ca46236c6ce584ae24bc6283ba8dcf4b3ec8a066 # v5.0.4
 
   installer-tests:
     timeout-minutes: 10
@@ -55,7 +55,7 @@ jobs:
         fetch-depth: 0
 
     - name: setup golang
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
       with:
         go-version-file: go.mod
 
@@ -129,14 +129,14 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
 
     - name: setup golang
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
       with:
         go-version-file: go.mod
 
@@ -216,7 +216,7 @@ jobs:
         id: detect_if_should_run
         run: echo "result=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
-      - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+      - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
         if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:
@@ -230,7 +230,7 @@ jobs:
 
       - name: setup golang
         if: steps.detect_if_should_run.outputs.result == 'true'
-        uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+        uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
         with:
           go-version: '^1.19'
 

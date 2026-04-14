@@ -27,7 +27,7 @@ jobs:
         fetch-depth: 0
 
     - name: setup golang
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
       with:
         go-version-file: go.mod
 
@@ -64,7 +64,7 @@ jobs:
         test: ${{ fromJSON(needs.setup-integration-tests.outputs.test_names) }}
     steps:
 
-    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       id: license
       with:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -75,7 +75,7 @@ jobs:
         fetch-depth: 0
 
     - name: setup golang
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
       with:
         go-version-file: go.mod
 
@@ -94,7 +94,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 
-    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       id: license
       with:
         op-token: ${{ secrets.OP_SERVICE_ACCOUNT_TOKEN }}
@@ -109,7 +109,7 @@ jobs:
         fetch-depth: 0
 
     - name: setup golang
-      uses: actions/setup-go@4dc6199c7b1a012772edbd06daecab0f50c9053c # v6.1.0
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417 # v6.3.0
       with:
         go-version-file: go.mod
 

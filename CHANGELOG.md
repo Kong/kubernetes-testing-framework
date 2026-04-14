@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.49.0
+
+- Continue dumping of resources anyways if errors happen in running `get all`
+  and `describe all` commands to dump as much information as possible.
+  [#1492](https://github.com/Kong/kubernetes-testing-framework/pull/1492)
+- Migrate from github.com/docker/docker to github.com/moby/moby for docker client.
+  [#1512](https://github.com/Kong/kubernetes-testing-framework/pull/1512)
+
 ## v0.48.0
 
 - Updating dependencies.
