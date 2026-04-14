@@ -129,7 +129,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
@@ -216,7 +216,7 @@ jobs:
         id: detect_if_should_run
         run: echo "result=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
-      - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+      - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
         if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:
