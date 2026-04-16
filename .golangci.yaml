@@ -8,7 +8,6 @@ linters:
   - durationcheck
   - errcheck
   - exhaustive
-  - exportloopref
   - forbidigo
   - gochecknoinits
   - gocritic
