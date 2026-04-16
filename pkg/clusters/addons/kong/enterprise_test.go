@@ -56,3 +56,70 @@ func TestGetLicenseJSON(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, validLicenseJSON, licenseSecret.Data["license"])
 }
+
+func TestLicenseDataUnmarshalJSON(t *testing.T) {
+	tests := []struct {
+		name    string
+		json    string
+		want    LicenseData
+		wantErr bool
+	}{
+		{
+			name: "version as string",
+			json: `{"payload":{},"signature":"sig","version":"1"}`,
+			want: LicenseData{
+				Version:   1,
+				Signature: "sig",
+			},
+		},
+		{
+			name: "version as integer",
+			json: `{"payload":{},"signature":"sig","version":1}`,
+			want: LicenseData{
+				Version:   1,
+				Signature: "sig",
+			},
+		},
+		{
+			name: "version missing",
+			json: `{"payload":{},"signature":"sig"}`,
+			want: LicenseData{
+				Signature: "sig",
+			},
+		},
+		{
+			name:    "version as boolean",
+			json:    `{"payload":{},"signature":"sig","version":true}`,
+			wantErr: true,
+		},
+		{
+			name: "full license with version as int",
+			json: `{"signature":"XXX","version":"1","payload":{"license_expiration_date":"2002-05-20","customer":"tests","license_creation_date":"2002-04-13","support_plan":"None","admin_seats":"1","product_subscription":"Product","license_key":"XXX"}}`,
+			want: LicenseData{
+				Version: 1,
+				Payload: LicensePayload{
+					ExpirationDate:      "2002-05-20",
+					Customer:            "tests",
+					CreationDate:        "2002-04-13",
+					SupportPlan:         "None",
+					AdminSeats:          "1",
+					ProductSubscription: "Product",
+					Key:                 "XXX",
+				},
+				Signature: "XXX",
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			var ld LicenseData
+			err := json.Unmarshal([]byte(tt.json), &ld)
+			if tt.wantErr {
+				assert.Error(t, err)
+				return
+			}
+			assert.NoError(t, err)
+			assert.Equal(t, tt.want, ld)
+		})
+	}
+}
