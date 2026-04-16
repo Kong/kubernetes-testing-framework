@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/http"
 	"strings"
@@ -107,8 +108,8 @@ func EventuallyExpectResponse(
 	require.Eventually(
 		t,
 		func() bool {
-			r := req.Clone(t.Context())
-			resp, err := httpClient.Do(r) //nolint:gosec
+			r := req.Clone(context.Background())
+			resp, err := httpClient.Do(r)
 			if err != nil {
 				t.Logf("WARNING: error while waiting for %s: %v", req.URL, err)
 				return false

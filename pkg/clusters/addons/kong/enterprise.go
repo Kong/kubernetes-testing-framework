@@ -42,11 +42,30 @@ type LicensePayload struct {
 type LicenseData struct {
 	Payload   LicensePayload `json:"payload"`
 	Signature string         `json:"signature"`
-	Version   int            `json:"version"`
+	Version   Version        `json:"version"`
 }
 
 type License struct {
 	Data LicenseData `json:"license"`
+}
+
+// Version represents the version of a Kong Enterprise License.
+// It is expected to be an integer and it can be specified in
+// the license JSON as a string or as a number.
+type Version int
+
+// UnmarshalJSON unmarshals a Version from a JSON string or number.
+func (v *Version) UnmarshalJSON(data []byte) error {
+	var version json.Number
+	if err := json.Unmarshal(data, &version); err != nil {
+		return err
+	}
+	i, err := version.Int64()
+	if err != nil {
+		return err
+	}
+	*v = Version(i)
+	return nil
 }
 
 // -----------------------------------------------------------------------------
