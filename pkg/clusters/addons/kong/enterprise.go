@@ -42,7 +42,7 @@ type LicensePayload struct {
 type LicenseData struct {
 	Payload   LicensePayload `json:"payload"`
 	Signature string         `json:"signature"`
-	Version   string         `json:"version"`
+	Version   int            `json:"version"`
 }
 
 type License struct {

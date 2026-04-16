@@ -23,7 +23,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
-    - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@d5d20e15f2736816ee0e001ba8b24b54d9ffcff4 # v5.0.0
+    - uses: zgosalvez/github-actions-ensure-sha-pinned-actions@ca46236c6ce584ae24bc6283ba8dcf4b3ec8a066 # v5.0.4
 
   installer-tests:
     timeout-minutes: 10
@@ -129,7 +129,7 @@ jobs:
       with:
         fetch-depth: 0
 
-    - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+    - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
       if: steps.detect_if_should_run_enterprise.outputs.result == 'true'
       id: license
       with:
@@ -216,7 +216,7 @@ jobs:
         id: detect_if_should_run
         run: echo "result=${{ secrets.OP_SERVICE_ACCOUNT_TOKEN != '' && secrets.GOOGLE_APPLICATION_CREDENTIALS != '' }}" >> $GITHUB_OUTPUT
 
-      - uses: Kong/kong-license@c4decf08584f84ff8fe8e7cd3c463e0192f6111b
+      - uses: Kong/kong-license@62d5e200998d4b19ed6b78591332a092536c63f5 # master @ 20260330
         if: steps.detect_if_should_run.outputs.result == 'true'
         id: license
         with:
