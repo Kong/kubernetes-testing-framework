@@ -10,7 +10,7 @@ require (
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
 	github.com/kong/go-database-reconciler v1.31.1
-	github.com/kong/go-kong v0.71.0
+	github.com/kong/go-kong v0.75.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/moby/client v0.3.0
 	github.com/samber/lo v1.53.0
