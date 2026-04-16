@@ -31,7 +31,7 @@ var partialRFC3339Regex = regexp.MustCompile("^[0-9]+-[0-9]+-[0-9]+$")
 type LicensePayload struct {
 	AdminSeats          string `json:"admin_seats"`
 	Customer            string `json:"customer"`
-	DataPlanes          string `json:"dataplanes"`
+	DataPlanes          string `json:"dataplanes,omitempty"`
 	CreationDate        string `json:"license_creation_date"`
 	ExpirationDate      string `json:"license_expiration_date"`
 	Key                 string `json:"license_key"`
