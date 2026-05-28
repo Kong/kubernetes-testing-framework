@@ -8,7 +8,7 @@ import (
 	"os/exec"
 	"time"
 
-	"github.com/avast/retry-go/v4"
+	"github.com/avast/retry-go/v5"
 	"github.com/sirupsen/logrus"
 )
 
@@ -55,32 +55,36 @@ func (c CommandDoer) WithStderr(w io.Writer) CommandDoer {
 }
 
 func (c CommandDoer) Do(ctx context.Context) error {
-	return retry.Do(func() error {
-		cmd, stdout, stderr := c.createCmd(ctx)
-		err := cmd.Run()
-		if err != nil {
-			return fmt.Errorf("command %q with args %v failed STDOUT=(%s) STDERR=(%s): %w",
-				c.cmd, c.args, stdout.String(), stderr.String(), err,
-			)
-		}
-		return nil
-	},
+	return retry.New(
 		c.createOpts(ctx)...,
+	).Do(
+		func() error {
+			cmd, stdout, stderr := c.createCmd(ctx)
+			err := cmd.Run()
+			if err != nil {
+				return fmt.Errorf("command %q with args %v failed STDOUT=(%s) STDERR=(%s): %w",
+					c.cmd, c.args, stdout.String(), stderr.String(), err,
+				)
+			}
+			return nil
+		},
 	)
 }
 
 // DoWithErrorHandling executes the command and runs errorFunc passing a resulting err, stdout and stderr to be handled
 // by the caller. The errorFunc is going to be called only when the resulting err != nil.
 func (c CommandDoer) DoWithErrorHandling(ctx context.Context, errorFunc ErrorFunc) error {
-	return retry.Do(func() error {
-		cmd, stdout, stderr := c.createCmd(ctx)
-		err := cmd.Run()
-		if err != nil {
-			return errorFunc(err, stdout, stderr)
-		}
-		return nil
-	},
+	return retry.New(
 		c.createOpts(ctx)...,
+	).Do(
+		func() error {
+			cmd, stdout, stderr := c.createCmd(ctx)
+			err := cmd.Run()
+			if err != nil {
+				return errorFunc(err, stdout, stderr)
+			}
+			return nil
+		},
 	)
 }
 
