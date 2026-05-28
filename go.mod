@@ -6,7 +6,7 @@ require (
 	cloud.google.com/go/container v1.52.0
 	github.com/avast/retry-go/v5 v5.0.0
 	github.com/blang/semver/v4 v4.0.0
-	github.com/cert-manager/cert-manager v1.20.0
+	github.com/cert-manager/cert-manager v1.20.2
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
 	github.com/kong/go-database-reconciler v1.38.0
