@@ -1,5 +1,14 @@
 # Changelog
 
+## v0.51.0
+
+- Update dependencies. Default kind version is bumped to 0.32.0.
+
+## v0.50.0
+
+- Update dependencies
+- Fix license handling
+
 ## v0.49.0
 
 - Continue dumping of resources anyways if errors happen in running `get all`
