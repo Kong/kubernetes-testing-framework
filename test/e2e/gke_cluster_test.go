@@ -220,5 +220,5 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 			return strings.Contains(b.String(), "<title>httpbin.org</title>")
 		}
 		return false
-	}, time.Minute*5, time.Second*1)
+	}, 5*time.Minute, time.Second)
 }
