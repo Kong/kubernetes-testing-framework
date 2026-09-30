@@ -82,8 +82,8 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 		assert.NoError(t, cluster.Cleanup(context.Background()))
 	})
 
-	// registered after the cleanup above so that it runs (LIFO) while the
-	// cluster still exists
+	// Registered after the cleanup above so that it runs (LIFO) while the
+	// cluster still exists.
 	t.Cleanup(func() {
 		if !t.Failed() {
 			return
