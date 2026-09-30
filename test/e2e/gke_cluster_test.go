@@ -89,7 +89,7 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 			return
 		}
 		t.Log("test failed, dumping cluster diagnostics")
-		// don't use test ctx as it may be cancelled already
+		// Don't use test ctx as it may have already been cancelled.
 		dir, err := cluster.DumpDiagnostics(context.Background(), t.Name())
 		if err != nil {
 			t.Logf("failed to dump diagnostics: %v", err)
