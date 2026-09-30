@@ -50,7 +50,7 @@ func main() {
 	}
 
 	// gather the provided arguments
-	workflow := filepath.Clean(os.Args[1])
+	workflow := filepath.Base(filepath.Clean(os.Args[1]))
 	ref := os.Args[2]
 
 	// validate that the workflow file exists
