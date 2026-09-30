@@ -172,8 +172,8 @@ github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnr
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
 github.com/kong/go-database-reconciler v1.40.0 h1:/1KmnpxBm5/Fr2z3Ma/21q68brMx6YyslCGKPukxYx0=
 github.com/kong/go-database-reconciler v1.40.0/go.mod h1:I9bCWQ3LJ8tHVZ6mA2NwerhujW9zoFduEypD8XIK5w0=
-github.com/kong/go-kong v0.76.1 h1:lImAHvog7ehm4XL2rs8ZyCx98k56ihNazLG55bvHgVM=
-github.com/kong/go-kong v0.76.1/go.mod h1:Wx5aTcMjyUnIF94M5NYFWb/EnuEkqB5STrWvybFSYYQ=
+github.com/kong/go-kong v0.78.0 h1:VK5g26BCeF+l9o3j3pgU3BOuOdmTd9Vj33x29mKGtkg=
+github.com/kong/go-kong v0.78.0/go.mod h1:Wx5aTcMjyUnIF94M5NYFWb/EnuEkqB5STrWvybFSYYQ=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
 github.com/kong/semver/v4 v4.0.1/go.mod h1:LImQ0oT15pJvSns/hs2laLca2zcYoHu5EsSNY0J6/QA=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
