@@ -96,11 +96,12 @@ kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 kubeadmConfigPatches:
 - |
-  apiVersion: kubeadm.k8s.io/v1beta3
+  apiVersion: kubeadm.k8s.io/v1beta4
   kind: ClusterConfiguration
   controllerManager:
     extraArgs:
-      max-endpoints-per-slice: "2"`)
+    - name: max-endpoints-per-slice
+      value: "2"`)
 
 	env, err := environment.
 		NewBuilder().

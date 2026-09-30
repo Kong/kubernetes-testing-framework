@@ -245,6 +245,14 @@ jobs:
           GOOGLE_LOCATION: ${{ secrets.GOOGLE_LOCATION }}
           KONG_LICENSE_DATA: ${{ steps.license.outputs.license }}
 
+      - name: upload diagnostics
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: e2e-diagnostics-${{ matrix.test }}
+          path: /tmp/ktf-diag-*/
+          if-no-files-found: ignore
+
   e2e-tests-passed:
     timeout-minutes: 10
     needs: e2e-tests

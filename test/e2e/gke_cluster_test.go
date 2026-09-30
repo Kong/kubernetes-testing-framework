@@ -30,7 +30,7 @@ import (
 
 const (
 	gkeVersionMajor = 1
-	gkeVersionMinor = 33
+	gkeVersionMinor = 35
 )
 
 var (
@@ -80,6 +80,22 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 		t.Logf("running cluster cleanup for %s", cluster.Name())
 		// don't use test ctx as it may be cancelled already
 		assert.NoError(t, cluster.Cleanup(context.Background()))
+	})
+
+	// Registered after the cleanup above so that it runs (LIFO) while the
+	// cluster still exists.
+	t.Cleanup(func() {
+		if !t.Failed() {
+			return
+		}
+		t.Log("test failed, dumping cluster diagnostics")
+		// Don't use test ctx as it may have already been cancelled.
+		dir, err := cluster.DumpDiagnostics(context.Background(), t.Name())
+		if err != nil {
+			t.Logf("failed to dump diagnostics: %v", err)
+			return
+		}
+		t.Logf("diagnostics dumped to %s", dir)
 	})
 
 	t.Log("verifying that the cluster can be communicated with")
@@ -204,5 +220,5 @@ func testGKECluster(t *testing.T, createSubnet bool) {
 			return strings.Contains(b.String(), "<title>httpbin.org</title>")
 		}
 		return false
-	}, time.Minute*1, time.Second*1)
+	}, 5*time.Minute, time.Second)
 }
