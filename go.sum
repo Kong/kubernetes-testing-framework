@@ -170,10 +170,10 @@ github.com/inconshreveable/mousetrap v1.1.0 h1:wN+x4NVGpMsO7ErUn/mUI3vEoE6Jt13X2
 github.com/inconshreveable/mousetrap v1.1.0/go.mod h1:vpF70FUmC8bwa3OWnCshd2FqLfsEA9PFc4w1p2J65bw=
 github.com/json-iterator/go v1.1.12 h1:PV8peI4a0ysnczrg+LtxykD8LfKY9ML6u2jnxaEnrnM=
 github.com/json-iterator/go v1.1.12/go.mod h1:e30LSqwooZae/UwlEbR2852Gd8hjQvJoHmT4TnhNGBo=
-github.com/kong/go-database-reconciler v1.39.0 h1:va3qjNe4urz+g+nZwmQQndvtUZtIY1ji3oA29aY4yfA=
-github.com/kong/go-database-reconciler v1.39.0/go.mod h1:4YhUoBTMO5smJ0BuWaSfxknbhjrKx9Cg4hvUMR2EW8M=
-github.com/kong/go-kong v0.76.0 h1:hMvr51RZh7zYfLPbRqXt6F30/HSvTuAFNXqqqSS3zzw=
-github.com/kong/go-kong v0.76.0/go.mod h1:Wx5aTcMjyUnIF94M5NYFWb/EnuEkqB5STrWvybFSYYQ=
+github.com/kong/go-database-reconciler v1.40.0 h1:/1KmnpxBm5/Fr2z3Ma/21q68brMx6YyslCGKPukxYx0=
+github.com/kong/go-database-reconciler v1.40.0/go.mod h1:I9bCWQ3LJ8tHVZ6mA2NwerhujW9zoFduEypD8XIK5w0=
+github.com/kong/go-kong v0.76.1 h1:lImAHvog7ehm4XL2rs8ZyCx98k56ihNazLG55bvHgVM=
+github.com/kong/go-kong v0.76.1/go.mod h1:Wx5aTcMjyUnIF94M5NYFWb/EnuEkqB5STrWvybFSYYQ=
 github.com/kong/semver/v4 v4.0.1 h1:DIcNR8W3gfx0KabFBADPalxxsp+q/5COwIFkkhrFQ2Y=
 github.com/kong/semver/v4 v4.0.1/go.mod h1:LImQ0oT15pJvSns/hs2laLca2zcYoHu5EsSNY0J6/QA=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=

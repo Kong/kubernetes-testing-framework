@@ -9,8 +9,8 @@ require (
 	github.com/cert-manager/cert-manager v1.20.2
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.39.0
-	github.com/kong/go-kong v0.76.0
+	github.com/kong/go-database-reconciler v1.40.0
+	github.com/kong/go-kong v0.76.1
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/moby/client v0.4.1
 	github.com/samber/lo v1.53.0
