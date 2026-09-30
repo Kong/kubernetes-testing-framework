@@ -15,6 +15,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 
+	"github.com/kong/kubernetes-testing-framework/internal/retry"
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
 	"github.com/kong/kubernetes-testing-framework/pkg/clusters"
 	"github.com/kong/kubernetes-testing-framework/pkg/utils/github"
@@ -107,13 +108,11 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		"apply", "-f", fmt.Sprintf(manifestFormatter, a.version),
 	}
 
-	stderr := new(bytes.Buffer)
-	cmd := exec.Command("kubectl", deployArgs...)
-	cmd.Stdout = io.Discard
-	cmd.Stderr = stderr
-
-	if err := cmd.Run(); err != nil {
-		return fmt.Errorf("%s: %w", stderr.String(), err)
+	// retry the apply: the manifest creates the webhook configuration mid-apply and the
+	// API server can call the webhook before cert-manager has patched its CA bundle,
+	// producing transient x509 errors. Re-apply skips unchanged resources.
+	if err := retry.Command("kubectl", deployArgs...).WithStdout(io.Discard).Do(ctx); err != nil {
+		return err
 	}
 
 	if err := a.deployWebhookWaitJob(ctx, cluster); err != nil {
