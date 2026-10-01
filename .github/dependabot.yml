@@ -20,3 +20,12 @@ updates:
   directory: /
   schedule:
     interval: daily
+  groups:
+     actions:
+        applies-to: version-updates # Applies the group rule to version updates.
+        patterns:
+          - "actions/*"
+     codeql:
+        applies-to: version-updates # Applies the group rule to version updates
+        patterns:
+          - "github/codeql-action/*"
