@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.52.0
+
+- Update dependencies.
+- Add retry mechanism for cert-manager installation.
+  [#1566](https://github.com/Kong/kubernetes-testing-framework/pull/1566)
+
 ## v0.51.0
 
 - Update dependencies. Default kind version is bumped to 0.32.0.
