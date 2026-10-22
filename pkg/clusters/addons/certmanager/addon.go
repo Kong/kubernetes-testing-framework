@@ -7,13 +7,16 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"time"
 
 	"github.com/blang/semver/v4"
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/kubernetes"
 
 	"github.com/kong/kubernetes-testing-framework/internal/retry"
 	"github.com/kong/kubernetes-testing-framework/internal/utils"
@@ -134,6 +137,12 @@ func (a *Addon) Deploy(ctx context.Context, cluster clusters.Cluster) error {
 		}
 	}
 
+	// the webhook configurations are deployed without a caBundle, and the wait job above talks
+	// to the webhook with curl -k, which cannot tell whether the CA is in place yet.
+	if err := waitForWebhookCAInjection(ctx, cluster); err != nil {
+		return err
+	}
+
 	return a.deployDefaultIssuer(ctx, cluster)
 }
 
@@ -204,7 +213,85 @@ func (a *Addon) DumpDiagnostics(context.Context, clusters.Cluster) (map[string][
 const (
 	manifestFormatter        = "https://github.com/cert-manager/cert-manager/releases/download/v%s/cert-manager.yaml"
 	defaultIssuerWaitSeconds = 60
+
+	// webhookConfigurationName is the name of both the Mutating and the Validating
+	// WebhookConfiguration deployed by the manifest.
+	webhookConfigurationName = "cert-manager-webhook"
+	// webhookCAInjectionWaitTime is the wait between two checks for the injected caBundle.
+	webhookCAInjectionWaitTime = time.Second
+	// webhookCAInjectionTimeout is how long to wait for cainjector to inject the caBundle.
+	webhookCAInjectionTimeout = time.Minute
 )
+
+// waitForWebhookCAInjection waits for cert-manager's cainjector to inject the CA bundle into
+// the webhook configurations. Until the injection happens the API server cannot verify the
+// serving certificate of the webhook, so creating any cert-manager.io resource - the default
+// cluster issuer included - fails with:
+//
+//	Internal error occurred: failed calling webhook "webhook.cert-manager.io":
+//	tls: failed to verify certificate: x509: certificate signed by unknown authority
+func waitForWebhookCAInjection(ctx context.Context, cluster clusters.Cluster) error {
+	ctx, cancel := context.WithTimeout(ctx, webhookCAInjectionTimeout)
+	defer cancel()
+
+	for {
+		injected, err := webhookCAInjected(ctx, cluster.Client())
+		if err != nil {
+			return err
+		}
+		if injected {
+			return nil
+		}
+		select {
+		case <-ctx.Done():
+			return fmt.Errorf("the %s webhook configurations have no injected caBundle: %w", webhookConfigurationName, ctx.Err())
+		case <-time.After(webhookCAInjectionWaitTime):
+		}
+	}
+}
+
+// webhookCAInjected reports whether all the webhooks of both cert-manager webhook
+// configurations carry a CA bundle.
+func webhookCAInjected(ctx context.Context, client kubernetes.Interface) (bool, error) {
+	mutating, err := client.AdmissionregistrationV1().MutatingWebhookConfigurations().
+		Get(ctx, webhookConfigurationName, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) { // the webhook configuration is not deployed yet
+			return false, nil
+		}
+		return false, err
+	}
+	validating, err := client.AdmissionregistrationV1().ValidatingWebhookConfigurations().
+		Get(ctx, webhookConfigurationName, metav1.GetOptions{})
+	if err != nil {
+		if errors.IsNotFound(err) { // the webhook configuration is not deployed yet
+			return false, nil
+		}
+		return false, err
+	}
+
+	return caBundleInjected(mutating.Webhooks, validating.Webhooks), nil
+}
+
+func caBundleInjected(
+	mutating []admissionregistrationv1.MutatingWebhook,
+	validating []admissionregistrationv1.ValidatingWebhook,
+) bool {
+	if len(mutating) == 0 || len(validating) == 0 {
+		return false
+	}
+	for _, webhook := range mutating {
+		if len(webhook.ClientConfig.CABundle) == 0 {
+			return false
+		}
+	}
+	for _, webhook := range validating {
+		if len(webhook.ClientConfig.CABundle) == 0 {
+			return false
+		}
+	}
+	return true
+}
 
 var defaultIssuer = fmt.Sprintf(`---
 apiVersion: cert-manager.io/v1
