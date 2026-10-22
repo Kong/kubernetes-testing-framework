@@ -1,6 +1,6 @@
 module github.com/kong/kubernetes-testing-framework
 
-go 1.26.4
+go 1.26.6
 
 require (
 	cloud.google.com/go/container v1.55.0
@@ -9,8 +9,8 @@ require (
 	github.com/cert-manager/cert-manager v1.21.2
 	github.com/google/go-github/v48 v48.2.0
 	github.com/google/uuid v1.6.0
-	github.com/kong/go-database-reconciler v1.42.4
-	github.com/kong/go-kong v0.79.0
+	github.com/kong/go-database-reconciler v1.43.0
+	github.com/kong/go-kong v0.80.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/moby/moby/client v0.6.1
 	github.com/samber/lo v1.53.0
@@ -62,7 +62,7 @@ require (
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fatih/color v1.19.0 // indirect
 	github.com/felixge/httpsnoop v1.1.0 // indirect
-	github.com/fsnotify/fsnotify v1.9.0 // indirect
+	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.1 // indirect
 	github.com/go-errors/errors v1.5.1 // indirect
 	github.com/go-logr/logr v1.4.4 // indirect
