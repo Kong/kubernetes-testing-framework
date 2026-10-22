@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.53.0
+
+- Update dependencies.
+- Wait for the cert-manager webhook CA bundle before deploying the default issuer.
+  [#1593](https://github.com/Kong/kubernetes-testing-framework/pull/1593)
+
 ## v0.52.0
 
 - Update dependencies.
