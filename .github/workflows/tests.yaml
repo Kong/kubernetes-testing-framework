@@ -95,10 +95,12 @@ jobs:
       # grep magic described in https://unix.stackexchange.com/a/13472
       # sed to add the extra $ is because some of our test names overlap. we need it so the -run regex only matches one test
       run: |
-        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
+        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-Z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
 
     - name: Print test names
-      run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
+      env:
+        TEST_NAMES: ${{ steps.set_test_names.outputs.test_names }}
+      run: echo "Test names ${TEST_NAMES}"
 
   integration-tests:
     needs:
@@ -194,10 +196,12 @@ jobs:
       # grep magic described in https://unix.stackexchange.com/a/13472
       # sed to add the extra $ is because some of our test names overlap. we need it so the -run regex only matches one test
       run: |
-        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
+        echo "test_names=$(grep -shoP "(?<=^func )(Test[a-zA-Z_0-9]+)(?=\(t \*testing.T\) {)" * | sed -e "s/$/\$/"| jq -R . | jq -cs .)" >> $GITHUB_OUTPUT
 
     - name: Print test names
-      run: echo "Test names ${{ steps.set_test_names.outputs.test_names }}"
+      env:
+        TEST_NAMES: ${{ steps.set_test_names.outputs.test_names }}
+      run: echo "Test names ${TEST_NAMES}"
 
   e2e-tests:
     needs:
